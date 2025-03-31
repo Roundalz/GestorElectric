@@ -1,0 +1,25 @@
+/* Contenedor principal de la app */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Navbar ocupa todo el ancho */
+.navbar {
+  width: 100%;
+  background-color: #282c34;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Ajustar el contenido para que no se sobreponga con el navbar */
+.content {
+  margin-top: 60px; /* Ajusta este valor según la altura del navbar */
+  padding: 20px;
+}
