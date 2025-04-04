@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - orquestador
+    networks:
+      - app_network
+
+  orquestador:
+    build: ./orquestador
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'EMPRESA_CHUNO'
+    networks:
+      - app_network
+
+  autenticacion:
+    build: ./servicios/autenticacion
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+    environment:
+      DATABASE_URL: postgres://postgres:admin@postgres:5432/EMPRESA_CHUNO
+    networks:
+      - app_network
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'EMPRESA_CHUNO'
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:   # <---- SE AGREGA ESTO
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:
+
+networks:
+  app_network:
