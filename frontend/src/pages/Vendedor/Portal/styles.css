@@ -1,0 +1,202 @@
+/* Variables CSS - Se sobrescriben dinámicamente */
+:root {
+    --color-primary: #4F46E5;
+    --color-secondary: #10B981;
+    --bg-color: #FFFFFF;
+  }
+  
+  /* Estilos base */
+  .config-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .config-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .theme-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .theme-card {
+    width: 200px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .theme-card.active {
+    border: 2px solid var(--color-primary);
+  }
+  
+  .theme-preview {
+    width: 100%;
+    height: 100px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    display: flex;
+  }
+  
+  .theme-primary {
+    width: 30%;
+    height: 100%;
+  }
+  
+  .theme-secondary {
+    width: 70%;
+    height: 100%;
+  }
+  
+  /* Estilos del portal */
+  .portal-container {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    min-height: 100vh;
+  }
+  
+  .portal-header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .portal-logo {
+    height: 50px;
+    width: auto;
+  }
+  
+  .banner-container {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .portal-banner {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+  }
+  
+  .product-display {
+    display: grid;
+    gap: 2rem;
+    padding: 2rem;
+  }
+  
+  .product-display.layout-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .product-display.layout-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .product-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .product-info {
+    padding: 1rem;
+  }
+  
+  .product-price {
+    color: var(--color-secondary);
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+  }
+  
+  .product-rating {
+    color: gold;
+    font-size: 1.2rem;
+  }
+  
+  /* Editor de productos */
+  .product-editor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .product-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .product-image-container {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .product-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .product-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .product-details input,
+  .product-details select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  /* Estados */
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+  }
+  
+  .error {
+    color: #dc3545;
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+  }

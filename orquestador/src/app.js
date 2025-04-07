@@ -22,6 +22,10 @@ app.get("/", (req, res) => {
 import autenticacionRouter from './routes/autenticacion.js';
 app.use("/api/auth", autenticacionRouter);
 
+// Proxy de rutas hacia los microservicios
+import portalRouter from './routes/portal.js';
+app.use("/api/portales", portalRouter);
+
 // Puerto del servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
