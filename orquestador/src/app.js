@@ -8,7 +8,11 @@ import pool from './database.js'; // Importar el pool de conexiones
 const app = express();
 
 // Middleware
-app.use(cors()); // Permitir solicitudes desde el frontend
+app.use(cors({
+  origin: ['http://localhost', 'http://frontend', 'http://localhost:80'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));// Permitir solicitudes desde el frontend
 app.use(express.json()); // Habilitar JSON en requests
 app.use('/api', testController);
 

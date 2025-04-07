@@ -10,8 +10,7 @@ services:
       - app_network
     environment:
       - VITE_API_BASE_URL=http://orquestador:5000/api
-    extra_hosts:
-      - "orquestador:host-gateway"
+
 
   orquestador:
     build: ./orquestador
@@ -35,9 +34,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    extra_hosts:
-      - "portal:host-gateway"
-      - "postgres:host-gateway"
+
 
   autenticacion:
     build: ./servicios/autenticacion
@@ -55,25 +52,18 @@ services:
     build: ./servicios/portal
     ports:
       - "5100:5100"
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: 123456
       DB_NAME: GESTOR_ELECTRIC
-      NODE_ENV: production
+      NODE_ENV: development
+    volumes:
+      - ./servicios/portal:/app
+      - /app/node_modules
     networks:
       - app_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    extra_hosts:
-      - "postgres:host-gateway"
 
   postgres:
     image: postgres:15
@@ -94,8 +84,6 @@ services:
       interval: 10s
       retries: 5
       timeout: 5s
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
 volumes:
   pgdata:
