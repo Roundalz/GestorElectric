@@ -22,6 +22,7 @@ import Ventas from "./pages/Vendedor/Ventas";
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
+import Register from "./components/Register";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Rutas de Admin */}
           <Route path="/admin/clientes" element={<CrudClientes />} />

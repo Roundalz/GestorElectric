@@ -21,6 +21,7 @@ function NavBar() {
             <li><Link to="/">Home</Link></li>
             <li><Link to="/about">About</Link></li>
             <li><Link to="/login">Login</Link></li>
+            <li><Link to="/register">Login</Link></li>
             <li><Link to="/admin/clientes">Clientes</Link></li>
             <li><Link to="/admin/plan-pagos">Plan de Pagos</Link></li>
             <li><Link to="/admin/vendedores">Vendedores</Link></li>
