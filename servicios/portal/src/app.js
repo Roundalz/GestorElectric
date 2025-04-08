@@ -51,11 +51,16 @@ pool.connect()
   });
 
 // Funciones de negocio (implementación básica)
+// Funciones de negocio actualizadas
 const obtenerDatosPortal = async (vendedorId) => {
   try {
-    const query = 'SELECT * FROM portales WHERE vendedor_id = $1';
+    const query = `
+      SELECT p.*, v.nombre_empresa, v.logo_empresa, v.banner_empresa 
+      FROM PORTAL p
+      JOIN VENDEDOR v ON p.VENDEDOR_codigo_vendedore = v.codigo_vendedore
+      WHERE p.VENDEDOR_codigo_vendedore = $1`;
     const result = await pool.query(query, [vendedorId]);
-    return result.rows[0] || { id: vendedorId, nombre: `Portal ${vendedorId}` };
+    return result.rows[0];
   } catch (error) {
     console.error('Error en obtenerDatosPortal:', error);
     throw error;
@@ -64,9 +69,58 @@ const obtenerDatosPortal = async (vendedorId) => {
 
 const obtenerConfigPortal = async (vendedorId) => {
   try {
-    const query = 'SELECT config FROM portales_config WHERE vendedor_id = $1';
+    const query = `
+      SELECT * FROM PORTAL_CONFIGURACION 
+      WHERE PORTAL_codigo_portal = (
+        SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1
+      )`;
     const result = await pool.query(query, [vendedorId]);
-    return result.rows[0]?.config || { tema: 'claro', colores: ['azul', 'blanco'] };
+    
+    if (result.rows.length === 0) {
+      // Crear configuración por defecto si no existe
+      const portalRes = await pool.query(
+        'SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1', 
+        [vendedorId]
+      );
+      
+      if (portalRes.rows.length === 0) {
+        throw new Error('No existe portal para este vendedor');
+      }
+      
+      const codigo_portal = portalRes.rows[0].codigo_portal;
+      const defaultConfig = {
+        estilo_titulo: 'centrado',
+        tema_seleccionado: 'claro',
+        color_principal: '#4a6baf',
+        color_secundario: '#f8f9fa',
+        color_fondo: '#ffffff',
+        fuente_principal: 'Arial',
+        disposicion_productos: 'grid',
+        productos_por_fila: 3,
+        mostrar_precios: true,
+        mostrar_valoraciones: true,
+        estilo_header: 'normal',
+        mostrar_busqueda: true,
+        mostrar_categorias: true,
+        estilos_productos: '{}',
+        mostrar_banner: true,
+        logo_personalizado: '',
+        banner_personalizado: '',
+        fecha_actualizacion: new Date()
+      };
+      
+      const insertRes = await pool.query(
+        `INSERT INTO PORTAL_CONFIGURACION (
+          PORTAL_codigo_portal, ${Object.keys(defaultConfig).join(', ')}
+        ) VALUES ($1, ${Object.keys(defaultConfig).map((_, i) => `$${i+2}`).join(', ')}) 
+        RETURNING *`,
+        [codigo_portal, ...Object.values(defaultConfig)]
+      );
+      
+      return insertRes.rows[0];
+    }
+    
+    return result.rows[0];
   } catch (error) {
     console.error('Error en obtenerConfigPortal:', error);
     throw error;
@@ -75,11 +129,12 @@ const obtenerConfigPortal = async (vendedorId) => {
 
 const obtenerProductosPortal = async (vendedorId) => {
   try {
-    const query = 'SELECT * FROM productos WHERE vendedor_id = $1';
+    const query = `
+      SELECT * FROM PRODUCTOS 
+      WHERE VENDEDOR_codigo_vendedore = $1
+      AND estado_producto = 'activo'`;
     const result = await pool.query(query, [vendedorId]);
-    return result.rows.length > 0 
-      ? result.rows 
-      : [{ id: 1, nombre: 'Producto 1' }, { id: 2, nombre: 'Producto 2' }];
+    return result.rows;
   } catch (error) {
     console.error('Error en obtenerProductosPortal:', error);
     throw error;
@@ -95,9 +150,28 @@ app.get('/portales/:vendedorId/view', async (req, res) => {
       return res.status(400).json({ error: 'ID de vendedor inválido' });
     }
 
+    // Obtener datos del portal y vendedor
     const portalData = await obtenerDatosPortal(vendedorId);
+    if (!portalData) {
+      return res.status(404).json({ error: 'Portal no encontrado' });
+    }
+
+    // Obtener configuración
+    const config = await obtenerConfigPortal(vendedorId);
+    
+    // Obtener productos
+    const productos = await obtenerProductosPortal(vendedorId);
+
     res.set('Content-Type', 'application/json');
-    res.status(200).json(portalData);
+    res.status(200).json({
+      vendedor: {
+        nombre_empresa: portalData.nombre_empresa,
+        logo_empresa: portalData.logo_empresa,
+        banner_empresa: portalData.banner_empresa
+      },
+      config,
+      productos
+    });
   } catch (error) {
     console.error('Error en /portales/:vendedorId/view:', error);
     res.status(500).json({ 

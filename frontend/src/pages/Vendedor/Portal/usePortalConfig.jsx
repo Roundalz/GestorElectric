@@ -34,7 +34,26 @@ export const usePortalConfig = (vendedorId) => {
     try {
       const response = await axios.put(
         `http://localhost:5000/api/portales/${vendedorId}/config`,
-        newConfig
+        {
+          // Mapear los nombres de campos según tu base de datos
+          estilo_titulo: newConfig.estilo_titulo,
+          tema_seleccionado: newConfig.tema_seleccionado,
+          color_principal: newConfig.color_principal,
+          color_secundario: newConfig.color_secundario,
+          color_fondo: newConfig.color_fondo,
+          fuente_principal: newConfig.fuente_principal,
+          disposicion_productos: newConfig.disposicion_productos,
+          productos_por_fila: newConfig.productos_por_fila,
+          mostrar_precios: newConfig.mostrar_precios,
+          mostrar_valoraciones: newConfig.mostrar_valoraciones,
+          estilo_header: newConfig.estilo_header,
+          mostrar_busqueda: newConfig.mostrar_busqueda,
+          mostrar_categorias: newConfig.mostrar_categorias,
+          estilos_productos: JSON.stringify(newConfig.estilos_productos),
+          mostrar_banner: newConfig.mostrar_banner,
+          logo_personalizado: newConfig.logo_personalizado,
+          banner_personalizado: newConfig.banner_personalizado
+        }
       );
       setConfig(response.data);
       return { success: true };

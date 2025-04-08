@@ -12,32 +12,19 @@ const PortalView = () => {
   useEffect(() => {
     const loadPortalData = async () => {
       try {
-        const response = await fetch(`/api/portales/${vendedorId}/view`, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await fetch(`/api/portales/${vendedorId}/view`);
         
-        // Verificación exhaustiva de la respuesta
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Error HTTP: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Respuesta no JSON:', text);
-          throw new TypeError('La respuesta no es JSON válido');
+          throw new Error(`Error HTTP: ${response.status}`);
         }
         
         const data = await response.json();
-        if (!data.success) {
-          throw new Error(data.error || 'Error en los datos recibidos');
+        
+        if (!data || !data.config) {
+          throw new Error('Datos del portal no recibidos correctamente');
         }
         
-        setPortalData(data.data);
+        setPortalData(data);
       } catch (err) {
         console.error('Error en loadPortalData:', err);
         setError(err.message);
@@ -46,7 +33,7 @@ const PortalView = () => {
       }
     };
 
-    if (vendedorId) { // Solo ejecutar si tenemos un vendedorId
+    if (vendedorId) {
       loadPortalData();
     } else {
       setError('ID de vendedor no proporcionado');
