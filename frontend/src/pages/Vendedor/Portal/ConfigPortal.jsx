@@ -7,7 +7,17 @@ import './styles.css';
 const ConfigPortal = () => {
   const { vendedorId } = useContext(VendedorContext);
   console.log("vendedorId desde contexto:", vendedorId);
+
   const { config, temas, loading, error, updateConfig } = usePortalConfig(vendedorId);
+  useEffect(() => {
+    if (error) {
+      console.error('Error en ConfigPortal:', error);
+      // Mostrar detalles del error solo en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        alert(`Error: ${error.message || error}`);
+      }
+    }
+  }, [error]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

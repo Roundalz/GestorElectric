@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   frontend:
@@ -5,46 +6,47 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - orquestador
+      orquestador:
+        condition: service_healthy
     networks:
       - app_network
     environment:
-      - VITE_API_BASE_URL=http://orquestador:5000/api
-
+      - VITE_API_BASE_URL=/api
 
   orquestador:
     build: ./orquestador
     ports:
       - "5000:5000"
     depends_on:
-      postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+      postgres_db:
+        condition: service_healthy
+      portal:
+        condition: service_started
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres_db
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: 123456
-      DB_NAME: GESTOR_ELECTRIC
+      DB_NAME: gestor_nuevo
       NODE_ENV: development
       PORTAL_SERVICE_URL: http://portal:5100
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]  # Probamos con el endpoint principal
       interval: 10s
       timeout: 5s
       retries: 5
-
 
   autenticacion:
     build: ./servicios/autenticacion
     ports:
       - "5001:5001"
     depends_on:
-      postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+      postgres_db:
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgres://postgres:admin@postgres:5432/GESTOR_ELECTRIC
+      DATABASE_URL: postgres://postgres:123456@postgres_db:5432/gestor_nuevo
     networks:
       - app_network
 
@@ -53,33 +55,48 @@ services:
     ports:
       - "5100:5100"
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres_db
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: 123456
-      DB_NAME: GESTOR_ELECTRIC
+      DB_NAME: gestor_nuevo
       NODE_ENV: development
     volumes:
       - ./servicios/portal:/app
       - /app/node_modules
     networks:
       - app_network
-
-  postgres:
+    depends_on:
+      - postgres_db
+  temas:
+    build: ./servicios/temas
+    ports:
+      - "5200:5200"
+    environment:
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 123456
+      DB_NAME: gestor_nuevo
+    networks:
+      - app_network
+    depends_on:
+      - postgres_db
+      
+  postgres_db:
     image: postgres:15
-    container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: 'GESTOR_ELECTRIC'
+      POSTGRES_DB: gestor_nuevo
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app_network
-    healthcheck:   # <---- SE AGREGA ESTO
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       retries: 5

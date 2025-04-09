@@ -232,7 +232,7 @@ app.use((err, req, res, next) => {
 app.get('/api/temas', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM temas_portal');
-    res.json(result.rows);
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error al obtener temas:', error);
     res.status(500).json({ error: 'Error al obtener temas' });
