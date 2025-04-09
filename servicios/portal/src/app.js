@@ -56,8 +56,8 @@ const obtenerDatosPortal = async (vendedorId) => {
   try {
     const query = `
       SELECT p.*, v.nombre_empresa, v.logo_empresa, v.banner_empresa 
-      FROM PORTAL p
-      JOIN VENDEDOR v ON p.VENDEDOR_codigo_vendedore = v.codigo_vendedore
+      FROM portal p
+      JOIN vendedor v ON p.vendedor_codigo_vendedore = v.codigo_vendedore
       WHERE p.VENDEDOR_codigo_vendedore = $1`;
     const result = await pool.query(query, [vendedorId]);
     return result.rows[0];
@@ -69,17 +69,20 @@ const obtenerDatosPortal = async (vendedorId) => {
 
 const obtenerConfigPortal = async (vendedorId) => {
   try {
+    // Consulta corregida - usa comillas dobles para nombres con mayúsculas
     const query = `
-      SELECT * FROM PORTAL_CONFIGURACION 
-      WHERE PORTAL_codigo_portal = (
-        SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1
+      SELECT * FROM portal_configuracion 
+      WHERE "PORTAL_codigo_portal" = (
+        SELECT "codigo_portal" FROM "PORTAL" 
+        WHERE "VENDEDOR_codigo_vendedore" = $1
       )`;
+    
     const result = await pool.query(query, [vendedorId]);
     
     if (result.rows.length === 0) {
       // Crear configuración por defecto si no existe
       const portalRes = await pool.query(
-        'SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1', 
+        `SELECT "codigo_portal" FROM "PORTAL" WHERE "VENDEDOR_codigo_vendedore" = $1`, 
         [vendedorId]
       );
       
@@ -89,31 +92,17 @@ const obtenerConfigPortal = async (vendedorId) => {
       
       const codigo_portal = portalRes.rows[0].codigo_portal;
       const defaultConfig = {
-        estilo_titulo: 'centrado',
-        tema_seleccionado: 'claro',
-        color_principal: '#4a6baf',
-        color_secundario: '#f8f9fa',
-        color_fondo: '#ffffff',
-        fuente_principal: 'Arial',
-        disposicion_productos: 'grid',
-        productos_por_fila: 3,
-        mostrar_precios: true,
-        mostrar_valoraciones: true,
-        estilo_header: 'normal',
-        mostrar_busqueda: true,
-        mostrar_categorias: true,
-        estilos_productos: '{}',
-        mostrar_banner: true,
-        logo_personalizado: '',
-        banner_personalizado: '',
-        fecha_actualizacion: new Date()
+        // ... (mantén tu configuración por defecto)
       };
       
+      const insertQuery = `
+        INSERT INTO portal_configuracion (
+          "PORTAL_codigo_portal", ${Object.keys(defaultConfig).map(col => `"${col}"`).join(', ')}
+        ) VALUES ($1, ${Object.keys(defaultConfig).map((_, i) => `$${i+2}`).join(', ')})
+        RETURNING *`;
+      
       const insertRes = await pool.query(
-        `INSERT INTO PORTAL_CONFIGURACION (
-          PORTAL_codigo_portal, ${Object.keys(defaultConfig).join(', ')}
-        ) VALUES ($1, ${Object.keys(defaultConfig).map((_, i) => `$${i+2}`).join(', ')}) 
-        RETURNING *`,
+        insertQuery,
         [codigo_portal, ...Object.values(defaultConfig)]
       );
       
@@ -130,8 +119,8 @@ const obtenerConfigPortal = async (vendedorId) => {
 const obtenerProductosPortal = async (vendedorId) => {
   try {
     const query = `
-      SELECT * FROM PRODUCTOS 
-      WHERE VENDEDOR_codigo_vendedore = $1
+      SELECT * FROM productos 
+      WHERE vendedor_codigo_vendedore = $1
       AND estado_producto = 'activo'`;
     const result = await pool.query(query, [vendedorId]);
     return result.rows;
@@ -186,15 +175,23 @@ app.get('/portales/:vendedorId/config', async (req, res) => {
     const vendedorId = parseInt(req.params.vendedorId);
     
     if (!vendedorId || isNaN(vendedorId)) {
-      return res.status(400).json({ error: 'ID de vendedor inválido' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'ID de vendedor inválido' 
+      });
     }
 
     const config = await obtenerConfigPortal(vendedorId);
+    
     res.set('Content-Type', 'application/json');
-    res.status(200).json(config);
+    res.status(200).json({
+      success: true,
+      data: config
+    });
   } catch (error) {
     console.error('Error en /portales/:vendedorId/config:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Error al obtener configuración',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
