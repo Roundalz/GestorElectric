@@ -14,27 +14,23 @@ const PortalView = () => {
       try {
         const response = await fetch(`/api/portales/${vendedorId}/view`);
         
-        // Verificar si la respuesta es JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          throw new Error(`Respuesta no JSON: ${text.substring(0, 100)}...`);
-        }
-        
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
         
         const data = await response.json();
         
-        if (!data || !data.config) {
-          throw new Error('Datos del portal no recibidos correctamente');
+        if (!data?.success) {
+          throw new Error(data.error || 'Respuesta inválida del servidor');
         }
         
-        setPortalData(data);
+        setPortalData(data.data);
       } catch (err) {
         console.error('Error en loadPortalData:', err);
         setError(err.message);
+        
+        // Cargar datos mock como fallback
+        setPortalData(mockPortalData);
       } finally {
         setLoading(false);
       }
