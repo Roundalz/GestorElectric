@@ -14,6 +14,7 @@ router.get('/:vendedorId/view', getPortalView);
 // ✅ Ruta para obtener los temas disponibles
 router.get('/temas', getTemas);
 
+
 // Añade estas rutas
 router.get('/:vendedorId/config', getPortalConfig);
 router.get('/:vendedorId/productos', getProductosPortal);

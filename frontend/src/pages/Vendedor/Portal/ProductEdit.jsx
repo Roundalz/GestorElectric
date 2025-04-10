@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { VendedorContext } from '@context/VendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import { useParams } from 'react-router-dom';
 import './styles.css';
 
 const ProductEditor = () => {
-  const { vendedorId } = useContext(VendedorContext);
+  const { vendedorId } = useVendedor();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -129,7 +129,50 @@ const obtenerProductosPortal = async (vendedorId) => {
     throw error;
   }
 };
+const obtenerPlanVendedor = async (vendedorId) => {
+  try {
+    const query = `
+      SELECT p.* 
+      FROM planes_pago p
+      JOIN vendedor v ON p.codigo_plan = v.planes_pago_codigo_plan
+      WHERE v.codigo_vendedore = $1`;
+    const result = await pool.query(query, [vendedorId]);
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error en obtenerPlanVendedor:', error);
+    throw error;
+  }
+};
 
+const obtenerTemasDisponibles = async () => {
+  try {
+    const query = 'SELECT * FROM temas_portal';
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error('Error en obtenerTemasDisponibles:', error);
+    throw error;
+  }
+};
+
+const actualizarConfigPortal = async (portalCodigo, nuevaConfig) => {
+  try {
+    const fields = Object.keys(nuevaConfig).map((key, index) => `"${key}" = $${index + 1}`).join(', ');
+    const values = Object.values(nuevaConfig);
+    
+    const query = `
+      UPDATE portal_configuracion 
+      SET ${fields}, fecha_actualizacion = NOW()
+      WHERE portal_codigo_portal = $${values.length + 1}
+      RETURNING *`;
+    
+    const result = await pool.query(query, [...values, portalCodigo]);
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error en actualizarConfigPortal:', error);
+    throw error;
+  }
+};
 // Endpoints
 app.get('/portales/:vendedorId/view', async (req, res) => {
   try {
@@ -215,6 +258,76 @@ app.get('/portales/:vendedorId/productos', async (req, res) => {
       error: 'Error al obtener productos',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+});
+app.get('/api/vendedor/:id/plan', async (req, res) => {
+  try {
+    const vendedorId = parseInt(req.params.id);
+    if (!vendedorId || isNaN(vendedorId)) {
+      return res.status(400).json({ error: 'ID de vendedor inválido' });
+    }
+
+    const plan = await obtenerPlanVendedor(vendedorId);
+    res.status(200).json(plan);
+  } catch (error) {
+    console.error('Error en /api/vendedor/:id/plan:', error);
+    res.status(500).json({ error: 'Error al obtener plan del vendedor' });
+  }
+});
+
+app.put('/api/portal/config/:portalCodigo', async (req, res) => {
+  try {
+    const portalCodigo = req.params.portalCodigo;
+    const nuevaConfig = req.body;
+    
+    if (!portalCodigo || !nuevaConfig) {
+      return res.status(400).json({ error: 'Datos inválidos' });
+    }
+
+    const configActualizada = await actualizarConfigPortal(portalCodigo, nuevaConfig);
+    res.status(200).json(configActualizada);
+  } catch (error) {
+    console.error('Error en /api/portal/config/:portalCodigo:', error);
+    res.status(500).json({ error: 'Error al actualizar configuración' });
+  }
+});
+/////////////////////
+app.get('/api/vendedor/:id/portal', async (req, res) => {
+  try {
+    const vendedorId = parseInt(req.params.id);
+    if (!vendedorId || isNaN(vendedorId)) {
+      return res.status(400).json({ error: 'ID de vendedor inválido' });
+    }
+
+    const query = 'SELECT codigo_portal FROM portal WHERE vendedor_codigo_vendedore = $1';
+    const result = await pool.query(query, [vendedorId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No se encontró portal para este vendedor' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error en /api/vendedor/:id/portal:', error);
+    res.status(500).json({ error: 'Error al obtener portal del vendedor' });
+  }
+});
+
+// Obtener configuración completa del portal
+app.get('/api/portal/config/:portalCodigo', async (req, res) => {
+  try {
+    const portalCodigo = req.params.portalCodigo;
+    const query = 'SELECT * FROM portal_configuracion WHERE portal_codigo_portal = $1';
+    const result = await pool.query(query, [portalCodigo]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error en /api/portal/config/:portalCodigo:', error);
+    res.status(500).json({ error: 'Error al obtener configuración' });
   }
 });
 

@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { VendedorContext } from '@context/VendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import './styles.css';
 
 const PortalView = () => {
-  const { vendedorId } = useContext(VendedorContext);
+  const { vendedorId } = useVendedor();
   const [portalData, setPortalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
