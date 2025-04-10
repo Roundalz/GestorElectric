@@ -1,21 +1,20 @@
 // app.js
-import express from 'express';
-import cors from 'cors';
-import testController from './controllers/testController.js';
-
-import pool from './database.js'; // Importar el pool de conexiones
+import cors from "cors";
+import express from "express";
+import testController from "./controllers/testController.js";
 
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost', 'http://frontend', 'http://localhost:80'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));// Permitir solicitudes desde el frontend
+app.use(
+  cors({
+    origin: ["http://localhost", "http://frontend", "http://localhost:80"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+); // Permitir solicitudes desde el frontend
 app.use(express.json()); // Habilitar JSON en requests
-app.use('/api', testController);
-
+app.use("/api", testController);
 
 // Rutas principales del orquestador
 app.get("/", (req, res) => {
@@ -23,11 +22,11 @@ app.get("/", (req, res) => {
 });
 
 // Proxy de rutas hacia los microservicios
-import autenticacionRouter from './routes/autenticacion.js';
+import autenticacionRouter from "./routes/autenticacion.js";
 app.use("/api/auth", autenticacionRouter);
 
 // Proxy de rutas hacia los microservicios
-import portalRouter from './routes/portal.js';
+import portalRouter from "./routes/portal.js";
 app.use("/api/portales", portalRouter);
 
 // Puerto del servidor
