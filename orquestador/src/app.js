@@ -34,3 +34,15 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Orquestador corriendo en http://localhost:${PORT}`);
 });
+///////////////////////////////////////////anghelo/////////////////////////////////
+import clienteRoutes from "./routes/clientes.js";
+app.use("/api/clientes", clienteRoutes);
+
+import planDePagosRoutes from "./routes/planDePagos.js";
+app.use("/api/planes", planDePagosRoutes);
+
+import vendedorRoutes from "./routes/vendedores.js";
+app.use("/api/vendedores", vendedorRoutes);
+
+import logsRoutes from "./routes/logs.js";
+app.usse("/api/logs", logsRoutes);
