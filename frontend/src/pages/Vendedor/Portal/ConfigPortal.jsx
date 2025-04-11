@@ -27,32 +27,48 @@ const ConfigPortal = () => {
   const [activeTab, setActiveTab] = useState('apariencia');
 
   // Obtener información del plan del vendedor y código del portal
+  // Obtener información del plan del vendedor y código del portal
   useEffect(() => {
     const fetchVendedorData = async () => {
       try {
         setLoadingPlan(true);
         
-        // 1. Obtener plan del vendedor
+        console.log('Iniciando obtención de datos para vendedor:', vendedorId);
+        
+        // 1. Obtener plan del vendedor (usando la ruta correcta del servicio temas)
         const planResponse = await axios.get(`/api/vendedor/${vendedorId}/plan`);
+        console.log('Datos del plan recibidos:', planResponse.data);
         setPlan(planResponse.data);
         
-        // 2. Obtener código del portal
-        const portalResponse = await axios.get(`/api/vendedor/${vendedorId}/portal`);
-        setPortalCodigo(portalResponse.data.codigo_portal);
+        // 2. Obtener código del portal (usando la ruta del orquestador)
+        const portalResponse = await axios.get(`/api/portales/${vendedorId}/config`);
+        console.log('Datos del portal recibidos:', portalResponse.data);
+        
+        // IMPORTANTE: Verifica la estructura real de la respuesta aquí
+        // Puede que necesites ajustar según cómo esté estructurada la respuesta real
+        setPortalCodigo(portalResponse.data.data?.codigo_portal || portalResponse.data.codigo_portal);
         
         setErrorPlan(null);
       } catch (err) {
-        console.error('Error al obtener datos del vendedor:', err);
-        setErrorPlan(err.message);
+        console.error('Error detallado al obtener datos del vendedor:', {
+          message: err.message,
+          response: err.response?.data,
+          config: err.config,
+          stack: err.stack
+        });
+        setErrorPlan(err.response?.data?.error || err.message);
       } finally {
         setLoadingPlan(false);
       }
     };
 
-    if (vendedorId) {
-      fetchVendedorData();
-    }
-  }, [vendedorId]);
+  if (vendedorId) {
+    console.log('VendedorID detectado, obteniendo datos...');
+    fetchVendedorData();
+  } else {
+    console.warn('No hay vendedorId, no se pueden obtener datos');
+  }
+}, [vendedorId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
