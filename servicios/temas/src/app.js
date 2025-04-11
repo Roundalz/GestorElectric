@@ -267,25 +267,11 @@ app.get('/api/vendedor/:id/plan', async (req, res) => {
       return res.status(400).json({ error: 'ID de vendedor inválido' });
     }
 
-    const query = `
-      SELECT p.codigo_plan, p.nombre_plan, p.descripcion, p.max_productos 
-      FROM planes_pago p
-      JOIN vendedor v ON p.codigo_plan = v.planes_pago_codigo_plan
-      WHERE v.codigo_vendedore = $1`;
-    
-    const result = await pool.query(query, [vendedorId]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'No se encontró plan para este vendedor' });
-    }
-
-    res.status(200).json(result.rows[0]);
+    const plan = await obtenerPlanVendedor(vendedorId);
+    res.status(200).json(plan);
   } catch (error) {
     console.error('Error en /api/vendedor/:id/plan:', error);
-    res.status(500).json({ 
-      error: 'Error al obtener plan del vendedor',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(500).json({ error: 'Error al obtener plan del vendedor' });
   }
 });
 
