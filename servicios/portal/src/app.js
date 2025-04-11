@@ -129,7 +129,29 @@ const obtenerProductosPortal = async (vendedorId) => {
     throw error;
   }
 };
-
+// Agrega esto temporalmente en tu servicio (app.js) antes de los endpoints
+app.get('/debug', async (req, res) => {
+  try {
+    const vendedorId = 2; // ID hardcodeado para pruebas
+    
+    const portalData = await pool.query(
+      'SELECT * FROM portal WHERE vendedor_codigo_vendedore = $1', 
+      [vendedorId]
+    );
+    
+    const configData = await pool.query(
+      'SELECT * FROM portal_configuracion WHERE portal_codigo_portal = $1',
+      [portalData.rows[0]?.codigo_portal]
+    );
+    
+    res.json({
+      portal: portalData.rows[0] || 'No existe portal',
+      config: configData.rows[0] || 'No existe configuración'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Endpoints
 app.get('/portales/:vendedorId/view', async (req, res) => {
   try {
@@ -170,10 +192,9 @@ app.get('/portales/:vendedorId/view', async (req, res) => {
   }
 });
 
-app.get('/portales/:vendedorId/config', async (req, res) => {
+app.get('/api/portales/:vendedorId/config', async (req, res) => {
   try {
     const vendedorId = parseInt(req.params.vendedorId);
-    
     if (!vendedorId || isNaN(vendedorId)) {
       return res.status(400).json({ 
         success: false,
@@ -181,15 +202,62 @@ app.get('/portales/:vendedorId/config', async (req, res) => {
       });
     }
 
-    const config = await obtenerConfigPortal(vendedorId);
+    // 1. Obtener código del portal
+    const portalRes = await pool.query(
+      'SELECT codigo_portal FROM portal WHERE vendedor_codigo_vendedore = $1', 
+      [vendedorId]
+    );
     
-    res.set('Content-Type', 'application/json');
+    if (portalRes.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No se encontró portal para este vendedor'
+      });
+    }
+
+    const codigo_portal = portalRes.rows[0].codigo_portal;
+
+    // 2. Obtener configuración
+    const configRes = await pool.query(
+      'SELECT * FROM portal_configuracion WHERE portal_codigo_portal = $1',
+      [codigo_portal]
+    );
+
+    // 3. Si no existe configuración, crear una por defecto
+    if (configRes.rows.length === 0) {
+      const defaultConfig = {
+        tema_seleccionado: 'default',
+        color_principal: '#4F46E5',
+        color_secundario: '#10B981',
+        color_fondo: '#FFFFFF',
+        mostrar_precios: true,
+        mostrar_valoraciones: false,
+        disposicion_productos: 'grid',
+        productos_por_fila: 3
+      };
+
+      const insertRes = await pool.query(
+        `INSERT INTO portal_configuracion (
+          portal_codigo_portal, ${Object.keys(defaultConfig).join(', ')}
+         VALUES ($1, ${Object.keys(defaultConfig).map((_, i) => `$${i+2}`).join(', ')})
+         RETURNING *`,
+        [codigo_portal, ...Object.values(defaultConfig)]
+      );
+
+      return res.status(200).json({
+        success: true,
+        codigo_portal,
+        config: insertRes.rows[0]
+      });
+    }
+
     res.status(200).json({
       success: true,
-      data: config
+      codigo_portal,
+      config: configRes.rows[0]
     });
   } catch (error) {
-    console.error('Error en /portales/:vendedorId/config:', error);
+    console.error('Error en /api/portales/:vendedorId/config:', error);
     res.status(500).json({ 
       success: false,
       error: 'Error al obtener configuración',
@@ -197,7 +265,6 @@ app.get('/portales/:vendedorId/config', async (req, res) => {
     });
   }
 });
-
 app.get('/portales/:vendedorId/productos', async (req, res) => {
   try {
     const vendedorId = parseInt(req.params.vendedorId);

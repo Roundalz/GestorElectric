@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
@@ -7,10 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://orquestador:5000',
+        target: 'http://localhost:5000', // Cambia a tu URL de orquestador
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        ws: true
       }
     }
   },
@@ -20,4 +21,4 @@ export default defineConfig({
       '@context': path.resolve(__dirname, './src/context')
     }
   }
-})
+});

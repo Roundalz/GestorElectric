@@ -1,5 +1,5 @@
 # Etapa de construcción (antes "FROM builder")
-FROM node:18 AS build-stage
+FROM node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

@@ -5,8 +5,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      orquestador:
-        condition: service_healthy
+      - orquestador
     networks:
       - app_network
     environment:

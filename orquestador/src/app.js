@@ -9,12 +9,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost', 'http://frontend', 'http://localhost:80'],
+  origin: ['http://localhost', 'http://frontend', 'http://localhost:80', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));// Permitir solicitudes desde el frontend
-app.use(express.json()); // Habilitar JSON en requests
-app.use('/api', testController);
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 
 // Rutas principales del orquestador

@@ -3,8 +3,32 @@ import { usePortalConfig } from './usePortalConfig';
 import { useVendedor } from '@context/VendedorContext';
 import axios from 'axios';
 import './styles.css';
-
+// Configura interceptores para axios
+axios.interceptors.response.use(
+  response => {
+    // Verifica si la respuesta es HTML
+    const contentType = response.headers['content-type'];
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('Received HTML instead of JSON');
+    }
+    return response;
+  },
+  error => {
+    if (error.response && error.response.status === 404) {
+      // Verifica si la respuesta es HTML
+      const contentType = error.response.headers['content-type'];
+      if (contentType && contentType.includes('text/html')) {
+        return Promise.reject({
+          message: 'La ruta solicitada no existe o devolvió HTML en lugar de JSON',
+          originalError: error
+        });
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 const ConfigPortal = () => {
+  const baseURL = import.meta.env.VITE_API_BASE_URL || '';  
   const { vendedorId } = useVendedor();
   const [plan, setPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
@@ -28,47 +52,84 @@ const ConfigPortal = () => {
 
   // Obtener información del plan del vendedor y código del portal
   // Obtener información del plan del vendedor y código del portal
-  useEffect(() => {
-    const fetchVendedorData = async () => {
-      try {
-        setLoadingPlan(true);
-        
-        console.log('Iniciando obtención de datos para vendedor:', vendedorId);
-        
-        // 1. Obtener plan del vendedor (usando la ruta correcta del servicio temas)
-        const planResponse = await axios.get(`/api/vendedor/${vendedorId}/plan`);
-        console.log('Datos del plan recibidos:', planResponse.data);
-        setPlan(planResponse.data);
-        
-        // 2. Obtener código del portal (usando la ruta del orquestador)
-        const portalResponse = await axios.get(`/api/portales/${vendedorId}/config`);
-        console.log('Datos del portal recibidos:', portalResponse.data);
-        
-        // IMPORTANTE: Verifica la estructura real de la respuesta aquí
-        // Puede que necesites ajustar según cómo esté estructurada la respuesta real
-        setPortalCodigo(portalResponse.data.data?.codigo_portal || portalResponse.data.codigo_portal);
-        
-        setErrorPlan(null);
-      } catch (err) {
-        console.error('Error detallado al obtener datos del vendedor:', {
-          message: err.message,
-          response: err.response?.data,
-          config: err.config,
-          stack: err.stack
+  // Cambia esta parte del useEffect
+// Agrega al inicio del componente
+const [apiStatus, setApiStatus] = useState({
+  plan: { loading: true, error: null },
+  config: { loading: true, error: null }
+});
+
+// Modifica el useEffect
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // 1. Verificar conexión básica primero
+      const testRes = await axios.get(`${baseURL}/api/portales/debug/test`);
+      console.log('Test connection:', testRes.data);
+      
+      // 2. Obtener plan
+      setApiStatus(prev => ({...prev, plan: {loading: true, error: null}}));
+      const planRes = await axios.get(`${baseURL}/api/portales/vendedor/${vendedorId}/plan`);
+      if (!planRes.data?.success) {
+        throw new Error(planRes.data?.error || 'Invalid plan response');
+      }
+      setPlan(planRes.data);
+      setApiStatus(prev => ({...prev, plan: {loading: false, error: null}}));
+      
+      // 3. Obtener configuración
+      setApiStatus(prev => ({...prev, config: {loading: true, error: null}}));
+      const configRes = await axios.get(`${baseURL}/api/portales/${vendedorId}/config`);
+      if (!configRes.data?.success) {
+        throw new Error(configRes.data?.error || 'Invalid config response');
+      }
+      
+      setPortalCodigo(configRes.data.codigo_portal);
+      updateConfig(configRes.data.config);
+      setApiStatus(prev => ({...prev, config: {loading: false, error: null}}));
+      
+    } catch (error) {
+      console.error('API Error:', {
+        message: error.message,
+        url: error.config?.url,
+        response: error.response?.data
+      });
+      
+      if (error.response?.headers?.['content-type']?.includes('text/html')) {
+        setApiStatus({
+          plan: {loading: false, error: 'El servidor respondió con HTML en lugar de JSON'},
+          config: {loading: false, error: 'El servidor respondió con HTML en lugar de JSON'}
         });
-        setErrorPlan(err.response?.data?.error || err.message);
-      } finally {
-        setLoadingPlan(false);
+      } else {
+        setApiStatus({
+          plan: {loading: false, error: error.message},
+          config: {loading: false, error: error.message}
+        });
+      }
+    }
+  };
+
+  if (vendedorId) fetchData();
+}, [vendedorId, baseURL, updateConfig]);
+  /*// PARA VISTA DE DEBUG ERRORES
+  useEffect(() => {
+    const testEndpoints = async () => {
+      try {
+        const planRes = await axios.get(`/api/vendedor/2/plan`);
+        const portalRes = await axios.get(`/api/portales/2/config`);
+        
+        console.log('Plan response:', planRes.data);
+        console.log('Portal response:', portalRes.data);
+      } catch (error) {
+        console.error('Debug error:', {
+          message: error.message,
+          response: error.response?.data,
+          config: error.config
+        });
       }
     };
-
-  if (vendedorId) {
-    console.log('VendedorID detectado, obteniendo datos...');
-    fetchVendedorData();
-  } else {
-    console.warn('No hay vendedorId, no se pueden obtener datos');
-  }
-}, [vendedorId]);
+    
+    testEndpoints();
+  }, []);*/
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -95,11 +156,27 @@ const ConfigPortal = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`/api/portal/config/${portalCodigo}`, config);
-      alert('Configuración guardada exitosamente');
+      if (!portalCodigo) {
+        throw new Error('No se ha cargado el código del portal');
+      }
+      
+      const response = await axios.put(
+        `${baseURL}/api/portales/portal/config/${portalCodigo}`,
+        config
+      );
+      
+      if (response.data.success) {
+        alert('Configuración guardada exitosamente');
+      } else {
+        throw new Error(response.data.error || 'Error al guardar configuración');
+      }
     } catch (error) {
-      console.error('Error al guardar configuración:', error);
-      alert('Error al guardar la configuración');
+      console.error('Error al guardar configuración:', {
+        message: error.message,
+        response: error.response?.data,
+        config: error.config
+      });
+      alert('Error al guardar la configuración: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -231,6 +308,12 @@ const ConfigPortal = () => {
               {renderFeatureLock('color_principal')}
               <div className={`form-group ${!isFeatureAllowed('color_principal') ? 'disabled' : ''}`}>
                 <label>Color Principal:</label>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  backgroundColor: config.color_principal,
+                  border: '1px solid #ddd'
+                }} />
                 <input
                   type="color"
                   name="color_principal"
