@@ -11,7 +11,7 @@ export const cartProducts = [
       id: 2,
       image: 'https://a.rgbimg.com/users/o/or/organza3/300/mtgVC1W.jpg',
       title: 'Producto 2',
-      description: 'Descripción del producto 2',
+      description: 'Descripción del producto 2asdasfa',
       price: 34.50,
     },
     {

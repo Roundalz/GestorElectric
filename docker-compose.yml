@@ -23,7 +23,7 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: 123456
+      DB_PASSWORD: Heroofgold03Sql
       DB_NAME: GESTOR_ELECTRIC
       NODE_ENV: development
       PORTAL_SERVICE_URL: http://portal:5100
@@ -44,7 +44,7 @@ services:
       postgres:
         condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
     environment:
-      DATABASE_URL: postgres://postgres:admin@postgres:5432/GESTOR_ELECTRIC
+      DATABASE_URL: postgres://postgres:Heroofgold03Sql@postgres:5432/GESTOR_ELECTRIC
     networks:
       - app_network
 
@@ -56,7 +56,7 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: 123456
+      DB_PASSWORD: Heroofgold03Sql
       DB_NAME: GESTOR_ELECTRIC
       NODE_ENV: development
     volumes:
@@ -71,7 +71,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: Heroofgold03Sql
       POSTGRES_DB: 'GESTOR_ELECTRIC'
     ports:
       - "5432:5432"

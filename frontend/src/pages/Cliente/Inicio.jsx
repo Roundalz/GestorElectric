@@ -1,19 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Card from './card';
-import { cardsData } from './data';
 import './CardStyles.css';
 
 const Inicio = () => {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5005/api/productos')
+      .then((res) => res.json())
+      .then((data) => setItems(data))
+      .catch((err) => console.error('Error al obtener productos:', err));
+  }, []);
+
   return (
     <div className="cards-container">
       <div className="cards-grid">
-        {cardsData.map((card) => (
+        {items.map((item) => (
           <Card
-            key={card.id}
-            image={card.image}
-            title={card.title}
-            line1={card.line1}
-            line2={card.line2}
+            key={item.codigo_producto}
+            image="https://a.rgbimg.com/users/o/or/organza3/300/mtgVC1W.jpg"
+            title={`${item.nombre_producto}`}
+            line1={`${item.descripcion}`}
+            line2={`${item.precio_unidad_producto} Bs.`}
           />
         ))}
       </div>
