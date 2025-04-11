@@ -3,7 +3,7 @@ import db from "../db.js";
 // GET
 export const obtenerVendedores = async (req, res) => {
   try {
-    const [result] = await db.query("SELECT * FROM vendedores");
+    const [result] = await db.query("SELECT * FROM VENDEDOR");
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener vendedores" });
@@ -12,13 +12,51 @@ export const obtenerVendedores = async (req, res) => {
 
 // POST
 export const crearVendedor = async (req, res) => {
-  const { nombre, correo, telefono } = req.body;
+  const {
+    nombre_vendedor,
+    correo_vendedor,
+    telefono_vendedor,
+    clave_vendedor,
+    estado_vendedor,
+    nombre_empresa,
+    tipo_empresa,
+    logo_empresa,
+    correo_empresa,
+    telefono_empresa,
+    pais_empresa,
+    ciudad_empresa,
+    direccion_empresa,
+    banner_empresa,
+    PLANES_PAGO_codigo_plan,
+  } = req.body;
+
   try {
     const [result] = await db.query(
-      "INSERT INTO vendedores (nombre, correo, telefono) VALUES (?, ?, ?)",
-      [nombre, correo, telefono]
+      `INSERT INTO VENDEDOR (
+        nombre_vendedor, correo_vendedor, telefono_vendedor, clave_vendedor, estado_vendedor,
+        nombre_empresa, tipo_empresa, logo_empresa, correo_empresa, telefono_empresa,
+        pais_empresa, ciudad_empresa, direccion_empresa, banner_empresa, PLANES_PAGO_codigo_plan
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        nombre_vendedor,
+        correo_vendedor,
+        telefono_vendedor,
+        clave_vendedor,
+        estado_vendedor,
+        nombre_empresa,
+        tipo_empresa,
+        logo_empresa,
+        correo_empresa,
+        telefono_empresa,
+        pais_empresa,
+        ciudad_empresa,
+        direccion_empresa,
+        banner_empresa,
+        PLANES_PAGO_codigo_plan,
+      ]
     );
-    res.json({ id: result.insertId, nombre, correo, telefono });
+
+    res.json({ id: result.insertId });
   } catch (error) {
     res.status(500).json({ error: "Error al crear vendedor" });
   }
@@ -27,13 +65,51 @@ export const crearVendedor = async (req, res) => {
 // PUT
 export const actualizarVendedor = async (req, res) => {
   const { id } = req.params;
-  const { nombre, correo, telefono } = req.body;
+  const {
+    nombre_vendedor,
+    correo_vendedor,
+    telefono_vendedor,
+    clave_vendedor,
+    estado_vendedor,
+    nombre_empresa,
+    tipo_empresa,
+    logo_empresa,
+    correo_empresa,
+    telefono_empresa,
+    pais_empresa,
+    ciudad_empresa,
+    direccion_empresa,
+    banner_empresa,
+    PLANES_PAGO_codigo_plan,
+  } = req.body;
+
   try {
     await db.query(
-      "UPDATE vendedores SET nombre = ?, correo = ?, telefono = ? WHERE id = ?",
-      [nombre, correo, telefono, id]
+      `UPDATE VENDEDOR SET
+        nombre_vendedor = ?, correo_vendedor = ?, telefono_vendedor = ?, clave_vendedor = ?, estado_vendedor = ?,
+        nombre_empresa = ?, tipo_empresa = ?, logo_empresa = ?, correo_empresa = ?, telefono_empresa = ?,
+        pais_empresa = ?, ciudad_empresa = ?, direccion_empresa = ?, banner_empresa = ?, PLANES_PAGO_codigo_plan = ?
+      WHERE codigo_vendedore = ?`,
+      [
+        nombre_vendedor,
+        correo_vendedor,
+        telefono_vendedor,
+        clave_vendedor,
+        estado_vendedor,
+        nombre_empresa,
+        tipo_empresa,
+        logo_empresa,
+        correo_empresa,
+        telefono_empresa,
+        pais_empresa,
+        ciudad_empresa,
+        direccion_empresa,
+        banner_empresa,
+        PLANES_PAGO_codigo_plan,
+        id,
+      ]
     );
-    res.json({ id, nombre, correo, telefono });
+    res.json({ id });
   } catch (error) {
     res.status(500).json({ error: "Error al actualizar vendedor" });
   }
@@ -43,7 +119,7 @@ export const actualizarVendedor = async (req, res) => {
 export const eliminarVendedor = async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query("DELETE FROM vendedores WHERE id = ?", [id]);
+    await db.query("DELETE FROM VENDEDOR WHERE codigo_vendedore = ?", [id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar vendedor" });

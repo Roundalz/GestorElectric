@@ -7,6 +7,7 @@ function Logs() {
     usuario: "",
     accion: "",
     fecha: "",
+    tipo: "",
   });
 
   // GET: Obtener todos los logs
@@ -28,23 +29,24 @@ function Logs() {
   };
 
   const logsFiltrados = logs.filter((log) =>
-    log.usuario.toLowerCase().includes(filtros.usuario) &&
+    log.usuario.toString().toLowerCase().includes(filtros.usuario) &&
     log.accion.toLowerCase().includes(filtros.accion) &&
-    new Date(log.fecha).toLocaleString().toLowerCase().includes(filtros.fecha)
+    new Date(log.fecha).toLocaleString().toLowerCase().includes(filtros.fecha) &&
+    log.tipo_log.toLowerCase().includes(filtros.tipo)
   );
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
+    <div className="p-4 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Historial de Logs</h1>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <input
           type="text"
           name="usuario"
           value={filtros.usuario}
           onChange={handleFiltroChange}
-          placeholder="Filtrar por usuario"
+          placeholder="Filtrar por usuario ID"
           className="border p-2 w-full"
         />
         <input
@@ -63,6 +65,14 @@ function Logs() {
           placeholder="Filtrar por fecha (ej: 2025-04)"
           className="border p-2 w-full"
         />
+        <input
+          type="text"
+          name="tipo"
+          value={filtros.tipo}
+          onChange={handleFiltroChange}
+          placeholder="Filtrar por tipo (evento/usuario)"
+          className="border p-2 w-full"
+        />
       </div>
 
       {/* Tabla de logs */}
@@ -70,8 +80,9 @@ function Logs() {
         <thead className="bg-gray-100">
           <tr>
             <th className="p-2 border">ID</th>
+            <th className="p-2 border">Tipo</th>
             <th className="p-2 border">Acción</th>
-            <th className="p-2 border">Usuario</th>
+            <th className="p-2 border">Usuario ID</th>
             <th className="p-2 border">Fecha</th>
             <th className="p-2 border">Detalles</th>
           </tr>
@@ -79,8 +90,9 @@ function Logs() {
         <tbody>
           {logsFiltrados.length > 0 ? (
             logsFiltrados.map((log) => (
-              <tr key={log.id}>
+              <tr key={`${log.tipo_log}-${log.id}`}>
                 <td className="p-2 border">{log.id}</td>
+                <td className="p-2 border capitalize">{log.tipo_log}</td>
                 <td className="p-2 border">{log.accion}</td>
                 <td className="p-2 border">{log.usuario}</td>
                 <td className="p-2 border">
@@ -91,7 +103,7 @@ function Logs() {
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="text-center py-4">
+              <td colSpan="6" className="text-center py-4">
                 No se encontraron logs con los filtros aplicados.
               </td>
             </tr>

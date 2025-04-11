@@ -3,11 +3,26 @@ import { useEffect, useState } from "react";
 
 function CrudVendedores() {
   const [vendedores, setVendedores] = useState([]);
-  const [form, setForm] = useState({ nombre: "", correo: "", telefono: "" });
+  const [form, setForm] = useState({
+    nombre_vendedor: "",
+    correo_vendedor: "",
+    telefono_vendedor: "",
+    clave_vendedor: "",
+    estado_vendedor: "",
+    nombre_empresa: "",
+    tipo_empresa: "",
+    logo_empresa: "",
+    correo_empresa: "",
+    telefono_empresa: "",
+    pais_empresa: "",
+    ciudad_empresa: "",
+    direccion_empresa: "",
+    banner_empresa: "",
+    PLANES_PAGO_codigo_plan: "",
+  });
   const [modoEditar, setModoEditar] = useState(false);
   const [vendedorActual, setVendedorActual] = useState(null);
 
-  // GET: Obtener vendedores
   const obtenerVendedores = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/vendedores");
@@ -21,30 +36,59 @@ function CrudVendedores() {
     obtenerVendedores();
   }, []);
 
-  // POST: Crear nuevo vendedor
   const crearVendedor = async () => {
     try {
       await axios.post("http://localhost:5000/api/vendedores", form);
       obtenerVendedores();
-      setForm({ nombre: "", correo: "", telefono: "" });
+      setForm({
+        nombre_vendedor: "",
+        correo_vendedor: "",
+        telefono_vendedor: "",
+        clave_vendedor: "",
+        estado_vendedor: "",
+        nombre_empresa: "",
+        tipo_empresa: "",
+        logo_empresa: "",
+        correo_empresa: "",
+        telefono_empresa: "",
+        pais_empresa: "",
+        ciudad_empresa: "",
+        direccion_empresa: "",
+        banner_empresa: "",
+        PLANES_PAGO_codigo_plan: "",
+      });
     } catch (error) {
       console.error("Error al crear vendedor:", error);
     }
   };
 
-  // PUT: Editar vendedor
   const actualizarVendedor = async () => {
     try {
       await axios.put(`http://localhost:5000/api/vendedores/${vendedorActual}`, form);
       obtenerVendedores();
       setModoEditar(false);
-      setForm({ nombre: "", correo: "", telefono: "" });
+      setForm({
+        nombre_vendedor: "",
+        correo_vendedor: "",
+        telefono_vendedor: "",
+        clave_vendedor: "",
+        estado_vendedor: "",
+        nombre_empresa: "",
+        tipo_empresa: "",
+        logo_empresa: "",
+        correo_empresa: "",
+        telefono_empresa: "",
+        pais_empresa: "",
+        ciudad_empresa: "",
+        direccion_empresa: "",
+        banner_empresa: "",
+        PLANES_PAGO_codigo_plan: "",
+      });
     } catch (error) {
       console.error("Error al actualizar vendedor:", error);
     }
   };
 
-  // DELETE: Eliminar vendedor
   const eliminarVendedor = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/vendedores/${id}`);
@@ -67,32 +111,33 @@ function CrudVendedores() {
     <div className="p-4 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">{modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}</h1>
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
+        {/** aquí puedes mapear inputs dinámicamente si quieres, pero te muestro algunos */}
         <input
-          name="nombre"
-          value={form.nombre}
+          name="nombre_vendedor"
+          value={form.nombre_vendedor}
           onChange={handleChange}
           placeholder="Nombre del vendedor"
           className="border p-2 w-full"
           required
         />
         <input
-          name="correo"
-          value={form.correo}
+          name="correo_vendedor"
+          value={form.correo_vendedor}
           onChange={handleChange}
-          placeholder="Correo electrónico"
+          placeholder="Correo vendedor"
           type="email"
           className="border p-2 w-full"
           required
         />
         <input
-          name="telefono"
-          value={form.telefono}
+          name="telefono_vendedor"
+          value={form.telefono_vendedor}
           onChange={handleChange}
-          placeholder="Teléfono"
-          type="tel"
+          placeholder="Teléfono vendedor"
           className="border p-2 w-full"
           required
         />
+        {/* y así sucesivamente para todos los campos... */}
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
           {modoEditar ? "Actualizar" : "Crear"}
         </button>
@@ -105,33 +150,30 @@ function CrudVendedores() {
             <th className="p-2 border">Nombre</th>
             <th className="p-2 border">Correo</th>
             <th className="p-2 border">Teléfono</th>
+            <th className="p-2 border">Empresa</th>
             <th className="p-2 border">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {vendedores.map((vendedor) => (
-            <tr key={vendedor.id}>
-              <td className="p-2 border">{vendedor.nombre}</td>
-              <td className="p-2 border">{vendedor.correo}</td>
-              <td className="p-2 border">{vendedor.telefono}</td>
+            <tr key={vendedor.codigo_vendedore}>
+              <td className="p-2 border">{vendedor.nombre_vendedor}</td>
+              <td className="p-2 border">{vendedor.correo_vendedor}</td>
+              <td className="p-2 border">{vendedor.telefono_vendedor}</td>
+              <td className="p-2 border">{vendedor.nombre_empresa}</td>
               <td className="p-2 border space-x-2">
                 <button
                   onClick={() => {
                     setModoEditar(true);
-                    setForm({
-                      nombre: vendedor.nombre,
-                      correo: vendedor.correo,
-                      telefono: vendedor.telefono,
-                    });
-                    setVendedorActual(vendedor.id);
+                    setForm(vendedor);
+                    setVendedorActual(vendedor.codigo_vendedore);
                   }}
                   className="bg-yellow-500 text-white px-2 py-1 rounded"
                 >
                   Editar
                 </button>
-
                 <button
-                  onClick={() => eliminarVendedor(vendedor.id)}
+                  onClick={() => eliminarVendedor(vendedor.codigo_vendedore)}
                   className="bg-red-600 text-white px-2 py-1 rounded"
                 >
                   Eliminar
