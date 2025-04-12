@@ -1,0 +1,20 @@
+# Dockerfile.dev para desarrollo del frontend con Vite
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar solo package.json y package-lock.json para aprovechar el cache
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copiar el resto del código fuente
+COPY . .
+
+# Exponer el puerto que usa Vite (por defecto 5173)
+EXPOSE 5173
+
+# Opcional: Forzar el polling (útil en algunos entornos Docker/WSL)
+ENV CHOKIDAR_USEPOLLING=true
+
+# Ejecuta Vite en modo desarrollo
+CMD ["npm", "run", "dev"]

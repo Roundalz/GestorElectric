@@ -1,11 +1,19 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> ronald
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
-    depends_on:
-      - orquestador
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     networks:
       - app_network
     environment:
@@ -16,6 +24,7 @@ services:
     ports:
       - "5000:5000"
     depends_on:
+<<<<<<< HEAD
       postgres_db:
         condition: service_healthy
       portal:
@@ -28,6 +37,16 @@ services:
       DB_NAME: gestor_nuevo
       NODE_ENV: development
       PORTAL_SERVICE_URL: http://portal:5100
+=======
+      postgres:
+        condition: service_healthy   # Espera a que PostgreSQL pase el healthcheck
+    environment:
+      DB_HOST: postgres              # Usa el nombre del servicio como host
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'gestor_nuevo'
+>>>>>>> ronald
     networks:
       - app_network
     healthcheck:
@@ -41,10 +60,17 @@ services:
     ports:
       - "5001:5001"
     depends_on:
+<<<<<<< HEAD
       postgres_db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://postgres:123456@postgres_db:5432/gestor_nuevo
+=======
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
+>>>>>>> ronald
     networks:
       - app_network
 
@@ -84,26 +110,56 @@ services:
   postgres_db:
     image: postgres:15
     restart: always
+<<<<<<< HEAD
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: gestor_nuevo
+=======
+>>>>>>> ronald
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'gestor_nuevo'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app_network
     healthcheck:
+<<<<<<< HEAD
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+=======
+      test: ["CMD-SHELL", "pg_isready -U root -d gestor_nuevo"]
+>>>>>>> ronald
       interval: 10s
-      retries: 5
       timeout: 5s
+<<<<<<< HEAD
       
+=======
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "8080:80"         # Ahora pgAdmin se expone en el puerto 8080 en el host
+    depends_on:
+      - postgres
+    networks:
+      - app_network
+>>>>>>> ronald
 
 volumes:
   pgdata:
 
 networks:
+<<<<<<< HEAD
   app_network:
     driver: bridge
+=======
+  app_network:
+>>>>>>> ronald

@@ -1,21 +1,30 @@
-import { auth, googleProvider } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
+import { useState } from "react";
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
-const Login = () => {
-  const signInWithGoogle = async () => {
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      await signInWithPopup(auth, googleProvider);
-      console.log("Usuario autenticado con éxito");
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Usuario autenticado:", result.user);
+      // Redirigir o guardar el token aquí si lo necesitas
     } catch (error) {
-      console.error("Error en autenticación:", error);
+      alert("Error al iniciar sesión: " + error.message);
     }
   };
 
   return (
-    <button onClick={signInWithGoogle}>
-      Iniciar sesión con Google
-    </button>
+    <form onSubmit={handleLogin}>
+      <h2>Iniciar Sesión</h2>
+      <input type="email" placeholder="Correo" onChange={e => setEmail(e.target.value)} required />
+      <input type="password" placeholder="Contraseña" onChange={e => setPassword(e.target.value)} required />
+      <button type="submit">Ingresar</button>
+    </form>
   );
-};
+}
 
 export default Login;

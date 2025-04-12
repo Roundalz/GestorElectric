@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import testController from './controllers/testController.js';
+import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
 
 import pool from './database.js'; // Importar el pool de conexiones
 
@@ -15,12 +16,20 @@ app.use(cors({
   credentials: true
 }));
 
+// Rutas de CRUD para SERVICIO
+app.use("/api/servicios", servicioRoutes);
+
+// Proxy de rutas hacia los microservicios
+import autenticacionRouter from './routes/autenticacion.js';
+app.use("/api/auth", autenticacionRouter);
+
 
 // Rutas principales del orquestador
 app.get("/", (req, res) => {
   res.send("Orquestador funcionando 🚀");
 });
 
+<<<<<<< HEAD
 // Proxy de rutas hacia los microservicios
 import autenticacionRouter from './routes/autenticacion.js';
 app.use("/api/auth", autenticacionRouter);
@@ -29,6 +38,8 @@ app.use("/api/auth", autenticacionRouter);
 import portalRouter from './routes/portal.js';
 app.use("/api/portales", portalRouter);
 
+=======
+>>>>>>> ronald
 // Puerto del servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
