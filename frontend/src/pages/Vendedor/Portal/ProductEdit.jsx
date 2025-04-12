@@ -12,7 +12,7 @@ const ProductEditor = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`/api/portales/${vendedorId}/productos`) // Usa ruta relativa con proxy
+        const response = await fetch(`${baseURL}/api/portales/${vendedorId}/productos`) // Usa ruta relativa con proxy
                                 .then(response => {
                                   if (!response.ok) throw new Error('Network response was not ok')
                                   const contentType = response.headers.get('content-type')
@@ -35,7 +35,7 @@ const ProductEditor = () => {
 
   const handleUpdateProduct = async (productId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/productos/${productId}`, {
+      const response = await fetch(`${baseURL}/api/productos/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

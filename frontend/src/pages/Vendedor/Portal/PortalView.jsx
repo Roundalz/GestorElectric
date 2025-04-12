@@ -12,7 +12,7 @@ const PortalView = () => {
   useEffect(() => {
     const loadPortalData = async () => {
       try {
-        const response = await fetch(`/api/portales/${vendedorId}/view`, {
+        const response = await fetch(`${baseURL}/api/portales/${vendedorId}/view`, {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
