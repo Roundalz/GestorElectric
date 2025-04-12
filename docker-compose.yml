@@ -1,12 +1,15 @@
-version: '3.8'
-
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
-    depends_on:
-      - orquestador
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     networks:
       - app_network
 
@@ -16,13 +19,13 @@ services:
       - "5000:5000"
     depends_on:
       postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+        condition: service_healthy   # Espera a que PostgreSQL pase el healthcheck
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres              # Usa el nombre del servicio como host
       DB_PORT: 5432
-      DB_USER: postgres
+      DB_USER: root
       DB_PASSWORD: 'admin'
-      DB_NAME: 'EMPRESA_CHUNO'
+      DB_NAME: 'gestor_nuevo'
     networks:
       - app_network
 
@@ -32,9 +35,9 @@ services:
       - "5001:5001"
     depends_on:
       postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgres://postgres:admin@postgres:5432/EMPRESA_CHUNO
+      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
     networks:
       - app_network
 
@@ -42,23 +45,33 @@ services:
     image: postgres:15
     container_name: postgres_db
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 'admin'
-      POSTGRES_DB: 'EMPRESA_CHUNO'
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'gestor_nuevo'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app_network
-    healthcheck:   # <---- SE AGREGA ESTO
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d gestor_nuevo"]
       interval: 10s
-      retries: 5
       timeout: 5s
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "8080:80"         # Ahora pgAdmin se expone en el puerto 8080 en el host
+    depends_on:
+      - postgres
+    networks:
+      - app_network
 
 volumes:
   pgdata:
