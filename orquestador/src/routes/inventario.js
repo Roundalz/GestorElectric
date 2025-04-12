@@ -1,12 +1,29 @@
-const express = require('express');
-const router = express.Router();
-const productosController = require('../controllers/inventarioController');
+import express from 'express';
+import inventarioController from '../controllers/inventarioController.js';
 
-// Redirigir CRUD al microservicio de productos
-router.get('/', productosController.listar);
-router.get('/:id', productosController.obtener);
-router.post('/', productosController.crear);
-router.put('/:id', productosController.actualizar);
-router.delete('/:id', productosController.eliminar);
+const router = express.Router(); // Aquí se crea el objeto router
 
-module.exports = router;
+// Ruta de prueba para el microservicio de inventario
+router.get('/test', (req, res) => {
+  res.json({ message: 'Inventario test OK' });
+});;
+  
+
+// Ruta para listar todos los productos
+router.get('/productos', inventarioController.getAllProductos);
+
+// Ruta para obtener un producto específico
+router.get('/productos/:id', inventarioController.getProductoById);
+
+// Ruta para crear un nuevo producto
+router.post('/productos', inventarioController.createProducto);
+
+// Ruta para actualizar un producto existente
+router.put('/productos/:id', inventarioController.updateProducto);
+
+// Ruta para eliminar un producto
+router.delete('/productos/:id', inventarioController.deleteProducto);
+
+ // Habilitar CORS para todas las rutas
+
+export default router;

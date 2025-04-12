@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build: ./frontend
@@ -16,15 +14,17 @@ services:
       - "5000:5000"
     depends_on:
       postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+        condition: service_healthy
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: 'admin'
-      DB_NAME: 'EMPRESA_CHUNO'
+      DB_PASSWORD: '10905114lp'
+      DB_NAME: 'GESTOR_ELECTRIC'
+      INVENTARIO_SERVICE_URL: http://inventario:3001
     networks:
       - app_network
+
 
   autenticacion:
     build: ./servicios/autenticacion
@@ -34,7 +34,23 @@ services:
       postgres:
         condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
     environment:
-      DATABASE_URL: postgres://postgres:admin@postgres:5432/EMPRESA_CHUNO
+      DATABASE_URL: postgres://postgres:10905114lp@postgres:5432/GESTOR_ELECTRIC
+
+    networks:
+      - app_network
+
+  inventario:
+    build: ./servicios/inventario  # <--- ruta del microservicio
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: '10905114lp'
+      DB_NAME: 'GESTOR_ELECTRIC'
     networks:
       - app_network
 
@@ -44,12 +60,13 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 'admin'
-      POSTGRES_DB: 'EMPRESA_CHUNO'
+      POSTGRES_PASSWORD: '10905114lp'
+      POSTGRES_DB: 'GESTOR_ELECTRIC'
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - app_network
     healthcheck:   # <---- SE AGREGA ESTO

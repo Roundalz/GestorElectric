@@ -3,6 +3,8 @@ FROM node:18 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
+RUN npm install qrcode.react
+RUN npm install react-barcode
 COPY . .
 RUN npm run build
 
