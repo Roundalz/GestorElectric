@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyB-sItsZ_1YgColAz06v3kNKAXec8YQYrc",
   authDomain: "gestorelectric-dpsk.firebaseapp.com",

@@ -64,11 +64,27 @@ function Home() {
   return (
     
     <div>
-      <h1>Bienvenido {user ? user.nombre_cliente : 'Invitado'}</h1>
-      {user && (
-        <p>Tu ID de cliente es: {user.codigo_cliente}</p>
-      )}
-      {/* El resto de tu contenido */}
+      {user ? (
+  <>
+    <h1>
+      Bienvenido,{" "}
+      {user.role === 'admin'
+        ? user.nombre || user.email
+        : user.nombre_cliente || user.nombre_vendedor}
+    </h1>
+    {user.role === 'cliente' ? (
+      <p>ID de cliente: {user.codigo_cliente}</p>
+    ) : user.role === 'vendedor' ? (
+      <p>ID de vendedor: {user.codigo_vendedore}</p>
+    ) : user.role === 'admin' ? (
+      <p>ID de admin: {user.uid}</p>
+    ) : null}
+  </>
+) : (
+  <h1>Bienvenido, Invitado</h1>
+)}
+{/* Resto del contenido de la página */}
+
       <h1>Lista de Servicioooos</h1>
       <ul>
         {servicios.map((servicio) => (

@@ -1,13 +1,19 @@
-// orquestador/src/routes/autenticacion.js
 import express from 'express';
-import { registerCliente, loginCliente } from '../controllers/autenticacionController.js';
+import {
+  registerCliente,
+  registerVendedor,
+  loginCliente,
+  loginVendedor
+} from '../controllers/autenticacionController.js';
 
 const router = express.Router();
 
-// Ruta para registro
-router.post('/register', registerCliente);
+// RUTAS DE REGISTRO
+router.post('/register/cliente', registerCliente);
+router.post('/register/vendedor', registerVendedor);
 
-// Ruta para login
-router.post('/login', loginCliente);
+// RUTAS DE LOGIN
+router.post('/login/cliente', loginCliente);
+router.post('/login/vendedor', loginVendedor);
 
 export default router;
