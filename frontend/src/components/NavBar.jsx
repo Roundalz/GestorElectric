@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import "./NavBar.css"; // Agregar estilos si es necesario
+import "./NavBar.css";
+import { AuthContext } from "../context/AuthContext"; // Ajusta el path según tu estructura
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
 
 function NavBar() {
   const [rol, setRol] = useState("admin"); // Opciones: 'admin', 'cliente', 'vendedor'
+  const { user, setUser } = useContext(AuthContext);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -15,13 +28,25 @@ function NavBar() {
         <option value="vendedor">Vendedor</option>
       </select>
 
+      {/* Sección de autenticación */}
+      <div className="auth-section">
+        {user ? (
+          <>
+            <span>Bienvenido, {user.nombre_cliente || user.email}</span>
+            <button onClick={handleLogout}>Cerrar Sesión</button>
+          </>
+        ) : (
+          <Link to="/login">Iniciar Sesión</Link>
+        )}
+      </div>
+
       <ul className="nav-links">
         {rol === "admin" && (
           <>
             <li><Link to="/">Home</Link></li>
             <li><Link to="/about">About</Link></li>
             <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Login</Link></li>
+            <li><Link to="/register">Register</Link></li>
             <li><Link to="/admin/clientes">Clientes</Link></li>
             <li><Link to="/admin/plan-pagos">Plan de Pagos</Link></li>
             <li><Link to="/admin/vendedores">Vendedores</Link></li>

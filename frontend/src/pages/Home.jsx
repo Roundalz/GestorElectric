@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 function Home() {
   const [servicios, setServicios] = useState([]);
+  const { user } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     codigo_servicio: '',
     nombre_servicio: '',
@@ -59,8 +62,14 @@ function Home() {
   };
 
   return (
+    
     <div>
-      <h1>Lista de Serviss</h1>
+      <h1>Bienvenido {user ? user.nombre_cliente : 'Invitado'}</h1>
+      {user && (
+        <p>Tu ID de cliente es: {user.codigo_cliente}</p>
+      )}
+      {/* El resto de tu contenido */}
+      <h1>Lista de Servicioooos</h1>
       <ul>
         {servicios.map((servicio) => (
           <li key={servicio.codigo_servicio}>

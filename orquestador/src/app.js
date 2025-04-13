@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import testController from './controllers/testController.js';
 import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
+import autenticacionRouter from './routes/autenticacion.js';
+
 
 import pool from './database.js'; // Importar el pool de conexiones
 
@@ -17,7 +19,6 @@ app.use('/api', testController);
 app.use("/api/servicios", servicioRoutes);
 
 // Proxy de rutas hacia los microservicios
-import autenticacionRouter from './routes/autenticacion.js';
 app.use("/api/auth", autenticacionRouter);
 
 

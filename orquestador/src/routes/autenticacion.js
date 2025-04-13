@@ -1,10 +1,13 @@
+// orquestador/src/routes/autenticacion.js
 import express from 'express';
+import { registerCliente, loginCliente } from '../controllers/autenticacionController.js';
+
 const router = express.Router();
 
-// Aquí definimos las rutas para autenticación
-router.get('/login', (req, res) => {
-  res.send('Login route');
-});
+// Ruta para registro
+router.post('/register', registerCliente);
 
-// Exportar el router
+// Ruta para login
+router.post('/login', loginCliente);
+
 export default router;
