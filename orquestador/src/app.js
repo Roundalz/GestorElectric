@@ -9,7 +9,8 @@ import pedidoRoutes from './routes/pedidoRoutes.js';
 import productoRoutes from './routes/productoRoutes.js';
 import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
 
-
+import testController from "./controllers/testController.js";
+import clientes from "./routes/clientes.js";
 
 import pool from './database.js'; // Importar el pool de conexiones
 
@@ -18,10 +19,15 @@ const app = express();
 // Middleware
 app.use(cors()); // Permitir solicitudes desde el frontend
 app.use(express.json()); // Habilitar JSON en requests
-app.use('/api', testController);
+
+// Rutas de prueba (o cualquier endpoint de prueba)
+app.use("/api", testController);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
+
+// Rutas de CRUD para CLIENTES
+app.use("/api/clientes", clientes); // <-- monta tus rutas de clientes aquí
 
 // Proxy de rutas hacia los microservicios
 app.use("/api/auth", autenticacionRouter);
