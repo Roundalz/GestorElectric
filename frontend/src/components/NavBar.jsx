@@ -47,7 +47,9 @@ function NavBar() {
             <li><Link to="/vendedor/dashboard">Dashboard</Link></li>
             <li><Link to="/vendedor/inventario">Inventario</Link></li>
             <li><Link to="/vendedor/perfil">Perfil</Link></li>
-            <li><Link to="/vendedor/portal">Portal</Link></li>
+            <li><Link to="/vendedor/Portal/view">Vista</Link></li>
+            <li><Link to="/vendedor/Portal/config">Config</Link></li>
+            <li><Link to="/vendedor/Portal/productos">Productos</Link></li>
             <li><Link to="/vendedor/ventas">Ventas</Link></li>
           </>
         )}

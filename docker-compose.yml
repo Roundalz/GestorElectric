@@ -24,7 +24,7 @@ services:
       DB_HOST: postgres              # Usa el nombre del servicio como host
       DB_PORT: 5432
       DB_USER: root
-      DB_PASSWORD: 'admin'
+      DB_PASSWORD: 123456
       DB_NAME: 'gestor_nuevo'
     networks:
       - app_network
@@ -37,7 +37,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
+      DATABASE_URL: postgres://postgres:admin@postgres:5432/gestor_nuevo
     networks:
       - app_network
 
@@ -49,7 +49,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: root
-      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: 'gestor_nuevo'
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -65,7 +65,7 @@ services:
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
-      PGADMIN_DEFAULT_PASSWORD: "admin"
+      PGADMIN_DEFAULT_PASSWORD: 123456
     ports:
       - "8080:80"         # Ahora pgAdmin se expone en el puerto 8080 en el host
     depends_on:
