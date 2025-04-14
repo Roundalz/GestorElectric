@@ -3,6 +3,7 @@ import express from "express";
 import testController from "./controllers/testController.js";
 import autenticacionRouter from "./routes/autenticacion.js";
 import clientes from "./routes/clientesRoutes.js";
+import planPagosRoutes from "./routes/planPagosRoutes.js";
 import servicioRoutes from "./routes/servicioRoutes.js";
 
 const app = express();
@@ -13,6 +14,9 @@ app.use(express.json()); // Habilitar JSON en requests
 
 // Rutas de prueba (o cualquier endpoint de prueba)
 app.use("/api", testController);
+
+// Luego de otros `app.use`, monta esto:
+app.use("/api/planes", planPagosRoutes);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
