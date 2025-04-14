@@ -54,9 +54,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Importar rutas
-import servicioRoutes from './routes/servicioRoutes.js';
 import portalRouter from './routes/portal.js';
-import autenticacionRouter from './routes/autenticacion.js';
 
 // Usar rutas
 app.use("/api/servicios", servicioRoutes);
