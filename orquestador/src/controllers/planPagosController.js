@@ -22,9 +22,7 @@ export const crearPlan = async (req, res) => {
   } = req.body;
   try {
     const [result] = await db.query(
-      `INSERT INTO planes_pago 
-      (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan) 
-      VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO planes_pago (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan) VALUES (?, ?, ?, ?, ?, ?)`,
       [
         nombre_plan,
         descripcion,
@@ -34,6 +32,7 @@ export const crearPlan = async (req, res) => {
         fecha_expiracion_plan,
       ]
     );
+
     res.json({
       codigo_plan: result.insertId,
       nombre_plan,
@@ -61,9 +60,7 @@ export const actualizarPlan = async (req, res) => {
   } = req.body;
   try {
     await db.query(
-      `UPDATE planes_pago 
-       SET nombre_plan = ?, descripcion = ?, precio_m_s_a = ?, comision_venta = ?, max_productos = ?, fecha_expiracion_plan = ? 
-       WHERE codigo_plan = ?`,
+      `UPDATE planes_pago SET nombre_plan = ?, descripcion = ?, precio_m_s_a = ?, comision_venta = ?, max_productos = ?, fecha_expiracion_plan = ? WHERE codigo_plan = ?`,
       [
         nombre_plan,
         descripcion,
