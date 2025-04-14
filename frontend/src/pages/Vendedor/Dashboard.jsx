@@ -109,7 +109,10 @@ const Dashboard = () => {
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
                       <Pie
-                        data={data.gastosCategoria}
+                        data={data.gastosCategoria.map(item => ({
+                          ...item,
+                          valor: Number(item.valor) // Asegura que valor sea numérico
+                        }))}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -123,11 +126,17 @@ const Dashboard = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip 
+                        formatter={(value) => [`$${value.toLocaleString()}`, 'Valor']}
+                        labelFormatter={(label) => `Categoría: ${label}`}
+                      />
+                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="no-data-message">No hay datos de gastos por categoría disponibles</div>
+                  <div className="no-data-message">
+                    No hay datos de gastos por categoría disponibles
+                  </div>
                 )}
               </div>
             </div>
@@ -283,65 +292,132 @@ const Dashboard = () => {
           </>
         )}
 
-        {activeTab === 'clientes' && (
-          <>
-            <div className="dashboard-section">
-              <h2>Clientes Recurrentes</h2>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={data.clientesRecurrentes}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="nombre" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="compras" fill="#3F51B5" name="Compras realizadas" />
-                    <Bar dataKey="valor_total" fill="#009688" name="Valor total ($)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="dashboard-section">
-              <h2>Valor por Cliente</h2>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    layout="vertical"
-                    data={data.clientesRecurrentes.slice(0, 5)}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="nombre" type="category" width={150} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="valor_total" fill="#FF9800" name="Valor generado ($)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="dashboard-section">
-              <h2>Cumpleaños de Clientes</h2>
-              <div className="birthdays-list">
-                <h3>Próximos cumpleaños</h3>
-                <ul>
-                  {data.proximosCumpleanos?.map((cliente, index) => (
-                    <li key={index}>
-                      <span className="client-name">{cliente.nombre}</span>
-                      <span className="client-birthday">
-                        {new Date(cliente.cumpleanos).toLocaleDateString('es-ES', {
-                          day: 'numeric', month: 'long'
-                        })}
-                      </span>
-                      <span className="client-email">{cliente.correo}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </>
+{activeTab === 'clientes' && (
+  <>
+    <div className="dashboard-section">
+      <h2>Clientes Recurrentes</h2>
+      <div className="chart-container">
+        {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart 
+              data={data.clientesRecurrentes.map(item => ({
+                ...item,
+                valor_total: Number(item.valor_total),
+                compras: Number(item.compras)
+              }))}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="nombre" 
+                angle={-45} 
+                textAnchor="end"
+                height={70}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis />
+              <Tooltip 
+                formatter={(value, name) => [
+                  name === 'valor_total' ? `$${value.toLocaleString()}` : value,
+                  name === 'valor_total' ? 'Valor total' : 'Compras'
+                ]}
+                labelFormatter={(label) => `Cliente: ${label}`}
+              />
+              <Legend />
+              <Bar 
+                dataKey="compras" 
+                fill="#3F51B5" 
+                name="Compras realizadas" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                dataKey="valor_total" 
+                fill="#009688" 
+                name="Valor total ($)" 
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="no-data-message">
+            No se encontraron clientes recurrentes
+          </div>
         )}
+      </div>
+    </div>
+
+    <div className="dashboard-section">
+      <h2>Valor por Cliente</h2>
+      <div className="chart-container">
+        {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              layout="vertical"
+              data={data.clientesRecurrentes
+                .map(item => ({
+                  ...item,
+                  valor_total: Number(item.valor_total)
+                }))
+                .slice(0, 5)
+              }
+              margin={{ left: 100 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis 
+                dataKey="nombre" 
+                type="category" 
+                width={150} 
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip 
+                formatter={(value) => [`$${value.toLocaleString()}`, 'Valor generado']}
+                labelFormatter={(label) => `Cliente: ${label}`}
+              />
+              <Legend />
+              <Bar 
+                dataKey="valor_total" 
+                fill="#FF9800" 
+                name="Valor generado ($)"
+                radius={[0, 4, 4, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="no-data-message">
+            No se encontraron datos de clientes
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className="dashboard-section">
+      <h2>Cumpleaños de Clientes</h2>
+      <div className="birthdays-list">
+        <h3>Próximos cumpleaños</h3>
+        {data.proximosCumpleanos && data.proximosCumpleanos.length > 0 ? (
+          <ul>
+            {data.proximosCumpleanos.map((cliente, index) => (
+              <li key={index}>
+                <span className="client-name">{cliente.nombre}</span>
+                <span className="client-birthday">
+                  {new Date(cliente.cumpleanos).toLocaleDateString('es-ES', {
+                    day: 'numeric', month: 'long'
+                  })}
+                </span>
+                <span className="client-email">{cliente.correo}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="no-data-message">
+            No hay cumpleaños próximos
+          </div>
+        )}
+      </div>
+    </div>
+  </>
+)}
       </div>
     </div>
   );

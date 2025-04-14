@@ -406,19 +406,19 @@ export const getPortalConfig = async (req, res) => {
   
         // 5. Clientes recurrentes
         pool.query(`
-            SELECT 
-                c.nombre_cliente AS nombre,
-                COUNT(p.codigo_pedido) AS compras,
-                COALESCE(SUM(p.total_pedido), 0) AS valor_total
-            FROM CLIENTE c
-            JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
-            WHERE p.VENDEDORE_codigo_vendedore = $1
-                AND p.total_pedido > 0  -- Filtra pedidos con valor
-            GROUP BY c.nombre_cliente
-            HAVING COUNT(p.codigo_pedido) > 1  -- Solo clientes con +1 compra
-            ORDER BY compras DESC
-            LIMIT 10
-            `, [vendedorId]),
+        SELECT 
+            c.nombre_cliente AS nombre,
+            COUNT(p.codigo_pedido) AS compras,
+            COALESCE(SUM(p.total_pedido), 0) AS valor_total,
+            MAX(p.fecha_pedido) AS ultima_compra
+        FROM CLIENTE c
+        JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
+        WHERE p.VENDEDORE_codigo_vendedore = $1
+            AND p.total_pedido > 0  -- Filtra pedidos con valor
+        GROUP BY c.nombre_cliente
+        ORDER BY valor_total DESC, compras DESC
+        LIMIT 10
+        `, [vendedorId]),
   
         // 6. Conversiones (favoritos vs pedidos)
         pool.query(`
