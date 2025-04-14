@@ -4,6 +4,9 @@ import cors from 'cors';
 import testController from './controllers/testController.js';
 import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
 import autenticacionRouter from './routes/autenticacion.js';
+import portalRoutes from './routes/portalRoutes.js';
+import pedidoRoutes from './routes/pedidoRoutes.js';
+import productoRoutes from './routes/productoRoutes.js';
 
 
 import pool from './database.js'; // Importar el pool de conexiones
@@ -21,6 +24,14 @@ app.use("/api/servicios", servicioRoutes);
 // Proxy de rutas hacia los microservicios
 app.use("/api/auth", autenticacionRouter);
 
+// Rutas portal
+app.use("/api/portal", portalRoutes);
+
+// Rutas portal
+app.use("/api/pedido", pedidoRoutes);
+
+// Rutas producto
+app.use("/api/producto", productoRoutes);
 
 // Rutas principales del orquestador
 app.get("/", (req, res) => {

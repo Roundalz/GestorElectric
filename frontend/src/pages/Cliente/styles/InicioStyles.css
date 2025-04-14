@@ -1,0 +1,81 @@
+/* src/styles/InicioStyles.css */
+
+.cards-container {
+    min-height: 100vh;
+    background-color: #f3f4f6; /* gray-100 */
+    padding: 2.5rem 1rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .cards-grid {
+    display: grid;
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+    grid-template-columns: repeat(3, 1fr); /* 3 cards por fila */
+  
+    /* Responsivo para tablets y móviles */
+  }
+  
+  @media (max-width: 1024px) {
+    .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .cards-grid {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 100%; /* que ocupe todo el espacio de la columna */
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.05);
+  }
+  
+  .card img {
+    width: 100%;
+    height: 12rem;
+    object-fit: cover;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-text {
+    color: #4b5563;
+  }
+  
+  .details-button {
+    background-color: #3b82f6; /* blue-500 */
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .details-button:hover {
+    background-color: #2563eb; /* blue-600 */
+  }
