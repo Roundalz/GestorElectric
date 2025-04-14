@@ -248,9 +248,26 @@ export const getPortalConfig = async (req, res) => {
       
       // 3. Obtener productos
       const productos = await pool.query(
-        'SELECT * FROM PRODUCTOS WHERE vendedor_codigo_vendedore = $1 AND estado_producto = $2',
+        `SELECT 
+           codigo_producto,
+           nombre_producto,
+           tipo_producto AS descripcion,  
+           precio_unidad_producto,
+           cantidad_disponible_producto,
+           estado_producto,
+           tipo_producto,
+           calificacion_producto,
+           descuento_producto,
+           imagen_referencia_producto
+         FROM PRODUCTOS 
+         WHERE vendedor_codigo_vendedore = $1 AND estado_producto = $2`,
         [vendedorId, 'activo']
       );
+      console.log('Productos encontrados:', productos.rows); // Debug
+    
+    if(productos.rows.length === 0) {
+      console.warn('No se encontraron productos para el vendedor:', vendedorId);
+    }
   
       res.json({
         success: true,
@@ -284,9 +301,7 @@ export const getPortalConfig = async (req, res) => {
       const fileName = `${type}_${vendedorId}_${Date.now()}.${fileExtension}`;
       const filePath = `portales/${fileName}`;
   
-      // Aquí deberías implementar la lógica para guardar el archivo
-      // Por ejemplo, usando fs para guardar localmente o un cliente S3 para AWS
-      // Este es un ejemplo básico para guardar localmente:
+
       const fs = require('fs');
       const path = require('path');
       
@@ -375,34 +390,35 @@ export const getPortalConfig = async (req, res) => {
   
         // 4. Productos mejor valorados
         pool.query(`
-          SELECT 
-            pr.nombre_producto AS nombre,
-            AVG(dp.calificacion_pedido) AS calificacion,
-            COUNT(dp.codigo_detalle_pedido) AS veces_calificado,
-            SUM(dp.cantidad_detalle_pedido) AS ventas
-          FROM PRODUCTOS pr
-          JOIN DETALLE_PEDIDO dp ON pr.codigo_producto = dp.PRODUCTOS_codigo_producto
-          WHERE pr.VENDEDOR_codigo_vendedore = $1 AND dp.calificacion_pedido > 0
-          GROUP BY pr.nombre_producto
-          HAVING COUNT(dp.codigo_detalle_pedido) > 2
-          ORDER BY calificacion DESC
-          LIMIT 10
-        `, [vendedorId]),
+        SELECT 
+          pr.nombre_producto AS nombre,
+          COALESCE(AVG(dp.calificacion_pedido)::numeric, 0) AS calificacion,
+          COUNT(dp.codigo_detalle_pedido) AS veces_calificado,
+          COALESCE(SUM(dp.cantidad_detalle_pedido), 0) AS ventas
+        FROM PRODUCTOS pr
+        LEFT JOIN DETALLE_PEDIDO dp ON pr.codigo_producto = dp.PRODUCTOS_codigo_producto
+        WHERE pr.VENDEDOR_codigo_vendedore = $1
+        GROUP BY pr.nombre_producto
+        HAVING COUNT(dp.codigo_detalle_pedido) > 0
+        ORDER BY calificacion DESC
+        LIMIT 10
+      `, [vendedorId]),
   
         // 5. Clientes recurrentes
         pool.query(`
-          SELECT 
-            c.nombre_cliente AS nombre,
-            COUNT(p.codigo_pedido) AS compras,
-            SUM(p.total_pedido) AS valor_total
-          FROM CLIENTE c
-          JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
-          WHERE p.VENDEDORE_codigo_vendedore = $1
-          GROUP BY c.nombre_cliente
-          HAVING COUNT(p.codigo_pedido) > 1
-          ORDER BY compras DESC
-          LIMIT 10
-        `, [vendedorId]),
+            SELECT 
+                c.nombre_cliente AS nombre,
+                COUNT(p.codigo_pedido) AS compras,
+                COALESCE(SUM(p.total_pedido), 0) AS valor_total
+            FROM CLIENTE c
+            JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
+            WHERE p.VENDEDORE_codigo_vendedore = $1
+                AND p.total_pedido > 0  -- Filtra pedidos con valor
+            GROUP BY c.nombre_cliente
+            HAVING COUNT(p.codigo_pedido) > 1  -- Solo clientes con +1 compra
+            ORDER BY compras DESC
+            LIMIT 10
+            `, [vendedorId]),
   
         // 6. Conversiones (favoritos vs pedidos)
         pool.query(`

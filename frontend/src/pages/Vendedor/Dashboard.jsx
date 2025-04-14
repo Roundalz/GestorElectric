@@ -31,18 +31,18 @@ const Dashboard = () => {
         setLoading(true);
         const response = await axios.get(`${baseURL}/api/portales/${vendedorId}/dashboard`);
         setData(response.data);
+        console.log('Datos de gastos por categoría:', response.data.gastosCategoria); // <-- Agrega esto
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
+  
     if (vendedorId) {
       fetchDashboardData();
     }
   }, [vendedorId, baseURL]);
-
   // Colores para gráficos
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -105,26 +105,30 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Desglose de Gastos</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <PieChart>
-                    <Pie
-                      data={data.gastosCategoria}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={150}
-                      fill="#8884d8"
-                      dataKey="valor"
-                      nameKey="categoria"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {data.gastosCategoria.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {data.gastosCategoria && data.gastosCategoria.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={data.gastosCategoria}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={150}
+                        fill="#8884d8"
+                        dataKey="valor"
+                        nameKey="categoria"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {data.gastosCategoria.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="no-data-message">No hay datos de gastos por categoría disponibles</div>
+                )}
               </div>
             </div>
 
@@ -171,18 +175,23 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Productos Mejor Valorados</h2>
               <div className="products-grid">
-                {data.productosValorados.slice(0, 5).map((producto, index) => (
-                  <div key={index} className="product-card">
-                    <h3>{producto.nombre}</h3>
-                    <div className="rating">
-                      {'★'.repeat(Math.round(producto.calificacion))}
-                      {'☆'.repeat(5 - Math.round(producto.calificacion))}
-                      <span>({producto.calificacion.toFixed(1)})</span>
+                {data.productosValorados.slice(0, 5).map((producto, index) => {
+                  // Convierte a número y maneja casos undefined/null
+                  const calificacion = Number(producto.calificacion) || 0;
+                  
+                  return (
+                    <div key={index} className="product-card">
+                      <h3>{producto.nombre}</h3>
+                      <div className="rating">
+                        {'★'.repeat(Math.round(calificacion))}
+                        {'☆'.repeat(5 - Math.round(calificacion))}
+                        <span>({calificacion.toFixed(1)})</span>
+                      </div>
+                      <p>Veces calificado: {producto.veces_calificado}</p>
+                      <p>Ventas: {producto.ventas}</p>
                     </div>
-                    <p>Veces calificado: {producto.veces_calificado}</p>
-                    <p>Ventas: {producto.ventas}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
