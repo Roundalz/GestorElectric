@@ -4,6 +4,8 @@ import cors from 'cors';
 import testController from './controllers/testController.js';
 import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
 import autenticacionRouter from './routes/autenticacion.js';
+import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
+
 
 
 import pool from './database.js'; // Importar el pool de conexiones
@@ -20,6 +22,8 @@ app.use("/api/servicios", servicioRoutes);
 
 // Proxy de rutas hacia los microservicios
 app.use("/api/auth", autenticacionRouter);
+
+app.use("/api/perfil", perfilRoutes); // Aquí se añaden las rutas para actualizar perfil
 
 
 // Rutas principales del orquestador
