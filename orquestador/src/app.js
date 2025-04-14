@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import testController from "./controllers/testController.js";
 import autenticacionRouter from "./routes/autenticacion.js";
-import clientes from "./routes/clientes.js";
+import clientes from "./routes/clientesRoutes.js";
 import servicioRoutes from "./routes/servicioRoutes.js";
 
 const app = express();
