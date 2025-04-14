@@ -21,7 +21,8 @@ export const createCliente = async (req, res) => {
   } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO cliente (nombre_cliente, correo_cliente, fecha_registro_cliente, telefono_cliente, cumpleanos_cliente, foto_perfil_cliente) 
+      `INSERT INTO cliente 
+       (nombre_cliente, correo_cliente, fecha_registro_cliente, telefono_cliente, cumpleanos_cliente, foto_perfil_cliente) 
        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5) RETURNING *`,
       [
         nombre_cliente,
@@ -31,6 +32,7 @@ export const createCliente = async (req, res) => {
         foto_perfil_cliente,
       ]
     );
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -61,6 +63,7 @@ export const updateCliente = async (req, res) => {
         id,
       ]
     );
+
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
