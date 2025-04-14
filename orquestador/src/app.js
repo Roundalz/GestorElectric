@@ -9,7 +9,6 @@ import pedidoRoutes from './routes/pedidoRoutes.js';
 import productoRoutes from './routes/productoRoutes.js';
 import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
 
-import testController from "./controllers/testController.js";
 import clientes from "./routes/clientes.js";
 
 import pool from './database.js'; // Importar el pool de conexiones
