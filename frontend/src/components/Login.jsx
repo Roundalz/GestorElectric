@@ -5,18 +5,21 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase'; // Asegúrate de exportar db en firebaseConfig.js
 import { AuthContext } from '../context/AuthContext';
+import "./Auth.css"; // Archivo CSS para estilos
+import logo from "../assets/logo.png"; // Importa el logo desde assets
+
 
 function Login() {
   const [role, setRole] = useState('cliente'); // 'cliente', 'vendedor' o 'admin'
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    clave_vendedor: '' // se usará solo para vendedor
+    clave_vendedor: ''
   });
   const [error, setError] = useState(null);
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
-
+  
   const handleChange = (e) => {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
@@ -24,7 +27,6 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // 1. Autenticación en Firebase con email y password
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const uid = userCredential.user.uid;
       console.log("Firebase auth exitosa:", uid);
@@ -35,14 +37,12 @@ function Login() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const adminData = docSnap.data();
-          // Guardamos en el contexto (incluye uid y rol, etc.)
           setUser({ uid, ...adminData, role });
-          navigate('/'); // Redirige a home
+          navigate('/');
         } else {
           setError("No se encontró registro de admin en Firestore");
         }
       } else if (role === 'cliente') {
-        // 2b. Para cliente: Llamar al endpoint del backend de clientes
         const response = await fetch('http://localhost:5000/api/auth/login/cliente', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,7 +57,6 @@ function Login() {
         setUser({ ...data, role });
         navigate('/');
       } else if (role === 'vendedor') {
-        // 2c. Para vendedor: Se requiere que además se envíe la clave de vendedor
         const response = await fetch('http://localhost:5000/api/auth/login/vendedor', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,75 +78,91 @@ function Login() {
   };
 
   return (
-    <div>
-      <h2>INICIO DE SESIÓN</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="cliente"
-              checked={role === 'cliente'}
-              onChange={() => setRole('cliente')}
-            />
-            Cliente
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="vendedor"
-              checked={role === 'vendedor'}
-              onChange={() => setRole('vendedor')}
-            />
-            Vendedor
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="admin"
-              checked={role === 'admin'}
-              onChange={() => setRole('admin')}
-            />
-            Admin
-          </label>
+    <div className="auth-container">
+      <div className="auth-left">
+        <div className="company-logo">
+          {/* Logo / Imagen */}
+          <img src={logo} alt="Company Logo" />
         </div>
-        
-        <input
-          type="email"
-          name="email"
-          placeholder="Correo"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          onChange={handleChange}
-          required
-        />
+      </div>
 
-        {role === 'vendedor' && (
+      <div className="auth-right">
+        <h2 className="auth-title">INICIO DE SESION</h2>
+        <form onSubmit={handleLogin} className="auth-form">
+          <div className="role-options">
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="cliente"
+                checked={role === 'cliente'}
+                onChange={() => setRole('cliente')}
+              />
+              Cliente
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="vendedor"
+                checked={role === 'vendedor'}
+                onChange={() => setRole('vendedor')}
+              />
+              Vendedor
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="admin"
+                checked={role === 'admin'}
+                onChange={() => setRole('admin')}
+              />
+              Admin
+            </label>
+          </div>
+          
           <input
-            type="text"
-            name="clave_vendedor"
-            placeholder="Clave de vendedor"
-            value={formData.clave_vendedor}
+            className="auth-input"
+            type="email"
+            name="email"
+            placeholder="Email address"
             onChange={handleChange}
             required
           />
-        )}
+          <input
+            className="auth-input"
+            type="password"
+            name="password"
+            placeholder="PASS"
+            onChange={handleChange}
+            required
+          />
 
-        <button type="submit">Iniciar Sesión</button>
-      </form>
+          {role === 'vendedor' && (
+            <input
+              className="auth-input"
+              type="text"
+              name="clave_vendedor"
+              placeholder="CÓDIGO DE VENDEDOR"
+              value={formData.clave_vendedor}
+              onChange={handleChange}
+              required
+            />
+          )}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>¿No tienes cuenta?
-        <button onClick={() => navigate('/register')}>Regístrate</button>
-      </p>
+          <button type="submit" className="auth-button">Continue</button>
+        </form>
+
+        {error && <p className="auth-error">{error}</p>}
+
+        <div className="auth-footer">
+          <p className="auth-disclaimer">
+            <a href="/terms">Terms of Use</a> | <a href="/privacy">Privacy Policy</a>
+          </p>
+          <p>Don't have an account? <button className="auth-switch-btn" onClick={() => navigate('/register')}>Sign Up</button></p>
+        </div>
+      </div>
     </div>
   );
 }
