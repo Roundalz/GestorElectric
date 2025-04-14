@@ -20,6 +20,7 @@ import ProductDetail from "./pages/Vendedor/ProductDetail";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Portal from "./pages/Vendedor/Portal";
 import Ventas from "./pages/Vendedor/Ventas";
+import SalesDetail from "./pages/Vendedor/SalesDetail";
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
@@ -54,6 +55,7 @@ function App() {
           <Route path="/vendedor/portal" element={<Portal />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
           <Route path="/productos/:codigoProducto" element={<ProductDetail />} />
+          <Route path="/ventas/:id" element={<SalesDetail />} />
 
           {/* Ruta para manejar páginas no encontradas */}
           <Route path="*" element={<NotFound />} />

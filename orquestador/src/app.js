@@ -3,6 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import testController from './controllers/testController.js';
 import dotenv from 'dotenv';
+import autenticacionRouter from './routes/autenticacion.js';
+import inventarioRouter from './routes/inventario.js';
+import ventasRoutes from "./routes/ventas.js"; 
+import clientesRoutes from "./routes/clientes.js"; 
 dotenv.config();
 
 import pool from './database.js'; // Importar el pool de conexiones
@@ -31,12 +35,16 @@ app.get("/", (req, res) => {
 });
 
 // Rutas de autenticación
-import autenticacionRouter from './routes/autenticacion.js';
 app.use("/api/auth", autenticacionRouter);
 
 // Rutas de inventario: Aquí se agregan las rutas que actuarán como proxy para el microservicio de inventario
-import inventarioRouter from './routes/inventario.js';
+
 app.use("/api/inventario", inventarioRouter);
+
+app.use("/api/ventas", ventasRoutes);
+
+app.use("/api/clientes", clientesRoutes); 
+
 // En tu app.js o en un archivo de rutas específico
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Orquestador funcionando correctamente" });

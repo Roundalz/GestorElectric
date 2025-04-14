@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build: ./frontend
@@ -16,15 +18,15 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres              # Mismo nombre de servicio
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: '10905114lp'
-      DB_NAME: 'GESTOR_ELECTRIC'
+      DB_USER: root                  # Cambiado a root
+      DB_PASSWORD: 'admin'           # Cambiado a 'admin'
+      DB_NAME: 'gestor_nuevo'         # Cambiado a gestor_nuevo
       INVENTARIO_SERVICE_URL: http://inventario:3001
+      VENTAS_SERVICE_URL: http://ventas:4000
     networks:
       - app_network
-
 
   autenticacion:
     build: ./servicios/autenticacion
@@ -32,15 +34,14 @@ services:
       - "5001:5001"
     depends_on:
       postgres:
-        condition: service_healthy  # Esperar a que PostgreSQL pase el healthcheck
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgres://postgres:10905114lp@postgres:5432/GESTOR_ELECTRIC
-
+      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
     networks:
       - app_network
 
   inventario:
-    build: ./servicios/inventario  # <--- ruta del microservicio
+    build: ./servicios/inventario
     ports:
       - "3001:3001"
     depends_on:
@@ -48,9 +49,24 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: '10905114lp'
-      DB_NAME: 'GESTOR_ELECTRIC'
+      DB_USER: root
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'gestor_nuevo'
+    networks:
+      - app_network
+
+  ventas:
+    build: ./servicios/ventas
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'gestor_nuevo'
     networks:
       - app_network
 
@@ -58,24 +74,35 @@ services:
     image: postgres:15
     container_name: postgres_db
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: '10905114lp'
-      POSTGRES_DB: 'GESTOR_ELECTRIC'
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'gestor_nuevo'
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./initdb:/docker-entrypoint-initdb.d
+      # Opcional: si la base de datos ya está inicializada, no es necesario montar ./initdb
+      # - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - app_network
-    healthcheck:   # <---- SE AGREGA ESTO
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d gestor_nuevo"]
       interval: 10s
       retries: 5
       timeout: 5s
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "8080:80"   # pgAdmin se expone en el puerto 8080 en el host
+    depends_on:
+      - postgres
+    networks:
+      - app_network
 
 volumes:
   pgdata:

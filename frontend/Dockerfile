@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 RUN npm install qrcode.react
 RUN npm install react-barcode
+RUN npm install exceljs
 COPY . .
 RUN npm run build
 
