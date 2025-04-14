@@ -7,6 +7,8 @@ import autenticacionRouter from './routes/autenticacion.js';
 import portalRoutes from './routes/portalRoutes.js';
 import pedidoRoutes from './routes/pedidoRoutes.js';
 import productoRoutes from './routes/productoRoutes.js';
+import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
+
 
 
 import pool from './database.js'; // Importar el pool de conexiones
@@ -32,6 +34,8 @@ app.use("/api/pedido", pedidoRoutes);
 
 // Rutas producto
 app.use("/api/producto", productoRoutes);
+app.use("/api/perfil", perfilRoutes); // Aquí se añaden las rutas para actualizar perfil
+
 
 // Rutas principales del orquestador
 app.get("/", (req, res) => {
