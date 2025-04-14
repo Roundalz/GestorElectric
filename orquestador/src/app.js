@@ -1,4 +1,3 @@
-// app.js
 import express from 'express';
 import cors from 'cors';
 import testController from './controllers/testController.js';
@@ -10,8 +9,13 @@ import productoRoutes from './routes/productoRoutes.js';
 import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
 
 import clientes from "./routes/clientes.js";
+import pool from './database.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-import pool from './database.js'; // Importar el pool de conexiones
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -41,8 +45,30 @@ app.use("/api/pedido", pedidoRoutes);
 app.use("/api/producto", productoRoutes);
 app.use("/api/perfil", perfilRoutes); // Aquí se añaden las rutas para actualizar perfil
 
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://frontend'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Disposition']
+}));
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Importar rutas
+import servicioRoutes from './routes/servicioRoutes.js';
+import portalRouter from './routes/portal.js';
+import autenticacionRouter from './routes/autenticacion.js';
 
-// Rutas principales del orquestador
+// Usar rutas
+app.use("/api/servicios", servicioRoutes);
+app.use("/api/portales", portalRouter);
+app.use("/api/auth", autenticacionRouter);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', service: 'orquestador' });
+});
+
+// Ruta principal
 app.get("/", (req, res) => {
   res.send("Orquestador funcionando 🚀");
 });

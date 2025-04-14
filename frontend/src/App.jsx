@@ -17,8 +17,12 @@ import PerfilCliente from "./pages/Cliente/Perfil";
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/Inventario";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
-import Portal from "./pages/Vendedor/Portal";
 import Ventas from "./pages/Vendedor/Ventas";
+import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
+import PortalView from './pages/Vendedor/Portal/PortalView';
+import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
+import { VendedorProvider } from '@context/vendedorContext';
+
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
@@ -26,7 +30,8 @@ import Register from "./components/Register";
 
 function App() {
   return (
-    <div className="app-container">
+    <VendedorProvider>
+      <div className="app-container">
       <NavBar />
       <div className="content">
         <Routes>
@@ -52,7 +57,9 @@ function App() {
           <Route path="/vendedor/dashboard" element={<Dashboard />} />
           <Route path="/vendedor/inventario" element={<Inventario />} />
           <Route path="/vendedor/perfil" element={<PerfilVendedor />} />
-          <Route path="/vendedor/portal" element={<Portal />} />
+          <Route path="/vendedor/portal/config" element={<ConfigPortal />} />
+          <Route path="/vendedor/portal/view" element={<PortalView />} />
+          <Route path="/vendedor/portal/productos" element={<ProductEditor />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
 
           {/* Ruta para manejar páginas no encontradas */}
@@ -60,6 +67,7 @@ function App() {
         </Routes>
       </div>
     </div>
+    </VendedorProvider>
   );
 }
 
