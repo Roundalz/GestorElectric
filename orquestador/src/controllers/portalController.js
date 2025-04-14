@@ -140,6 +140,7 @@ export const getPortalConfig = async (req, res) => {
       const values = Object.values(newConfig)
         .filter(val => val !== undefined);
   
+      // Elimina la duplicación de fecha_actualizacion
       const query = `
         UPDATE portal_configuracion
         SET ${fields}, fecha_actualizacion = NOW()
@@ -305,6 +306,165 @@ export const getPortalConfig = async (req, res) => {
       res.status(500).json({
         success: false,
         error: 'Error al subir el archivo'
+      });
+    }
+  };
+
+  //////////////DASHBOARD//////////////
+  export const getDashboardData = async (req, res) => {
+    try {
+      const vendedorId = parseInt(req.params.vendedorId);
+      
+      // Ejecutar todas las consultas en paralelo
+      const [
+        ingresosGastos,
+        ventasMensuales,
+        topProductos,
+        productosValorados,
+        clientesRecurrentes,
+        conversiones,
+        gastosCategoria,
+        proximosCumpleanos
+      ] = await Promise.all([
+        // 1. Ingresos vs Gastos mensuales
+        pool.query(`
+          SELECT 
+            DATE_TRUNC('month', t.fecha_transaccion) AS mes,
+            SUM(CASE WHEN t.tipo_transaccion = 'Ingreso' THEN t.monto ELSE 0 END) AS ingresos,
+            SUM(CASE WHEN t.tipo_transaccion = 'Gasto' THEN t.monto ELSE 0 END) AS gastos
+          FROM TRANSACCION t
+          WHERE t.VENDEDOR_codigo_vendedore = $1
+          GROUP BY mes
+          ORDER BY mes
+          LIMIT 12
+        `, [vendedorId]),
+  
+        // 2. Ventas mensuales y ticket promedio (corregido)
+        pool.query(`
+          SELECT 
+            DATE_TRUNC('month', p.fecha_pedido) AS mes,
+            COUNT(p.codigo_pedido) AS ventas,
+            SUM(p.total_pedido) AS ingresos,
+            AVG(p.total_pedido) AS ticket_promedio,
+            SUM(CASE WHEN pr.descuento_producto > 0 THEN 1 ELSE 0 END) AS ventas_con_descuento,
+            SUM(CASE WHEN pr.descuento_producto = 0 THEN 1 ELSE 0 END) AS ventas_sin_descuento
+          FROM PEDIDO p
+          JOIN DETALLE_PEDIDO dp ON p.codigo_pedido = dp.PEDIDO_codigo_pedido
+          JOIN PRODUCTOS pr ON dp.PRODUCTOS_codigo_producto = pr.codigo_producto
+          WHERE p.VENDEDORE_codigo_vendedore = $1
+          GROUP BY mes
+          ORDER BY mes
+          LIMIT 12
+        `, [vendedorId]),
+  
+        // 3. Productos más vendidos
+        pool.query(`
+          SELECT 
+            pr.nombre_producto AS nombre,
+            SUM(dp.cantidad_detalle_pedido) AS ventas,
+            SUM(dp.subtotal_detalle_pedido) AS ingresos,
+            COUNT(f.codigo_favorito) AS favoritos
+          FROM PRODUCTOS pr
+          JOIN DETALLE_PEDIDO dp ON pr.codigo_producto = dp.PRODUCTOS_codigo_producto
+          LEFT JOIN FAVORITOS f ON pr.codigo_producto = f.PRODUCTOS_codigo_producto
+          WHERE pr.VENDEDOR_codigo_vendedore = $1
+          GROUP BY pr.nombre_producto
+          ORDER BY ventas DESC
+          LIMIT 10
+        `, [vendedorId]),
+  
+        // 4. Productos mejor valorados
+        pool.query(`
+          SELECT 
+            pr.nombre_producto AS nombre,
+            AVG(dp.calificacion_pedido) AS calificacion,
+            COUNT(dp.codigo_detalle_pedido) AS veces_calificado,
+            SUM(dp.cantidad_detalle_pedido) AS ventas
+          FROM PRODUCTOS pr
+          JOIN DETALLE_PEDIDO dp ON pr.codigo_producto = dp.PRODUCTOS_codigo_producto
+          WHERE pr.VENDEDOR_codigo_vendedore = $1 AND dp.calificacion_pedido > 0
+          GROUP BY pr.nombre_producto
+          HAVING COUNT(dp.codigo_detalle_pedido) > 2
+          ORDER BY calificacion DESC
+          LIMIT 10
+        `, [vendedorId]),
+  
+        // 5. Clientes recurrentes
+        pool.query(`
+          SELECT 
+            c.nombre_cliente AS nombre,
+            COUNT(p.codigo_pedido) AS compras,
+            SUM(p.total_pedido) AS valor_total
+          FROM CLIENTE c
+          JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
+          WHERE p.VENDEDORE_codigo_vendedore = $1
+          GROUP BY c.nombre_cliente
+          HAVING COUNT(p.codigo_pedido) > 1
+          ORDER BY compras DESC
+          LIMIT 10
+        `, [vendedorId]),
+  
+        // 6. Conversiones (favoritos vs pedidos)
+        pool.query(`
+          SELECT 
+            COUNT(DISTINCT f.codigo_favorito) AS total_favoritos,
+            COUNT(DISTINCT p.codigo_pedido) AS total_pedidos,
+            ROUND(COUNT(DISTINCT p.codigo_pedido) * 100.0 / 
+                  NULLIF(COUNT(DISTINCT f.codigo_favorito), 0), 2) AS tasa_conversion
+          FROM FAVORITOS f
+          LEFT JOIN PEDIDO p ON f.CLIENTE_codigo_cliente = p.CLIENTE_codigo_cliente
+          WHERE f.PORTAL_codigo_portal IN (
+            SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1
+          )
+        `, [vendedorId]),
+  
+        // 7. Gastos por categoría
+        pool.query(`
+          SELECT 
+            s.nombre_servicio AS categoria,
+            SUM(t.monto) AS valor
+          FROM TRANSACCION t
+          JOIN SERVICIO s ON t.SERVICIO_codigo_servicio = s.codigo_servicio
+          WHERE t.VENDEDOR_codigo_vendedore = $1 AND t.tipo_transaccion = 'Gasto'
+          GROUP BY s.nombre_servicio
+          ORDER BY valor DESC
+        `, [vendedorId]),
+  
+        // 8. Próximos cumpleaños
+        pool.query(`
+          SELECT 
+            nombre_cliente AS nombre,
+            correo_cliente AS correo,
+            cumpleanos_cliente AS cumpleanos
+          FROM CLIENTE
+          WHERE codigo_cliente IN (
+            SELECT DISTINCT CLIENTE_codigo_cliente 
+            FROM PEDIDO 
+            WHERE VENDEDORE_codigo_vendedore = $1
+          )
+          AND EXTRACT(MONTH FROM cumpleanos_cliente) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '1 month')
+          ORDER BY EXTRACT(DAY FROM cumpleanos_cliente)
+          LIMIT 10
+        `, [vendedorId])
+      ]);
+  
+      res.json({
+        success: true,
+        ingresosGastos: ingresosGastos.rows,
+        ventasMensuales: ventasMensuales.rows,
+        topProductos: topProductos.rows,
+        productosValorados: productosValorados.rows,
+        clientesRecurrentes: clientesRecurrentes.rows,
+        conversiones: conversiones.rows[0],
+        gastosCategoria: gastosCategoria.rows,
+        proximosCumpleanos: proximosCumpleanos.rows
+      });
+  
+    } catch (error) {
+      console.error('Error en getDashboardData:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error al obtener datos del dashboard'
       });
     }
   };

@@ -1,14 +1,15 @@
 import express from 'express';
 import {
-    getPortalConfig,
-    getTemas,
-    updatePortalConfig,
-    getVendedorPlan,
-    getProductosPortal,
-    getPortalView,
-    updateProducto,
-    deleteProducto,
-    uploadFile
+  getPortalConfig,
+  getTemas,
+  updatePortalConfig,
+  getVendedorPlan,
+  getProductosPortal,
+  getPortalView,
+  updateProducto,
+  deleteProducto,
+  uploadFile,
+  getDashboardData
 } from '../controllers/portalController.js';
 import multer from 'multer';
 
@@ -28,6 +29,9 @@ router.delete('/productos/:productId', deleteProducto);
 
 // Uploads
 router.post('/upload', upload.single('file'), uploadFile);
+
+// Dashboard
+router.get('/:vendedorId/dashboard', getDashboardData);
 
 // Vista del portal
 router.get('/:vendedorId/view', getPortalView);

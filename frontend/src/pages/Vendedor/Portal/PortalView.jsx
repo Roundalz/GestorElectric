@@ -78,7 +78,10 @@ const PortalView = () => {
         
         {config.mostrar_busqueda && (
           <div className="portal-search">
+            <label htmlFor="portal-search-input" className="sr-only">Buscar productos</label>
             <input 
+              id="portal-search-input"
+              name="search"
               type="text" 
               placeholder="Buscar productos..." 
               value={searchTerm}

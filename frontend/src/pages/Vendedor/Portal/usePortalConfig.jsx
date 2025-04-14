@@ -55,7 +55,7 @@ export const usePortalConfig = (vendedorId) => {
     if (vendedorId) fetchData();
   }, [vendedorId, baseURL]);
 
-  const updateConfig = async (newConfig) => {
+const updateConfig = async (newConfig) => {
     try {
       const response = await axios.put(
         `${baseURL}/api/portales/portal/config`,

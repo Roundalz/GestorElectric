@@ -15,7 +15,8 @@ const ConfigPortal = () => {
     error: errorConfig, 
     updateConfig 
   } = usePortalConfig(vendedorId);
-
+  
+  const [localConfig, setLocalConfig] = useState(config);
   const [activeTab, setActiveTab] = useState('apariencia');
   const [plan, setPlan] = useState(null);
   const [portalCodigo, setPortalCodigo] = useState(null);
@@ -62,8 +63,8 @@ const ConfigPortal = () => {
   }, [vendedorId, baseURL]);
 
   const handleConfigChange = (field, value) => {
-    updateConfig({
-      ...config,
+    setLocalConfig({
+      ...localConfig,
       [field]: value
     });
   };
@@ -109,12 +110,14 @@ const ConfigPortal = () => {
         `${baseURL}/api/portales/portal/config`,
         {
           portal_codigo_portal: portalCodigo,
-          ...config
+          ...localConfig
         }
       );
       
       if (response.data.success) {
         alert('Configuración guardada exitosamente');
+        // Actualizar el config global después de guardar
+        updateConfig(localConfig);
       }
     } catch (error) {
       console.error('Error al guardar:', error);

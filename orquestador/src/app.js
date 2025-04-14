@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import pool from './database.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -8,10 +14,11 @@ const app = express();
 app.use(cors({
   origin: ['http://localhost:3000', 'http://frontend'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Disposition']
 }));
 app.use(express.json());
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Importar rutas
 import servicioRoutes from './routes/servicioRoutes.js';
 import portalRouter from './routes/portal.js';
