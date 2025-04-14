@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 
+import { useEffect, useState } from "react";
 export default function CrudCliente() {
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState({ nombre: "", correo: "", telefono: "" });
@@ -19,29 +19,42 @@ export default function CrudCliente() {
   useEffect(() => {
     obtenerClientes();
   }, []);
+// POST: Crear nuevo cliente
+const crearCliente = async () => {
+  try {
+    await axios.post("http://localhost:5000/api/clientes", {
+      nombre_cliente: form.nombre,
+      correo_cliente: form.correo,
+      telefono_cliente: form.telefono,
+      cumpleanos_cliente: null,
+      foto_perfil_cliente: null
+    });
+    obtenerClientes();
+    setForm({ nombre: "", correo: "", telefono: "" });
+  } catch (error) {
+    console.error("Error al crear cliente:", error);
+  }
+};
 
-  // POST: Crear nuevo cliente
-  const crearCliente = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/clientes", form);
-      obtenerClientes();
-      setForm({ nombre: "", correo: "", telefono: "" });
-    } catch (error) {
-      console.error("Error al crear cliente:", error);
-    }
-  };
 
-  // PUT: Editar cliente
-  const actualizarCliente = async () => {
-    try {
-      await axios.put(`http://localhost:5000/api/clientes/${clienteActual}`, form);
-      obtenerClientes();
-      setModoEditar(false);
-      setForm({ nombre: "", correo: "", telefono: "" });
-    } catch (error) {
-      console.error("Error al actualizar cliente:", error);
-    }
-  };
+// PUT: Editar cliente
+const actualizarCliente = async () => {
+  try {
+    await axios.put(`http://localhost:5000/api/clientes/${clienteActual}`, {
+      nombre_cliente: form.nombre,
+      correo_cliente: form.correo,
+      telefono_cliente: form.telefono,
+      cumpleanos_cliente: null,
+      foto_perfil_cliente: null
+    });
+    obtenerClientes();
+    setModoEditar(false);
+    setForm({ nombre: "", correo: "", telefono: "" });
+  } catch (error) {
+    console.error("Error al actualizar cliente:", error);
+  }
+};
+
 
   // DELETE: Eliminar cliente
   const eliminarCliente = async (id) => {
