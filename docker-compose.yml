@@ -23,7 +23,7 @@ services:
     environment:
       DB_HOST: postgres              # Usa el nombre del servicio como host
       DB_PORT: 5432
-      DB_USER: root
+      DB_USER: postgres
       DB_PASSWORD: 'admin'
       DB_NAME: 'gestor_nuevo'
     networks:
@@ -37,7 +37,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
+      DATABASE_URL: postgres://postgres:admin@postgres:5432/gestor_nuevo
     networks:
       - app_network
 
@@ -48,7 +48,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: root
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 'admin'
       POSTGRES_DB: 'gestor_nuevo'
     volumes:
@@ -56,7 +56,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d gestor_nuevo"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gestor_nuevo"]
       interval: 10s
       timeout: 5s
       retries: 5
