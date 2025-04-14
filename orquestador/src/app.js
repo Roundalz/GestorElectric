@@ -1,26 +1,27 @@
-// app.js
-import express from 'express';
-import cors from 'cors';
-import testController from './controllers/testController.js';
-import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
-import autenticacionRouter from './routes/autenticacion.js';
-
-
-import pool from './database.js'; // Importar el pool de conexiones
+import cors from "cors";
+import express from "express";
+import testController from "./controllers/testController.js";
+import autenticacionRouter from "./routes/autenticacion.js";
+import clientes from "./routes/clientes.js";
+import servicioRoutes from "./routes/servicioRoutes.js";
 
 const app = express();
 
 // Middleware
 app.use(cors()); // Permitir solicitudes desde el frontend
 app.use(express.json()); // Habilitar JSON en requests
-app.use('/api', testController);
+
+// Rutas de prueba (o cualquier endpoint de prueba)
+app.use("/api", testController);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
 
+// Rutas de CRUD para CLIENTES
+app.use("/api/clientes", clientes); // <-- monta tus rutas de clientes aquí
+
 // Proxy de rutas hacia los microservicios
 app.use("/api/auth", autenticacionRouter);
-
 
 // Rutas principales del orquestador
 app.get("/", (req, res) => {
