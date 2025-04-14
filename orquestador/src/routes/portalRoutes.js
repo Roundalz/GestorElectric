@@ -3,7 +3,7 @@ import express from 'express';
 import {
   getPortal,
   getPortalById
-} from '../controllers/portalController.js';
+} from '../controllers/portalController2.js';
 
 const router = express.Router();
 
