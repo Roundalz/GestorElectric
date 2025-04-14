@@ -2,8 +2,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import productoRoutes from './routes/productoRoutes.js';
-import caracteristicaRoutes from './routes/caracteristicaRoutes.js';
-import imgProductoRoutes from './routes/imgProductoRoutes.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -16,8 +14,6 @@ app.use(express.json());
 
 // Montamos las rutas del CRUD de productos bajo el prefijo "/inventario"
 app.use('/inventario', productoRoutes);
-app.use('/inventario/caracteristicas', caracteristicaRoutes);
-app.use('/inventario/imagenes', imgProductoRoutes);
 
 // Ruta raíz de prueba
 app.get('/', (req, res) => {

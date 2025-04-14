@@ -26,16 +26,16 @@ export const getVentaDetail = async (req, res) => {
   }
 };
 
-// Exportar ventas a Excel
+// Endpoint para exportar ventas a Excel
 export const exportVentas = async (req, res) => {
     try {
-      // Obtén las ventas del servicio de ventas
+      // Obtenemos las ventas (se supone que ya están filtradas por vendedor 1)
       const response = await axios.get(`${VENTAS_SERVICE_URL}/ventas`);
       const ventasData = response.data;
   
       const workbook = await exportVentasExcel(ventasData);
   
-      // Configurar headers para Excel
+      // Configuramos los headers para la descarga del archivo Excel
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -45,7 +45,7 @@ export const exportVentas = async (req, res) => {
         "attachment; filename=ventas.xlsx"
       );
   
-      // Escribir el libro al stream de respuesta
+      // Escribir el workbook al stream de respuesta y finalizar
       await workbook.xlsx.write(res);
       res.end();
     } catch (error) {
@@ -53,6 +53,7 @@ export const exportVentas = async (req, res) => {
       res.status(500).json({ error: "Error al exportar ventas", details: error.message });
     }
   };
+  
   
 
 export default { getVentas, getVentaDetail, exportVentas };

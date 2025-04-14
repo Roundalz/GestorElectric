@@ -1,18 +1,7 @@
 // models/productoModel.js
-import pool from '../database.js';
+import pool from "../database.js";
 
-export const getAllProductos = async () => {
-  const query = 'SELECT * FROM PRODUCTOS';
-  const result = await pool.query(query);
-  return result.rows;
-};
-
-export const getProductoById = async (id) => {
-  const query = 'SELECT * FROM PRODUCTOS WHERE codigo_producto = $1';
-  const result = await pool.query(query, [id]);
-  return result.rows[0];
-};
-
+// Crear producto (sin campo serial, ya que la secuencia lo autogenera)
 export const createProducto = async (data) => {
   const query = `
     INSERT INTO PRODUCTOS 
@@ -31,12 +20,87 @@ export const createProducto = async (data) => {
     data.calificacion_producto,
     data.costo_producto,
     data.descuento_producto,
-    data.VENDEDOR_codigo_vendedore,
+    data.VENDEDOR_codigo_vendedore, // Debe ser 1 para vendedor 1
     data.PORTAL_codigo_portal
   ];
   const result = await pool.query(query, values);
   return result.rows[0];
 };
+
+export const getAllProductosByVendedor = async (vendedorId = 1) => {
+  const query = `
+    SELECT 
+      p.*,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'codigo_caracteristica', c.codigo_caracteristica,
+            'nombre_caracteristica', c.nombre_caracteristica,
+            'descripcion_caracteristica', c.descripcion_caracteristica
+          )
+        ) FILTER (WHERE c.codigo_caracteristica IS NOT NULL), '[]'
+      ) AS caracteristicas,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'codigo_img_producto', i.codigo_img_producto,
+            'primer_angulo', i.primer_angulo,
+            'segundo_angulo', i.segundo_angulo,
+            'tercer_angulo', i.tercer_angulo,
+            'cuarto_angulo', i.cuarto_angulo
+          )
+        ) FILTER (WHERE i.codigo_img_producto IS NOT NULL), '[]'
+      ) AS imagenes
+    FROM PRODUCTOS p
+    LEFT JOIN CARACTERISTICAS c 
+      ON p.codigo_producto = c.PRODUCTOS_codigo_producto
+    LEFT JOIN IMG_PRODUCTO i 
+      ON p.codigo_producto = i.PRODUCTOS_codigo_producto
+    WHERE p.VENDEDOR_codigo_vendedore = $1
+    GROUP BY p.codigo_producto
+    ORDER BY p.codigo_producto DESC;
+  `;
+  const result = await pool.query(query, [vendedorId]);
+  return result.rows;
+};
+
+export const getProductoByIdAndVendedor = async (id, vendedorId = 1) => {
+  const query = `
+    SELECT 
+      p.*,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'codigo_caracteristica', c.codigo_caracteristica,
+            'nombre_caracteristica', c.nombre_caracteristica,
+            'descripcion_caracteristica', c.descripcion_caracteristica
+          )
+        ) FILTER (WHERE c.codigo_caracteristica IS NOT NULL), '[]'
+      ) AS caracteristicas,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'codigo_img_producto', i.codigo_img_producto,
+            'primer_angulo', i.primer_angulo,
+            'segundo_angulo', i.segundo_angulo,
+            'tercer_angulo', i.tercer_angulo,
+            'cuarto_angulo', i.cuarto_angulo
+          )
+        ) FILTER (WHERE i.codigo_img_producto IS NOT NULL), '[]'
+      ) AS imagenes
+    FROM PRODUCTOS p
+    LEFT JOIN CARACTERISTICAS c 
+      ON p.codigo_producto = c.PRODUCTOS_codigo_producto
+    LEFT JOIN IMG_PRODUCTO i 
+      ON p.codigo_producto = i.PRODUCTOS_codigo_producto
+    WHERE p.codigo_producto = $1 
+      AND p.VENDEDOR_codigo_vendedore = $2
+    GROUP BY p.codigo_producto;
+  `;
+  const result = await pool.query(query, [id, vendedorId]);
+  return result.rows[0];
+};
+
 
 export const updateProducto = async (id, data) => {
   const query = `
@@ -50,9 +114,8 @@ export const updateProducto = async (id, data) => {
         calificacion_producto = $7,
         costo_producto = $8,
         descuento_producto = $9,
-        VENDEDOR_codigo_vendedore = $10,
-        PORTAL_codigo_portal = $11
-    WHERE codigo_producto = $12 
+        PORTAL_codigo_portal = $10
+    WHERE codigo_producto = $11
     RETURNING *
   `;
   const values = [
@@ -65,7 +128,6 @@ export const updateProducto = async (id, data) => {
     data.calificacion_producto,
     data.costo_producto,
     data.descuento_producto,
-    data.VENDEDOR_codigo_vendedore,
     data.PORTAL_codigo_portal,
     id
   ];
@@ -74,14 +136,22 @@ export const updateProducto = async (id, data) => {
 };
 
 export const deleteProducto = async (id) => {
-  const query = 'DELETE FROM PRODUCTOS WHERE codigo_producto = $1';
-  await pool.query(query, [id]);
+  // Primero, es conveniente eliminar registros relacionados en las otras tablas
+  // (por ejemplo, Características e Imágenes) mediante transacción, pero aquí se muestra en forma secuencial
+  const deleteCaracteristicasQuery = "DELETE FROM CARACTERISTICAS WHERE PRODUCTOS_codigo_producto = $1";
+  await pool.query(deleteCaracteristicasQuery, [id]);
+
+  const deleteImagenesQuery = "DELETE FROM IMG_PRODUCTO WHERE PRODUCTOS_codigo_producto = $1";
+  await pool.query(deleteImagenesQuery, [id]);
+
+  const deleteQuery = "DELETE FROM PRODUCTOS WHERE codigo_producto = $1";
+  await pool.query(deleteQuery, [id]);
 };
 
 export default {
-  getAllProductos,
-  getProductoById,
   createProducto,
+  getAllProductosByVendedor,
+  getProductoByIdAndVendedor,
   updateProducto,
   deleteProducto
 };

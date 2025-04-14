@@ -1,28 +1,25 @@
 // routes/productoRoutes.js
-import express from 'express';
-import {
-  getAllProductos,
-  getProductoById,
-  createProducto,
-  updateProducto,
-  deleteProducto
-} from '../controllers/productoController.js';
+import express from "express";
+import productoController from "../controllers/productoController.js";
 
 const router = express.Router();
 
-// Ruta para obtener todos los productos
-router.get('/productos', getAllProductos);
+// Crear un producto
+router.post("/", productoController.createProducto);
 
-// Ruta para obtener un producto específico por ID
-router.get('/productos/:id', getProductoById);
+// Listar productos (sólo del vendedor 1)
+router.get("/", productoController.getProductos);
 
-// Ruta para crear un nuevo producto
-router.post('/productos', createProducto);
+// Obtener detalle de producto (incluye características e imágenes)
+router.get("/:id", productoController.getProductoDetail);
 
-// Ruta para actualizar un producto existente por ID
-router.put('/productos/:id', updateProducto);
+// Actualizar producto
+router.put("/:id", productoController.updateProducto);
 
-// Ruta para eliminar un producto por ID
-router.delete('/productos/:id', deleteProducto);
+// Eliminar producto (remover registros relacionados)
+router.delete("/:id", productoController.deleteProducto);
+
+router.get("/export", productoController.exportProductos);
+
 
 export default router;

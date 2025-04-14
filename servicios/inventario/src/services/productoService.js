@@ -1,75 +1,92 @@
 // services/productoService.js
-import productoModel from '../models/productoModel.js';
-import caracteristicaModel from '../models/caracteristicaModel.js';
-import imgProductoModel from '../models/imgProductoModel.js';
+import productoModel from "../models/productoModel.js";
+import caracteristicaModel from "../models/caracteristicaModel.js";
+import imgProductoModel from "../models/imgProductoModel.js";
+import logEventoModel from "../models/logEventoModel.js";
 
-export const getAllProductos = async () => {
-  const productos = await productoModel.getAllProductos();
-  // Agregar para cada producto sus características e imágenes.
-  for (let producto of productos) {
-    producto.caracteristicas = await caracteristicaModel.getCaracteristicasByProductoId(producto.codigo_producto);
-    producto.imagenes = await imgProductoModel.getImgsByProductoId(producto.codigo_producto);
+export const createProducto = async (data, vendedorId = 1, logData = {}) => {
+  // Registrar el intento de crear un producto
+  await logEventoModel.createLogEvento({
+    usuario_id: vendedorId,
+    accion: "Crear producto",
+    ip_origen: logData.ip || "0.0.0.0"
+  });
+  
+  // Crear el producto
+  const nuevoProducto = await productoModel.createProducto(data);
+  
+  // Agregar Características
+  if (data.caracteristicas && Array.isArray(data.caracteristicas)) {
+    nuevoProducto.caracteristicas = [];
+    for (let caract of data.caracteristicas) {
+      caract.PRODUCTOS_codigo_producto = nuevoProducto.codigo_producto;
+      const nuevaCaract = await caracteristicaModel.createCaracteristica(caract);
+      nuevoProducto.caracteristicas.push(nuevaCaract);
+    }
   }
+  
+  // Agregar Imágenes
+  if (data.imagenes && Array.isArray(data.imagenes)) {
+    nuevoProducto.imagenes = [];
+    for (let img of data.imagenes) {
+      img.PRODUCTOS_codigo_producto = nuevoProducto.codigo_producto;
+      const nuevaImg = await imgProductoModel.createImgProducto(img);
+      nuevoProducto.imagenes.push(nuevaImg);
+    }
+  }
+  
+  return nuevoProducto;
+};
+
+export const getProductos = async (vendedorId = 1, logData = {}) => {
+  await logEventoModel.createLogEvento({
+    usuario_id: vendedorId,
+    accion: "Listar productos",
+    ip_origen: logData.ip || "0.0.0.0"
+  });
+  const productos = await productoModel.getAllProductosByVendedor(vendedorId);
   return productos;
 };
 
-export const getProductoById = async (id) => {
-  const producto = await productoModel.getProductoById(id);
+export const getProductoDetail = async (id, vendedorId = 1, logData = {}) => {
+  await logEventoModel.createLogEvento({
+    usuario_id: vendedorId,
+    accion: `Ver detalle producto ${id}`,
+    ip_origen: logData.ip || "0.0.0.0"
+  });
+  const producto = await productoModel.getProductoByIdAndVendedor(id, vendedorId);
   if (producto) {
-    producto.caracteristicas = await caracteristicaModel.getCaracteristicasByProductoId(producto.codigo_producto);
-    producto.imagenes = await imgProductoModel.getImgsByProductoId(producto.codigo_producto);
+    const caracteristicas = await caracteristicaModel.getCaracteristicasByProductoId(id);
+    const imagenes = await imgProductoModel.getImgsByProductoId(id);
+    producto.caracteristicas = caracteristicas;
+    producto.imagenes = imagenes;
   }
   return producto;
 };
 
-export const createProducto = async (data) => {
-  try {
-    const nuevoProducto = await productoModel.createProducto(data);
-    console.log("Producto creado:", nuevoProducto);
-
-    if (data.caracteristicas && Array.isArray(data.caracteristicas)) {
-      nuevoProducto.caracteristicas = [];
-      for (let caract of data.caracteristicas) {
-        caract.PRODUCTOS_codigo_producto = nuevoProducto.codigo_producto;
-        const nuevaCaract = await caracteristicaModel.createCaracteristica(caract);
-        console.log("Característica insertada:", nuevaCaract);
-        nuevoProducto.caracteristicas.push(nuevaCaract);
-      }
-    }
-    
-    if (data.imagenes && Array.isArray(data.imagenes)) {
-      nuevoProducto.imagenes = [];
-      for (let img of data.imagenes) {
-        img.PRODUCTOS_codigo_producto = nuevoProducto.codigo_producto;
-        const nuevaImg = await imgProductoModel.createImgProducto(img);
-        console.log("Imagen insertada:", nuevaImg);
-        nuevoProducto.imagenes.push(nuevaImg);
-      }
-    }
-    return nuevoProducto;
-  } catch (error) {
-    console.error("Error en createProducto:", error);
-    throw error;
-  }
-};
-
-
-export const updateProducto = async (id, data) => {
-  // Actualizamos solo los campos del producto; la actualización de características
-  // e imágenes podría manejarse en endpoints separados.
+export const updateProducto = async (id, data, logData = {}) => {
+  await logEventoModel.createLogEvento({
+    usuario_id: data.VENDEDOR_codigo_vendedore || 1,
+    accion: `Editar producto ${id}`,
+    ip_origen: logData.ip || "0.0.0.0"
+  });
   const productoActualizado = await productoModel.updateProducto(id, data);
   return productoActualizado;
 };
 
-export const deleteProducto = async (id) => {
+export const deleteProducto = async (id, vendedorId = 1, logData = {}) => {
+  await logEventoModel.createLogEvento({
+    usuario_id: vendedorId,
+    accion: `Eliminar producto ${id}`,
+    ip_origen: logData.ip || "0.0.0.0"
+  });
   await productoModel.deleteProducto(id);
 };
 
-// Exportación por defecto para poder importarlo de forma única
-export default { 
-  getAllProductos,
-  getProductoById,
+export default {
   createProducto,
+  getProductos,
+  getProductoDetail,
   updateProducto,
   deleteProducto
 };

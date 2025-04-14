@@ -1,67 +1,70 @@
-// Importa axios usando la sintaxis ES6
-import axios from 'axios';
+// src/controllers/inventarioController.js
+import axios from "axios";
 
-// Función para obtener todos los productos
+const INVENTARIO_SERVICE_URL = process.env.INVENTARIO_SERVICE_URL || "http://inventario:3001";
+
+// Listar productos: Se espera que el microservicio filtre productos por el vendedor (por ejemplo, 1)
 export const getAllProductos = async (req, res) => {
   try {
-    // Ejemplo: reenviar la solicitud al microservicio de inventario
-    const response = await axios.get(`${process.env.INVENTARIO_SERVICE_URL || 'http://inventario:3001'}/inventario/productos`);
+    const response = await axios.get(`${INVENTARIO_SERVICE_URL}/inventario`);
     res.json(response.data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al obtener productos', details: error.message });
+    console.error("Error al obtener productos:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error al obtener productos", details: error.message });
   }
 };
 
-// Función para obtener un producto por ID
-export const getProductoById = async (req, res) => {
+// Obtener el detalle de un producto, con sus características e imágenes
+export const getProductoDetail = async (req, res) => {
   try {
-    const response = await axios.get(`${process.env.INVENTARIO_SERVICE_URL || 'http://inventario:3001'}/inventario/productos/${req.params.id}`);
+    const { id } = req.params;
+    const response = await axios.get(`${INVENTARIO_SERVICE_URL}/inventario/${id}`);
     res.json(response.data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al obtener el producto', details: error.message });
+    console.error("Error al obtener detalle del producto:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error al obtener detalle del producto", details: error.message });
   }
 };
 
-// Función para crear un producto
+// Crear un nuevo producto (incluyendo características e imágenes)
 export const createProducto = async (req, res) => {
   try {
-    const response = await axios.post(`${process.env.INVENTARIO_SERVICE_URL || 'http://inventario:3001'}/inventario/productos`, req.body);
+    const response = await axios.post(`${INVENTARIO_SERVICE_URL}/inventario`, req.body);
     res.status(201).json(response.data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al crear el producto', details: error.message });
+    console.error("Error al crear producto:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error al crear producto", details: error.message });
   }
 };
 
-// Función para actualizar un producto
+// Actualizar un producto
 export const updateProducto = async (req, res) => {
   try {
-    const response = await axios.put(`${process.env.INVENTARIO_SERVICE_URL || 'http://inventario:3001'}/inventario/productos/${req.params.id}`, req.body);
+    const { id } = req.params;
+    const response = await axios.put(`${INVENTARIO_SERVICE_URL}/inventario/${id}`, req.body);
     res.json(response.data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al actualizar el producto', details: error.message });
+    console.error("Error al actualizar producto:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error al actualizar producto", details: error.message });
   }
 };
 
-// Función para eliminar un producto
+// Eliminar un producto y sus registros relacionados
 export const deleteProducto = async (req, res) => {
   try {
-    await axios.delete(`${process.env.INVENTARIO_SERVICE_URL || 'http://inventario:3001'}/inventario/productos/${req.params.id}`);
+    const { id } = req.params;
+    await axios.delete(`${INVENTARIO_SERVICE_URL}/inventario/${id}`);
     res.status(204).send();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al eliminar el producto', details: error.message });
+    console.error("Error al eliminar producto:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error al eliminar producto", details: error.message });
   }
 };
 
-// Exportación por defecto para que puedas importar de forma única
 export default {
   getAllProductos,
-  getProductoById,
+  getProductoDetail,
   createProducto,
   updateProducto,
-  deleteProducto
+  deleteProducto,
 };
