@@ -16,6 +16,7 @@ import PerfilCliente from "./pages/Cliente/Perfil";
 
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/Inventario";
+import ProductDetail from "./pages/Vendedor/ProductDetail"; 
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
@@ -23,6 +24,8 @@ import PortalView from './pages/Vendedor/Portal/PortalView';
 import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
 import { VendedorProvider } from '@context/vendedorContext';
 
+import SalesDetail from "./pages/Vendedor/SalesDetail";
+import AddProduct from "./pages/Vendedor/AddProduct"; // Nueva página para agregar productos
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
@@ -61,6 +64,10 @@ function App() {
           <Route path="/vendedor/portal/view" element={<PortalView />} />
           <Route path="/vendedor/portal/productos" element={<ProductEditor />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
+          <Route path="/inventario/:id" element={<ProductDetail />} />
+          <Route path="/ventas/:id" element={<SalesDetail />} />
+          <Route path="/agregar-producto" element={<AddProduct />} />
+
 
           {/* Ruta para manejar páginas no encontradas */}
           <Route path="*" element={<NotFound />} />

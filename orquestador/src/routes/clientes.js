@@ -1,16 +1,10 @@
+// src/routes/clientes.js
 import express from "express";
-import {
-  createCliente,
-  deleteCliente,
-  getClientes,
-  updateCliente,
-} from "../controllers/clienteController.js";
+import clientesController from "../controllers/clientesController.js";
 
 const router = express.Router();
 
-router.get("/", getClientes);
-router.post("/", createCliente);
-router.put("/:id", updateCliente);
-router.delete("/:id", deleteCliente);
+// Ruta para listar todos los clientes (con datos agregados, si lo implementas en el microservicio)
+router.get("/", clientesController.listClientes);
 
 export default router;
