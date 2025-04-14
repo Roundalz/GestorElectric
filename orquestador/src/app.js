@@ -1,27 +1,33 @@
-// app.js
 import express from 'express';
 import cors from 'cors';
-import testController from './controllers/testController.js';
-import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
-
-import pool from './database.js'; // Importar el pool de conexiones
+import pool from './database.js';
 
 const app = express();
 
 // Middleware
-app.use(cors()); // Permitir solicitudes desde el frontend
-app.use(express.json()); // Habilitar JSON en requests
-app.use('/api', testController);
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://frontend'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json());
 
-// Rutas de CRUD para SERVICIO
-app.use("/api/servicios", servicioRoutes);
-
-// Proxy de rutas hacia los microservicios
+// Importar rutas
+import servicioRoutes from './routes/servicioRoutes.js';
+import portalRouter from './routes/portal.js';
 import autenticacionRouter from './routes/autenticacion.js';
+
+// Usar rutas
+app.use("/api/servicios", servicioRoutes);
+app.use("/api/portales", portalRouter);
 app.use("/api/auth", autenticacionRouter);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', service: 'orquestador' });
+});
 
-// Rutas principales del orquestador
+// Ruta principal
 app.get("/", (req, res) => {
   res.send("Orquestador funcionando 🚀");
 });

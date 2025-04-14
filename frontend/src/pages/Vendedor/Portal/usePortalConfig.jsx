@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export const usePortalConfig = (vendedorId) => {
+  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,55 +11,74 @@ export const usePortalConfig = (vendedorId) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Obtener configuración del portal
-        const configRes = await axios.get(`http://localhost:5000/api/portales/${vendedorId}/config`)
-        ;
+        setLoading(true);
+        setError(null);
         
-        // Obtener temas disponibles
-        const temasRes = await axios.get(`http://localhost:5000/api/portales/temas`)
-        ;
+        const [configResponse, temasResponse] = await Promise.all([
+          axios.get(`${baseURL}/api/portales/${vendedorId}/config`),
+          axios.get(`${baseURL}/api/portales/temas`)
+        ]);
         
-        setConfig(configRes.data);
-        setTemas(temasRes.data);
+        if (!configResponse.data?.success) {
+          throw new Error(configResponse.data?.error || 'Error en la respuesta de configuración');
+        }
+        
+        setConfig(configResponse.data.config);
+        setTemas(temasResponse.data || []);
       } catch (err) {
+        console.error('Error en usePortalConfig:', err);
         setError(err.message);
+        
+        // Configuración por defecto si hay error
+        setConfig({
+          tema_seleccionado: 'default',
+          color_principal: '#4F46E5',
+          color_secundario: '#7C3AED',
+          color_fondo: '#FFFFFF',
+          fuente_principal: 'Arial',
+          disposicion_productos: 'grid',
+          productos_por_fila: 3,
+          mostrar_precios: true,
+          mostrar_valoraciones: true,
+          estilo_header: 'normal',
+          mostrar_busqueda: true,
+          mostrar_categorias: true,
+          mostrar_banner: true,
+          logo_personalizado: '',
+          banner_personalizado: ''
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [vendedorId]);
+    if (vendedorId) fetchData();
+  }, [vendedorId, baseURL]);
 
   const updateConfig = async (newConfig) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/portales/${vendedorId}/config`,
+        `${baseURL}/api/portales/portal/config`,
+        newConfig,
         {
-          // Mapear los nombres de campos según tu base de datos
-          estilo_titulo: newConfig.estilo_titulo,
-          tema_seleccionado: newConfig.tema_seleccionado,
-          color_principal: newConfig.color_principal,
-          color_secundario: newConfig.color_secundario,
-          color_fondo: newConfig.color_fondo,
-          fuente_principal: newConfig.fuente_principal,
-          disposicion_productos: newConfig.disposicion_productos,
-          productos_por_fila: newConfig.productos_por_fila,
-          mostrar_precios: newConfig.mostrar_precios,
-          mostrar_valoraciones: newConfig.mostrar_valoraciones,
-          estilo_header: newConfig.estilo_header,
-          mostrar_busqueda: newConfig.mostrar_busqueda,
-          mostrar_categorias: newConfig.mostrar_categorias,
-          estilos_productos: JSON.stringify(newConfig.estilos_productos),
-          mostrar_banner: newConfig.mostrar_banner,
-          logo_personalizado: newConfig.logo_personalizado,
-          banner_personalizado: newConfig.banner_personalizado
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
       );
-      setConfig(response.data);
+      
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Error al actualizar configuración');
+      }
+      
+      setConfig(newConfig);
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error('Error al actualizar configuración:', err);
+      return { 
+        success: false, 
+        error: err.response?.data?.error || err.message 
+      };
     }
   };
 

@@ -1,103 +1,164 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useVendedor } from '@context/VendedorContext';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './styles.css';
 
 const ProductEditor = () => {
-  const { vendedorId } = useVendedor();
+  const { vendedorId } = useParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [portalConfig, setPortalConfig] = useState(null);
+  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`/api/portales/${vendedorId}/productos`) // Usa ruta relativa con proxy
-                                .then(response => {
-                                  if (!response.ok) throw new Error('Network response was not ok')
-                                  const contentType = response.headers.get('content-type')
-                                  if (!contentType || !contentType.includes('application/json')) {
-                                    throw new TypeError("Oops, no recibimos JSON!")
-                                  }
-                                  return response.json()
-                                })
-        const data = await response.json();
-        setProducts(data);
+        setLoading(true);
+        
+        const [productsRes, configRes] = await Promise.all([
+          axios.get(`${baseURL}/api/portales/${vendedorId}/productos`),
+          axios.get(`${baseURL}/api/portales/${vendedorId}/config`)
+        ]);
+        
+        setProducts(productsRes.data || []);
+        setPortalConfig(configRes.data?.config || {});
       } catch (err) {
+        console.error('Error fetching data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, [vendedorId]);
+    if (vendedorId) {
+      fetchData();
+    }
+  }, [vendedorId, baseURL]);
 
   const handleUpdateProduct = async (productId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/productos/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData)
-      });
+      const response = await axios.put(
+        `${baseURL}/api/portales/productos/${productId}`,
+        updatedData
+      );
       
-      if (!response.ok) throw new Error('Error al actualizar');
-      
-      // Actualizar estado local
-      setProducts(products.map(p => 
-        p.codigo_producto === productId ? { ...p, ...updatedData } : p
-      ));
+      if (response.data.success) {
+        setProducts(products.map(p => 
+          p.codigo_producto === productId ? { ...p, ...updatedData } : p
+        ));
+        alert('Producto actualizado correctamente');
+      }
     } catch (err) {
       console.error('Error updating product:', err);
+      alert('Error al actualizar el producto');
     }
   };
 
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
+      try {
+        const response = await axios.delete(
+          `${baseURL}/api/portales/productos/${productId}`
+        );
+        
+        if (response.data.success) {
+          setProducts(products.filter(p => p.codigo_producto !== productId));
+          alert('Producto eliminado correctamente');
+        }
+      } catch (err) {
+        console.error('Error deleting product:', err);
+        alert('Error al eliminar el producto');
+      }
+    }
+  };
+
+  const handleAddProduct = () => {
+    navigate(`/vendedor/${vendedorId}/productos/nuevo`);
+  };
+
   if (loading) return <div className="loading">Cargando productos...</div>;
-  if (error) return <div className="error">Error: {error}</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="product-editor">
-      <h2>Administrar Productos</h2>
+      <div className="editor-header">
+        <h2>Administración de Productos</h2>
+        <button onClick={handleAddProduct} className="btn-add">
+          + Añadir Producto
+        </button>
+      </div>
+
       <div className="product-list">
-        {products.map(product => (
-          <div key={product.codigo_producto} className="product-item">
-            <div className="product-image-container">
+        {products.map(producto => (
+          <div key={producto.codigo_producto} className="product-item">
+            <div className="product-image">
               <img 
-                src={product.imagen_referencia_producto} 
-                alt={product.nombre_producto} 
+                src={producto.imagen_referencia_producto} 
+                alt={producto.nombre_producto} 
               />
             </div>
+            
             <div className="product-details">
-              <input
-                type="text"
-                value={product.nombre_producto}
-                onChange={(e) => handleUpdateProduct(product.codigo_producto, {
-                  nombre_producto: e.target.value
-                })}
-              />
-              <input
-                type="number"
-                value={product.precio_unidad_producto}
-                onChange={(e) => handleUpdateProduct(product.codigo_producto, {
-                  precio_unidad_producto: e.target.value
-                })}
-              />
-              <select
-                value={product.estado_producto}
-                onChange={(e) => handleUpdateProduct(product.codigo_producto, {
-                  estado_producto: e.target.value
-                })}
+              <h3>{producto.nombre_producto}</h3>
+              <p>Tipo: {producto.tipo_producto}</p>
+              <p>Precio: ${producto.precio_unidad_producto}</p>
+              <p>Stock: {producto.cantidad_disponible_producto}</p>
+              <p>Estado: {producto.estado_producto}</p>
+            </div>
+            
+            <div className="product-actions">
+              <button 
+                onClick={() => navigate(`/vendedor/${vendedorId}/productos/${producto.codigo_producto}`)}
+                className="btn-edit"
               >
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="agotado">Agotado</option>
-              </select>
+                Editar
+              </button>
+              <button 
+                onClick={() => handleDeleteProduct(producto.codigo_producto)}
+                className="btn-delete"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Configuración de visualización de productos */}
+      {portalConfig && (
+        <div className="display-config">
+          <h3>Configuración de Visualización</h3>
+          
+          <div className="config-option">
+            <label>
+              <input 
+                type="checkbox" 
+                checked={portalConfig.mostrar_precios}
+                readOnly
+              />
+              Mostrar precios
+            </label>
+          </div>
+          
+          <div className="config-option">
+            <label>
+              <input 
+                type="checkbox" 
+                checked={portalConfig.mostrar_valoraciones}
+                readOnly
+              />
+              Mostrar valoraciones
+            </label>
+          </div>
+          
+          <div className="config-option">
+            <label>Disposición: </label>
+            <span>{portalConfig.disposicion_productos}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
