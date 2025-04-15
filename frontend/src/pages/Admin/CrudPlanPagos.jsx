@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function CrudPlanPagos() {
@@ -12,12 +12,13 @@ function CrudPlanPagos() {
     max_productos: "",
     fecha_expiracion_plan: "",
   });
+
   const [modoEditar, setModoEditar] = useState(false);
   const [planActual, setPlanActual] = useState(null);
 
   const obtenerPlanes = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/planes");
+      const res = await axios.get("http://localhost:5000/api/planes_pago");
       setPlanes(res.data);
     } catch (error) {
       console.error("Error al obtener planes:", error);
@@ -30,7 +31,7 @@ function CrudPlanPagos() {
 
   const crearPlan = async () => {
     try {
-      await axios.post("http://localhost:5000/api/planes", form);
+      await axios.post("http://localhost:5000/api/planes_pago", form);
       obtenerPlanes();
       resetForm();
     } catch (error) {
@@ -40,7 +41,7 @@ function CrudPlanPagos() {
 
   const actualizarPlan = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/planes/${planActual}`, form);
+      await axios.put(`http://localhost:5000/api/planes_pago/${planActual}`, form);
       obtenerPlanes();
       setModoEditar(false);
       resetForm();
@@ -51,7 +52,7 @@ function CrudPlanPagos() {
 
   const eliminarPlan = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/planes/${id}`);
+      await axios.delete(`http://localhost:5000/api/planes_pago/${id}`);
       obtenerPlanes();
     } catch (error) {
       console.error("Error al eliminar plan:", error);
@@ -90,6 +91,7 @@ function CrudPlanPagos() {
         <input name="comision_venta" value={form.comision_venta} onChange={handleChange} placeholder="Comisión (%)" type="number" step="0.01" className="border p-2 rounded" required />
         <input name="max_productos" value={form.max_productos} onChange={handleChange} placeholder="Máx. productos" type="number" className="border p-2 rounded" required />
         <input name="fecha_expiracion_plan" value={form.fecha_expiracion_plan} onChange={handleChange} type="date" className="border p-2 rounded" required />
+
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded col-span-2 hover:bg-blue-700 transition">
           {modoEditar ? "Actualizar" : "Crear"}
         </button>
@@ -118,6 +120,7 @@ function CrudPlanPagos() {
                 <td className="p-2 border">{plan.comision_venta}%</td>
                 <td className="p-2 border">{plan.max_productos}</td>
                 <td className="p-2 border">{plan.fecha_expiracion_plan}</td>
+
                 <td className="p-2 border flex gap-2 justify-center">
                   <button
                     onClick={() => {
@@ -130,6 +133,7 @@ function CrudPlanPagos() {
                         max_productos: plan.max_productos,
                         fecha_expiracion_plan: plan.fecha_expiracion_plan,
                       });
+
                       setPlanActual(plan.codigo_plan);
                     }}
                     className="text-yellow-500 hover:text-yellow-600"
