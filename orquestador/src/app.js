@@ -16,7 +16,7 @@ app.use(express.json()); // Habilitar JSON en requests
 app.use("/api", testController);
 
 // Luego de otros `app.use`, monta esto:
-app.use("/api/planes", planPagosRoutes);
+app.use("/api/planes_pago", planPagosRoutes);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
