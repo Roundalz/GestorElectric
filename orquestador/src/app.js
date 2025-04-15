@@ -10,10 +10,10 @@ import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del
 import dotenv from 'dotenv';
 import inventarioRouter from './routes/inventario.js';
 import ventasRoutes from "./routes/ventas.js"; 
-import clientesRoutes from "./routes/clientes.js"; 
+import clientes from "./routes/clientesRoutes.js"; 
+import planPagosRoutes from "./routes/planPagosRoutes.js";
 dotenv.config();
 
-import clientes from "./routes/clientes.js";
 import pool from './database.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -42,6 +42,9 @@ app.use("/api", testController);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
+
+// Luego de otros `app.use`, monta esto:
+app.use("/api/planes", planPagosRoutes);
 
 // Rutas de CRUD para CLIENTES
 app.use("/api/clientes", clientes); // <-- monta tus rutas de clientes aquí
@@ -93,8 +96,7 @@ app.use("/api/auth", autenticacionRouter);
 app.use("/api/inventario", inventarioRouter);
 
 app.use("/api/ventas", ventasRoutes);
-
-app.use("/api/clientes", clientesRoutes); 
+ 
 
 // En tu app.js o en un archivo de rutas específico
 app.get("/health", (req, res) => {
