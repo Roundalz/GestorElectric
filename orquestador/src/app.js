@@ -12,12 +12,12 @@ import inventarioRouter from './routes/inventario.js';
 import ventasRoutes from "./routes/ventas.js"; 
 import clientes from "./routes/clientesRoutes.js"; 
 import planPagosRoutes from "./routes/planPagosRoutes.js";
-dotenv.config();
-
 import pool from './database.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,7 +44,7 @@ app.use("/api", testController);
 app.use("/api/servicios", servicioRoutes);
 
 // Luego de otros `app.use`, monta esto:
-app.use("/api/planes", planPagosRoutes);
+app.use("/api/planes_pago", planPagosRoutes);
 
 // Rutas de CRUD para CLIENTES
 app.use("/api/clientes", clientes); // <-- monta tus rutas de clientes aquí

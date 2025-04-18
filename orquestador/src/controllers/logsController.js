@@ -1,5 +1,4 @@
-import db from "../db.js";
-
+import pool from "../database.js";
 // GET
 export const obtenerLogs = async (req, res) => {
   try {
