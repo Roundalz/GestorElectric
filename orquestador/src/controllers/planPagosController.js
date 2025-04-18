@@ -1,16 +1,17 @@
 import pool from "../database.js";
 
-// GET
+// Obtener todos los planes
 export const obtenerPlanes = async (req, res) => {
   try {
-    const [result] = await pool.query("SELECT * FROM planes_pago");
-    res.json(result);
+    const result = await pool.query("SELECT * FROM planes_pago");
+    res.status(200).json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener planes de pago" });
+    console.error("Error en obtenerPlanes:", error);
+    res.status(500).json({ error: "Error al obtener planes de pago." });
   }
 };
 
-// POST
+// Crear un nuevo plan
 export const crearPlan = async (req, res) => {
   const {
     nombre_plan,
@@ -21,8 +22,11 @@ export const crearPlan = async (req, res) => {
     fecha_expiracion_plan,
   } = req.body;
   try {
-    const [result] = await pool.query(
-      `INSERT INTO planes_pago (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan) VALUES (?, ?, ?, ?, ?, ?)`,
+    const result = await pool.query(
+      `INSERT INTO planes_pago 
+        (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan)
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
       [
         nombre_plan,
         descripcion,
@@ -33,21 +37,14 @@ export const crearPlan = async (req, res) => {
       ]
     );
 
-    res.json({
-      codigo_plan: result.insertId,
-      nombre_plan,
-      descripcion,
-      precio_m_s_a,
-      comision_venta,
-      max_productos,
-      fecha_expiracion_plan,
-    });
+    res.status(201).json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: "Error al crear plan de pago" });
+    console.error("Error al crear plan:", error);
+    res.status(500).json({ error: "Error al crear plan" });
   }
 };
 
-// PUT
+// Actualizar un plan existente
 export const actualizarPlan = async (req, res) => {
   const { id } = req.params;
   const {
@@ -59,8 +56,12 @@ export const actualizarPlan = async (req, res) => {
     fecha_expiracion_plan,
   } = req.body;
   try {
-    await pool.query(
-      `UPDATE planes_pago SET nombre_plan = ?, descripcion = ?, precio_m_s_a = ?, comision_venta = ?, max_productos = ?, fecha_expiracion_plan = ? WHERE codigo_plan = ?`,
+    const result = await pool.query(
+      `UPDATE planes_pago 
+       SET nombre_plan = $1, descripcion = $2, precio_m_s_a = $3, comision_venta = $4, 
+           max_productos = $5, fecha_expiracion_plan = $6
+       WHERE codigo_plan = $7
+       RETURNING *`,
       [
         nombre_plan,
         descripcion,
@@ -71,27 +72,32 @@ export const actualizarPlan = async (req, res) => {
         id,
       ]
     );
-    res.json({
-      codigo_plan: id,
-      nombre_plan,
-      descripcion,
-      precio_m_s_a,
-      comision_venta,
-      max_productos,
-      fecha_expiracion_plan,
-    });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ mensaje: "Plan no encontrado." });
+    }
+    res.status(200).json({ mensaje: "Plan actualizado correctamente." });
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar plan de pago" });
+    console.error("Error en actualizarPlan:", error);
+    res.status(500).json({ error: "Error al actualizar el plan de pago." });
   }
 };
 
-// DELETE
+// Eliminar un plan
 export const eliminarPlan = async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query("DELETE FROM planes_pago WHERE codigo_plan = ?", [id]);
-    res.json({ success: true });
+    const result = await pool.query(
+      "DELETE FROM planes_pago WHERE codigo_plan = $1",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ mensaje: "Plan no encontrado." });
+    }
+    res.status(200).json({ mensaje: "Plan eliminado correctamente." });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar plan de pago" });
+    console.error("Error en eliminarPlan:", error);
+    res.status(500).json({ error: "Error al eliminar el plan de pago." });
   }
 };
+
+//
