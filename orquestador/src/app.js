@@ -1,10 +1,12 @@
 import cors from "cors";
+
 import express from "express";
 import testController from "./controllers/testController.js";
 import autenticacionRouter from "./routes/autenticacion.js";
 import clientes from "./routes/clientesRoutes.js";
 import planPagosRoutes from "./routes/planPagosRoutes.js";
 import servicioRoutes from "./routes/servicioRoutes.js";
+import vendedorRoutes from "./routes/vendedorRoutes.js";
 
 const app = express();
 
@@ -17,6 +19,9 @@ app.use("/api", testController);
 
 // Luego de otros `app.use`, monta esto:
 app.use("/api/planes_pago", planPagosRoutes);
+
+// Rutas de CRUD para VENDEDOR
+app.use("/api/vendedores", vendedorRoutes);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);
