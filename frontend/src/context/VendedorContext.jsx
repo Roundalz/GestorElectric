@@ -4,7 +4,7 @@ import React, { createContext, useState, useContext } from 'react';
 const vendedorContext = createContext();
 
 export const VendedorProvider = ({ children }) => {
-  const [vendedorId, setVendedorId] = useState(3); // O el ID inicial que corresponda
+  const [vendedorId, setVendedorId] = useState(4); // O el ID inicial que corresponda
 
   return (
     <vendedorContext.Provider value={{ vendedorId, setVendedorId }}>
