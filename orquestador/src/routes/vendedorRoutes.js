@@ -1,3 +1,4 @@
+// routes/vendedorRoutes.js
 import express from "express";
 import {
   actualizarVendedor,

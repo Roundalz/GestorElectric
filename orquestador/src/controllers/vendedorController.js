@@ -1,42 +1,73 @@
-import db from "../db.js";
+const pool = require("../config/db");
 
-// GET
-export const obtenerVendedores = async (req, res) => {
+exports.obtenerVendedores = async (req, res) => {
   try {
-    const [result] = await db.query("SELECT * FROM VENDEDOR");
-    res.json(result);
+    const resultado = await pool.query("SELECT * FROM VENDEDOR");
+    res.json(resultado.rows);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener vendedores" });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// POST
-export const crearVendedor = async (req, res) => {
-  const {
-    nombre_vendedor,
-    correo_vendedor,
-    telefono_vendedor,
-    clave_vendedor,
-    estado_vendedor,
-    nombre_empresa,
-    tipo_empresa,
-    logo_empresa,
-    correo_empresa,
-    telefono_empresa,
-    pais_empresa,
-    ciudad_empresa,
-    direccion_empresa,
-    banner_empresa,
-    PLANES_PAGO_codigo_plan,
-  } = req.body;
-
+exports.crearVendedor = async (req, res) => {
   try {
-    const [result] = await db.query(
+    const {
+      nombre_vendedor,
+      correo_vendedor,
+      telefono_vendedor,
+      clave_vendedor,
+      estado_vendedor = "activo",
+      nombre_empresa,
+      tipo_empresa,
+      logo_empresa = "default_logo.png",
+      correo_empresa,
+      telefono_empresa,
+      pais_empresa = "Colombia",
+      ciudad_empresa,
+      direccion_empresa,
+      banner_empresa = "default_banner.png",
+      PLANES_PAGO_codigo_plan = 1,
+    } = req.body;
+
+    // Validar campos requeridos
+    if (
+      !nombre_vendedor ||
+      !correo_vendedor ||
+      !telefono_vendedor ||
+      !clave_vendedor ||
+      !nombre_empresa ||
+      !tipo_empresa ||
+      !correo_empresa ||
+      !telefono_empresa ||
+      !ciudad_empresa ||
+      !direccion_empresa
+    ) {
+      return res.status(400).json({ error: "Faltan campos requeridos" });
+    }
+
+    // Verificar si el plan existe
+    const planExistente = await pool.query(
+      "SELECT 1 FROM PLANES_PAGO WHERE codigo_plan = $1",
+      [PLANES_PAGO_codigo_plan]
+    );
+
+    if (planExistente.rowCount === 0) {
+      return res.status(400).json({ error: "El plan especificado no existe" });
+    }
+
+    // Insertar vendedor
+    const result = await pool.query(
       `INSERT INTO VENDEDOR (
-        nombre_vendedor, correo_vendedor, telefono_vendedor, clave_vendedor, estado_vendedor,
-        nombre_empresa, tipo_empresa, logo_empresa, correo_empresa, telefono_empresa,
-        pais_empresa, ciudad_empresa, direccion_empresa, banner_empresa, PLANES_PAGO_codigo_plan
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        nombre_vendedor, correo_vendedor, telefono_vendedor, clave_vendedor,
+        estado_vendedor, nombre_empresa, tipo_empresa, logo_empresa, correo_empresa,
+        telefono_empresa, pais_empresa, ciudad_empresa, direccion_empresa,
+        banner_empresa, PLANES_PAGO_codigo_plan
+      ) VALUES (
+        $1, $2, $3, $4,
+        $5, $6, $7, $8, $9,
+        $10, $11, $12, $13,
+        $14, $15
+      ) RETURNING *`,
       [
         nombre_vendedor,
         correo_vendedor,
@@ -56,40 +87,45 @@ export const crearVendedor = async (req, res) => {
       ]
     );
 
-    res.json({ id: result.insertId });
+    res.status(201).json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: "Error al crear vendedor" });
+    console.error("Error al crear vendedor:", error);
+    res.status(500).json({
+      error: "Error al crear vendedor",
+      detalle: error.message,
+    });
   }
 };
 
-// PUT
-export const actualizarVendedor = async (req, res) => {
+exports.actualizarVendedor = async (req, res) => {
   const { id } = req.params;
   const {
     nombre_vendedor,
     correo_vendedor,
     telefono_vendedor,
     clave_vendedor,
-    estado_vendedor,
+    estado_vendedor = "activo",
     nombre_empresa,
     tipo_empresa,
-    logo_empresa,
+    logo_empresa = "default_logo.png",
     correo_empresa,
     telefono_empresa,
-    pais_empresa,
+    pais_empresa = "Colombia",
     ciudad_empresa,
     direccion_empresa,
-    banner_empresa,
-    PLANES_PAGO_codigo_plan,
+    banner_empresa = "default_banner.png",
+    PLANES_PAGO_codigo_plan = 1,
   } = req.body;
 
   try {
-    await db.query(
-      `UPDATE VENDEDOR SET
-        nombre_vendedor = ?, correo_vendedor = ?, telefono_vendedor = ?, clave_vendedor = ?, estado_vendedor = ?,
-        nombre_empresa = ?, tipo_empresa = ?, logo_empresa = ?, correo_empresa = ?, telefono_empresa = ?,
-        pais_empresa = ?, ciudad_empresa = ?, direccion_empresa = ?, banner_empresa = ?, PLANES_PAGO_codigo_plan = ?
-      WHERE codigo_vendedore = ?`,
+    const result = await pool.query(
+      `UPDATE VENDEDOR SET 
+        nombre_vendedor=$1, correo_vendedor=$2, telefono_vendedor=$3, clave_vendedor=$4,
+        estado_vendedor=$5, nombre_empresa=$6, tipo_empresa=$7, logo_empresa=$8, correo_empresa=$9,
+        telefono_empresa=$10, pais_empresa=$11, ciudad_empresa=$12, direccion_empresa=$13,
+        banner_empresa=$14, PLANES_PAGO_codigo_plan=$15
+      WHERE codigo_vendedore=$16
+      RETURNING *`,
       [
         nombre_vendedor,
         correo_vendedor,
@@ -109,19 +145,43 @@ export const actualizarVendedor = async (req, res) => {
         id,
       ]
     );
-    res.json({ id });
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Vendedor no encontrado" });
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar vendedor" });
+    console.error("Error al actualizar vendedor:", error);
+    res.status(500).json({
+      error: "Error al actualizar vendedor",
+      detalle: error.message,
+    });
   }
 };
 
-// DELETE
-export const eliminarVendedor = async (req, res) => {
+exports.eliminarVendedor = async (req, res) => {
   const { id } = req.params;
+
   try {
-    await db.query("DELETE FROM VENDEDOR WHERE codigo_vendedore = ?", [id]);
-    res.json({ success: true });
+    const result = await pool.query(
+      "DELETE FROM VENDEDOR WHERE codigo_vendedore = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Vendedor no encontrado" });
+    }
+
+    res.json({
+      mensaje: "Vendedor eliminado correctamente",
+      vendedor: result.rows[0],
+    });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar vendedor" });
+    console.error("Error al eliminar vendedor:", error);
+    res.status(500).json({
+      error: "Error al eliminar vendedor",
+      detalle: error.message,
+    });
   }
 };
