@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   getPortalConfig,
-  getTemas,
   updatePortalConfig,
   getVendedorPlan,
   getProductosPortal,
@@ -18,7 +17,6 @@ const router = express.Router();
 
 // Rutas más específicas primero
 router.get('/vendedor/:id/plan', getVendedorPlan);
-router.get('/temas', getTemas);
 
 // Rutas con parámetros similares después
 router.get('/:vendedorId/config', getPortalConfig);

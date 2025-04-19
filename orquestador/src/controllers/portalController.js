@@ -10,55 +10,62 @@ const pool = new Pool({
 });
 
 export const getPortalConfig = async (req, res) => {
-    try {
-      const vendedorId = parseInt(req.params.vendedorId);
-      
-      // 1. Obtener código del portal
-      const portalQuery = await pool.query(
-        `SELECT p.codigo_portal, pc.* 
-         FROM portal p
-         LEFT JOIN portal_configuracion pc ON p.codigo_portal = pc.portal_codigo_portal
-         WHERE p.vendedor_codigo_vendedore = $1`,
-        [vendedorId]
-      );
-  
-      if (portalQuery.rows.length === 0) {
-        return res.status(404).json({ 
-          success: false,
-          error: 'Portal no encontrado para este vendedor'
-        });
-      }
-  
-      const config = portalQuery.rows[0] || {};
-      delete config.codigo_portal; // Eliminamos el campo duplicado
-  
-      res.json({
+  try {
+    const vendedorId = parseInt(req.params.vendedorId);
+    
+    // 1. Obtener código del portal y configuración
+    const result = await pool.query(
+      `SELECT p.codigo_portal, pc.* 
+       FROM portal p
+       LEFT JOIN portal_configuracion pc ON p.codigo_portal = pc.portal_codigo_portal
+       WHERE p.vendedor_codigo_vendedore = $1`,
+      [vendedorId]
+    );
+
+    if (result.rows.length === 0) {
+      // Si no existe configuración, devolver valores por defecto
+      return res.json({
         success: true,
-        codigo_portal: portalQuery.rows[0].codigo_portal,
-        config
-      });
-  
-    } catch (error) {
-      console.error('Error en getPortalConfig:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Error interno del servidor'
-      });
-    }
-  };
-  
-  export const getTemas = async (req, res) => {
-    try {
-      const result = await pool.query('SELECT * FROM temas_portal');
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error en getTemas:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Error al obtener temas'
+        codigo_portal: 'DEFAULT-001',
+        config: {
+          tema_seleccionado: 'default',
+          color_principal: '#4F46E5',
+          color_secundario: '#7C3AED',
+          color_fondo: '#FFFFFF',
+          fuente_principal: 'Arial',
+          disposicion_productos: 'grid',
+          productos_por_fila: 3,
+          mostrar_precios: true,
+          mostrar_valoraciones: true,
+          estilo_header: 'normal',
+          mostrar_busqueda: true,
+          mostrar_categorias: true,
+          mostrar_banner: true,
+          logo_personalizado: '',
+          banner_personalizado: ''
+        }
       });
     }
-  };
+
+    const config = result.rows[0] || {};
+    delete config.codigo_portal; // Eliminamos el campo duplicado
+
+    res.json({
+      success: true,
+      codigo_portal: result.rows[0].codigo_portal,
+      config
+    });
+
+  } catch (error) {
+    console.error('Error en getPortalConfig:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+  
+
   export const updateProducto = async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);
@@ -122,46 +129,110 @@ export const getPortalConfig = async (req, res) => {
     }
   };
   export const updatePortalConfig = async (req, res) => {
+    const client = await pool.connect(); // Usamos transacción para asegurar consistencia
+    
     try {
-      const { portal_codigo_portal, ...newConfig } = req.body;
-      
-      if (!portal_codigo_portal) {
-        return res.status(400).json({
-          success: false,
-          error: 'Se requiere el código del portal'
+        await client.query('BEGIN'); // Iniciamos transacción
+
+        const { portal_codigo_portal, ...newConfig } = req.body;
+        
+        // Validaciones básicas
+        if (!portal_codigo_portal) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                error: 'Se requiere el código del portal'
+            });
+        }
+
+        // 1. Obtener configuración actual ANTES de la actualización
+        const currentConfigQuery = await client.query(
+            'SELECT * FROM portal_configuracion WHERE portal_codigo_portal = $1',
+            [portal_codigo_portal]
+        );
+
+        if (currentConfigQuery.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({
+                success: false,
+                error: 'Configuración no encontrada para este portal'
+            });
+        }
+
+        const currentConfig = currentConfigQuery.rows[0];
+        
+        // 2. Preparar y ejecutar la actualización
+        const fieldsToUpdate = Object.keys(newConfig)
+            .filter(key => newConfig[key] !== undefined && key !== 'codigo_portal_configuracion')
+            .map((key, index) => `"${key}" = $${index + 1}`)
+            .join(', ');
+
+        const valuesToUpdate = Object.values(newConfig)
+            .filter(val => val !== undefined);
+
+        const updateQuery = `
+            UPDATE portal_configuracion
+            SET ${fieldsToUpdate}, fecha_actualizacion = NOW()
+            WHERE portal_codigo_portal = $${valuesToUpdate.length + 1}
+            RETURNING *`;
+
+        const updateResult = await client.query(
+            updateQuery, 
+            [...valuesToUpdate, portal_codigo_portal]
+        );
+
+        const updatedConfig = updateResult.rows[0];
+
+        // 3. Registrar en histórico_configuracion
+        const historicoQuery = `
+            INSERT INTO historico_configuracion (
+                configuracion_anterior,
+                configuracion_nueva,
+                fecha_cambio,
+                cambiado_por,
+                motivo_cambio,
+                portal_codigo_portal
+            ) VALUES ($1, $2, NOW(), $3, $4, $5)
+            RETURNING codigo_historial`;
+
+        // Obtenemos el ID del vendedor del token JWT o de la sesión
+        const vendedorId = req.user?.codigo_vendedore || req.vendedorId || 1; // Fallback a 1 si no hay info
+        
+        const historicoResult = await client.query(
+            historicoQuery,
+            [
+                JSON.stringify(currentConfig), // Configuración anterior
+                JSON.stringify(updatedConfig), // Configuración nueva
+                vendedorId,                   // ID del vendedor que hizo el cambio
+                1,                            // Motivo 1 = actualización manual
+                portal_codigo_portal           // Código del portal
+            ]
+        );
+
+        await client.query('COMMIT'); // Confirmamos la transacción
+
+        res.json({
+            success: true,
+            config: updatedConfig,
+            historicoId: historicoResult.rows[0].codigo_historial
         });
-      }
-  
-      const fields = Object.keys(newConfig)
-        .filter(key => newConfig[key] !== undefined)
-        .map((key, index) => `"${key}" = $${index + 1}`)
-        .join(', ');
-  
-      const values = Object.values(newConfig)
-        .filter(val => val !== undefined);
-  
-      // Elimina la duplicación de fecha_actualizacion
-      const query = `
-        UPDATE portal_configuracion
-        SET ${fields}, fecha_actualizacion = NOW()
-        WHERE portal_codigo_portal = $${values.length + 1}
-        RETURNING *`;
-  
-      const result = await pool.query(query, [...values, portal_codigo_portal]);
-  
-      res.json({
-        success: true,
-        config: result.rows[0]
-      });
-  
+
     } catch (error) {
-      console.error('Error en updatePortalConfig:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error al actualizar configuración'
-      });
+        await client.query('ROLLBACK');
+        console.error('Error en updatePortalConfig:', error);
+        
+        res.status(500).json({
+            success: false,
+            error: 'Error al actualizar configuración',
+            details: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                stack: error.stack
+            } : undefined
+        });
+    } finally {
+        client.release();
     }
-  };
+};
   export const getVendedorPlan = async (req, res) => {
     try {
       const vendedorId = parseInt(req.params.id);
@@ -259,9 +330,10 @@ export const getPortalConfig = async (req, res) => {
            calificacion_producto,
            descuento_producto,
            imagen_referencia_producto
-         FROM PRODUCTOS 
-         WHERE vendedor_codigo_vendedore = $1 AND estado_producto = $2`,
-        [vendedorId, 'activo']
+           FROM PRODUCTOS 
+           WHERE vendedor_codigo_vendedore = $1 
+           AND estado_producto IN ('Disponible', 'Agotado')`,
+          [vendedorId]
       );
       console.log('Productos encontrados:', productos.rows); // Debug
     
@@ -325,7 +397,7 @@ export const getPortalConfig = async (req, res) => {
     }
   };
 
-  //////////////DASHBOARD//////////////
+  /*__________________________DASHBOARD__________________________*/
   export const getDashboardData = async (req, res) => {
     try {
       const vendedorId = parseInt(req.params.vendedorId);

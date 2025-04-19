@@ -1,78 +1,84 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Configuración por defecto centralizada
+const DEFAULT_CONFIG = {
+  tema_seleccionado: 'default',
+  color_principal: '#4F46E5',
+  color_secundario: '#7C3AED',
+  color_fondo: '#FFFFFF',
+  fuente_principal: 'Arial',
+  disposicion_productos: 'grid',
+  productos_por_fila: 3,
+  mostrar_precios: true,
+  mostrar_valoraciones: true,
+  estilo_header: 'normal',
+  mostrar_busqueda: true,
+  mostrar_categorias: true,
+  mostrar_banner: true,
+  logo_personalizado: '',
+  banner_personalizado: ''
+};
+
 export const usePortalConfig = (vendedorId) => {
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-  const [config, setConfig] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [temas, setTemas] = useState([]);
+  const [state, setState] = useState({
+    config: DEFAULT_CONFIG, // Usa el mismo objeto de valores por defecto
+    loading: true,
+    error: null,
+    portalCodigo: null
+  });
 
+  // Cuando recibas datos del servidor
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        const configRes = await axios.get(`${baseURL}/api/portales/${vendedorId}/config`);
         
-        const [configResponse, temasResponse] = await Promise.all([
-          axios.get(`${baseURL}/api/portales/${vendedorId}/config`),
-          axios.get(`${baseURL}/api/portales/temas`)
-        ]);
-        
-        if (!configResponse.data?.success) {
-          throw new Error(configResponse.data?.error || 'Error en la respuesta de configuración');
-        }
-        
-        setConfig(configResponse.data.config);
-        setTemas(temasResponse.data || []);
-      } catch (err) {
-        console.error('Error en usePortalConfig:', err);
-        setError(err.message);
-        
-        // Configuración por defecto si hay error
-        setConfig({
-          tema_seleccionado: 'default',
-          color_principal: '#4F46E5',
-          color_secundario: '#7C3AED',
-          color_fondo: '#FFFFFF',
-          fuente_principal: 'Arial',
-          disposicion_productos: 'grid',
-          productos_por_fila: 3,
-          mostrar_precios: true,
-          mostrar_valoraciones: true,
-          estilo_header: 'normal',
-          mostrar_busqueda: true,
-          mostrar_categorias: true,
-          mostrar_banner: true,
-          logo_personalizado: '',
-          banner_personalizado: ''
+        setState({
+          loading: false,
+          error: null,
+          config: {
+            ...DEFAULT_CONFIG,
+            ...(configRes.data?.config || {}) // Combina con los datos del servidor
+          },
+          portalCodigo: configRes.data?.codigo_portal || null
         });
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        // En caso de error, usa los valores por defecto
+        setState({
+          loading: false,
+          error: err.message,
+          config: DEFAULT_CONFIG,
+          portalCodigo: null
+        });
       }
     };
 
     if (vendedorId) fetchData();
   }, [vendedorId, baseURL]);
 
-const updateConfig = async (newConfig) => {
+  const updateConfig = async (newConfig) => {
     try {
       const response = await axios.put(
         `${baseURL}/api/portales/portal/config`,
-        newConfig,
         {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          portal_codigo_portal: state.portalCodigo,
+          ...newConfig
         }
       );
       
-      if (!response.data?.success) {
-        throw new Error(response.data?.error || 'Error al actualizar configuración');
+      if (response.data.success) {
+        setState(prev => ({
+          ...prev,
+          config: {
+            ...prev.config,
+            ...newConfig
+          }
+        }));
+        return { success: true };
       }
-      
-      setConfig(newConfig);
-      return { success: true };
+      throw new Error(response.data?.error || 'Error al actualizar');
     } catch (err) {
       console.error('Error al actualizar configuración:', err);
       return { 
@@ -82,5 +88,8 @@ const updateConfig = async (newConfig) => {
     }
   };
 
-  return { config, temas, loading, error, updateConfig };
+  return { 
+    ...state,
+    updateConfig 
+  };
 };

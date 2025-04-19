@@ -4,19 +4,39 @@ import { useVendedor } from '@context/vendedorContext';
 import axios from 'axios';
 import './styles.css';
 
+const DEFAULT_CONFIG = {
+  tema_seleccionado: 'default',
+  color_principal: '#4F46E5',
+  color_secundario: '#7C3AED',
+  color_fondo: '#FFFFFF',
+  fuente_principal: 'Arial',
+  disposicion_productos: 'grid',
+  productos_por_fila: 3,
+  mostrar_precios: true,
+  mostrar_valoraciones: true,
+  estilo_header: 'normal',
+  mostrar_busqueda: true,
+  mostrar_categorias: true,
+  estilos_productos: 'card',
+  mostrar_banner: true,
+  logo_personalizado: '',
+  banner_personalizado: '',
+  estilo_titulo: 'bold 24px Arial'
+};
+
 const ConfigPortal = () => {
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const { vendedorId } = useVendedor();
   
   const { 
     config, 
-    temas, 
     loading: loadingConfig, 
     error: errorConfig, 
     updateConfig 
   } = usePortalConfig(vendedorId);
   
-  const [localConfig, setLocalConfig] = useState(config);
+  // Inicializa con valores por defecto
+  const [localConfig, setLocalConfig] = useState(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState('apariencia');
   const [plan, setPlan] = useState(null);
   const [portalCodigo, setPortalCodigo] = useState(null);
@@ -37,6 +57,12 @@ const ConfigPortal = () => {
   };
 
   useEffect(() => {
+    if (config) {
+      setLocalConfig(prev => ({
+        ...DEFAULT_CONFIG,
+        ...config // Sobrescribe solo las propiedades que vienen del servidor
+      }));
+    }
     const fetchData = async () => {
       try {
         const [planRes, configRes] = await Promise.all([
@@ -60,7 +86,7 @@ const ConfigPortal = () => {
     };
 
     if (vendedorId) fetchData();
-  }, [vendedorId, baseURL]);
+  }, [vendedorId, baseURL,config]);
 
   const handleConfigChange = (field, value) => {
     setLocalConfig({
@@ -106,26 +132,35 @@ const ConfigPortal = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await axios.put(
-        `${baseURL}/api/portales/portal/config`,
-        {
-          portal_codigo_portal: portalCodigo,
-          ...localConfig
+        // Asegúrate de que portalCodigo está definido
+        if (!portalCodigo) {
+            throw new Error('No se ha cargado el código del portal');
         }
-      );
-      
-      if (response.data.success) {
-        alert('Configuración guardada exitosamente');
-        // Actualizar el config global después de guardar
-        updateConfig(localConfig);
-      }
+
+        const response = await axios.put(
+            `${baseURL}/api/portales/portal/config`,
+            {
+                portal_codigo_portal: portalCodigo, // Asegúrate que este campo coincide con el esperado en el backend
+                ...localConfig
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        if (response.data.success) {
+            alert('Configuración guardada exitosamente');
+            updateConfig(localConfig);
+        }
     } catch (error) {
-      console.error('Error al guardar:', error);
-      alert('Error al guardar la configuración');
+        console.error('Error al guardar:', error);
+        alert(`Error al guardar la configuración: ${error.response?.data?.error || error.message}`);
     } finally {
-      setSaving(false);
+        setSaving(false);
     }
-  };
+};
 
   if (loadingConfig || !config) return <div className="loading">Cargando configuración...</div>;
   if (errorConfig) return <div className="error">{errorConfig}</div>;
@@ -172,40 +207,13 @@ const ConfigPortal = () => {
         {activeTab === 'apariencia' && (
           <>
             <div className="config-section">
-              <h3>Tema del Portal</h3>
-              
-              <div className="theme-selector">
-                {temas.map(tema => (
-                  <div 
-                    key={tema.codigo_tema}
-                    className={`theme-card ${config.tema_seleccionado === tema.nombre_tema ? 'active' : ''}`}
-                    onClick={() => handleConfigChange('tema_seleccionado', tema.nombre_tema)}
-                  >
-                    <div className="theme-preview">
-                      <div 
-                        className="theme-primary" 
-                        style={{ backgroundColor: tema.datos_config.colorPrincipal }}
-                      />
-                      <div 
-                        className="theme-secondary" 
-                        style={{ backgroundColor: tema.datos_config.colorSecundario }}
-                      />
-                    </div>
-                    <h4>{tema.nombre_tema}</h4>
-                    <p>{tema.descripcion_tema}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="config-section">
               <h3>Colores Personalizados</h3>
               
               <div className="form-group">
                 <label>Color principal</label>
                 <input
                   type="color"
-                  value={config.color_principal}
+                  value={localConfig.color_principal || '#4F46E5'}
                   onChange={(e) => handleConfigChange('color_principal', e.target.value)}
                 />
               </div>
@@ -214,7 +222,7 @@ const ConfigPortal = () => {
                 <label>Color secundario</label>
                 <input
                   type="color"
-                  value={config.color_secundario}
+                  value={localConfig.color_secundario}
                   onChange={(e) => handleConfigChange('color_secundario', e.target.value)}
                 />
               </div>
@@ -223,7 +231,7 @@ const ConfigPortal = () => {
                 <label>Color de fondo</label>
                 <input
                   type="color"
-                  value={config.color_fondo}
+                  value={localConfig.color_fondo}
                   onChange={(e) => handleConfigChange('color_fondo', e.target.value)}
                 />
               </div>
@@ -235,7 +243,7 @@ const ConfigPortal = () => {
               <div className="form-group">
                 <label>Fuente principal</label>
                 <select
-                  value={config.fuente_principal}
+                  value={localConfig.fuente_principal || 'Arial'}
                   onChange={(e) => handleConfigChange('fuente_principal', e.target.value)}
                 >
                   <option value="Arial">Arial</option>
@@ -251,7 +259,7 @@ const ConfigPortal = () => {
                 <label>Estilo del título</label>
                 <input
                   type="text"
-                  value={config.estilo_titulo}
+                  value={localConfig.estilo_titulo}
                   onChange={(e) => handleConfigChange('estilo_titulo', e.target.value)}
                   placeholder="Ej: bold 24px Arial"
                 />
@@ -269,7 +277,7 @@ const ConfigPortal = () => {
                 {Object.entries(layoutPreviews).map(([layout, imgSrc]) => (
                   <div 
                     key={layout}
-                    className={`layout-option ${config.disposicion_productos === layout ? 'active' : ''}`}
+                    className={`layout-option ${localConfig.disposicion_productos === layout ? 'active' : ''}`}
                     onClick={() => handleConfigChange('disposicion_productos', layout)}
                   >
                     <img src={imgSrc} alt={`Layout ${layout}`} />
@@ -284,7 +292,7 @@ const ConfigPortal = () => {
                   type="number"
                   min="1"
                   max="6"
-                  value={config.productos_por_fila}
+                  value={localConfig.productos_por_fila || 3}
                   onChange={(e) => handleConfigChange('productos_por_fila', parseInt(e.target.value))}
                 />
               </div>
@@ -296,7 +304,7 @@ const ConfigPortal = () => {
               <div className="form-group">
                 <label>Estilo del encabezado</label>
                 <select
-                  value={config.estilo_header}
+                  value={localConfig.estilo_header}
                   onChange={(e) => handleConfigChange('estilo_header', e.target.value)}
                 >
                   <option value="fijo">Fijo (siempre visible)</option>
@@ -309,7 +317,7 @@ const ConfigPortal = () => {
               <div className="form-group checkbox">
                 <input
                   type="checkbox"
-                  checked={config.mostrar_busqueda}
+                  checked={localConfig.mostrar_busqueda}
                   onChange={(e) => handleConfigChange('mostrar_busqueda', e.target.checked)}
                 />
                 <label>Mostrar barra de búsqueda</label>
@@ -318,7 +326,7 @@ const ConfigPortal = () => {
               <div className="form-group checkbox">
                 <input
                   type="checkbox"
-                  checked={config.mostrar_categorias}
+                  checked={localConfig.mostrar_categorias}
                   onChange={(e) => handleConfigChange('mostrar_categorias', e.target.checked)}
                 />
                 <label>Mostrar categorías</label>
@@ -336,7 +344,7 @@ const ConfigPortal = () => {
                 {Object.entries(stylePreviews).map(([style, imgSrc]) => (
                   <div 
                     key={style}
-                    className={`style-option ${config.estilos_productos === style ? 'active' : ''}`}
+                    className={`style-option ${localConfig.estilos_productos === style ? 'active' : ''}`}
                     onClick={() => handleConfigChange('estilos_productos', style)}
                   >
                     <img src={imgSrc} alt={`Style ${style}`} />
@@ -348,7 +356,7 @@ const ConfigPortal = () => {
               <div className="form-group checkbox">
                 <input
                   type="checkbox"
-                  checked={config.mostrar_precios}
+                  checked={localConfig.mostrar_precios}
                   onChange={(e) => handleConfigChange('mostrar_precios', e.target.checked)}
                 />
                 <label>Mostrar precios</label>
@@ -357,7 +365,7 @@ const ConfigPortal = () => {
               <div className="form-group checkbox">
                 <input
                   type="checkbox"
-                  checked={config.mostrar_valoraciones}
+                  checked={localConfig.mostrar_valoraciones}
                   onChange={(e) => handleConfigChange('mostrar_valoraciones', e.target.checked)}
                 />
                 <label>Mostrar valoraciones</label>
@@ -414,7 +422,7 @@ const ConfigPortal = () => {
               <div className="form-group checkbox">
                 <input
                   type="checkbox"
-                  checked={config.mostrar_banner}
+                  checked={localConfig.mostrar_banner}
                   onChange={(e) => handleConfigChange('mostrar_banner', e.target.checked)}
                 />
                 <label>Mostrar banner en el portal</label>
