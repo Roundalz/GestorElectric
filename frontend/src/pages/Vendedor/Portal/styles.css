@@ -757,9 +757,34 @@ margin-right: 10px;
 #logo-upload, #banner-upload {
 display: none;
 }
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
 
 /*___________________ESTILOS PARA PORTALVIEW.JSX__________________*/
-/* Estilos base */
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+/* Variables CSS */
+:root {
+--color-primary: #4F46E5;
+--color-secondary: #7C3AED;
+--color-bg: #FFFFFF;
+--font-family: Arial, sans-serif;
+--title-style: bold 24px Arial;
+--products-per-row: 4;
+--button-style: redondeado;
+--product-hover-effect: sombra;
+}
+
+/*___________________ESTILOS BASE__________________*/
 .portal-view {
 font-family: var(--font-family);
 background-color: var(--color-bg);
@@ -767,9 +792,10 @@ color: #333;
 min-height: 100vh;
 display: flex;
 flex-direction: column;
+position: relative;
 }
 
-/* Header */
+/*___________________HEADER__________________*/
 .portal-header {
 display: flex;
 justify-content: space-between;
@@ -777,31 +803,51 @@ align-items: center;
 padding: 1rem 2rem;
 background-color: var(--color-primary);
 color: white;
+position: relative;
+z-index: 100;
 }
 
-.portal-header.compact {
-padding: 0.5rem 1rem;
+.portal-header.fixed {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+z-index: 1000;
+}
+
+.portal-header.sticky {
+position: sticky;
+top: 0;
+z-index: 1000;
 }
 
 .portal-logo img {
 max-height: 60px;
+max-width: 200px;
+object-fit: contain;
 }
 
 .portal-search input {
-padding: 0.5rem;
+padding: 0.5rem 1rem;
 border-radius: 4px;
 border: none;
 min-width: 300px;
+font-size: 1rem;
 }
 
-/* Banner */
+/*___________________BANNER__________________*/
+.portal-banner {
+width: 100%;
+overflow: hidden;
+}
+
 .portal-banner img {
 width: 100%;
-max-height: 300px;
+max-height: 400px;
 object-fit: cover;
 }
 
-/* Contenido principal */
+/*___________________CONTENIDO PRINCIPAL__________________*/
 .portal-main {
 flex: 1;
 padding: 2rem;
@@ -810,13 +856,106 @@ margin: 0 auto;
 width: 100%;
 }
 
+.portal-content-wrapper {
+display: flex;
+gap: 2rem;
+}
+
+.portal-sidebar {
+flex: 0 0 250px;
+}
+
+.portal-products-section {
+flex: 1;
+}
+
 .portal-title {
 color: var(--color-primary);
 margin-bottom: 2rem;
 text-align: center;
+font: var(--title-style);
 }
 
-/* Grid de productos */
+/*___________________FILTROS__________________*/
+.product-filters {
+background: white;
+padding: 1.5rem;
+border-radius: 8px;
+box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+margin-bottom: 2rem;
+}
+
+.product-filters h4 {
+margin-top: 0;
+margin-bottom: 1rem;
+color: var(--color-primary);
+}
+
+.filter-option {
+margin-bottom: 0.5rem;
+}
+
+.filter-option label {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+cursor: pointer;
+}
+
+.filter-option input[type="checkbox"] {
+width: 18px;
+height: 18px;
+}
+
+/*___________________OFERTAS DESTACADAS__________________*/
+.featured-offers {
+margin-bottom: 3rem;
+}
+
+.featured-offers h3 {
+color: var(--color-primary);
+margin-bottom: 1rem;
+padding-bottom: 0.5rem;
+border-bottom: 2px solid var(--color-secondary);
+}
+
+.offers-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1.5rem;
+}
+
+.offer-card {
+position: relative;
+border-radius: 8px;
+overflow: hidden;
+cursor: pointer;
+transition: transform 0.3s ease;
+}
+
+.offer-card:hover {
+transform: translateY(-5px);
+}
+
+.offer-card img {
+width: 100%;
+height: 200px;
+object-fit: cover;
+}
+
+.offer-badge {
+position: absolute;
+top: 10px;
+right: 10px;
+background-color: var(--color-secondary);
+color: white;
+padding: 0.3rem 0.6rem;
+border-radius: 20px;
+font-weight: bold;
+font-size: 0.9rem;
+}
+
+/*___________________GRID DE PRODUCTOS__________________*/
 .product-grid {
 display: grid;
 gap: 1.5rem;
@@ -834,46 +973,53 @@ flex-direction: column;
 gap: 1rem;
 }
 
-.carousel {
-display: flex;
-overflow-x: auto;
-gap: 1rem;
-padding-bottom: 1rem;
-scroll-snap-type: x mandatory;
-}
-
-/* Estilos de tarjetas de producto */
+/*___________________TARJETAS DE PRODUCTO__________________*/
 .product-card {
 border: 1px solid #e1e1e1;
 border-radius: 8px;
 overflow: hidden;
-transition: transform 0.2s, box-shadow 0.2s;
+transition: all 0.3s ease;
 cursor: pointer;
 background: white;
+position: relative;
 }
 
-.product-card:hover {
-transform: translateY(-5px);
+/* Efectos hover según configuración */
+.product-card[data-hover-effect="sombra"]:hover {
 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+transform: translateY(-5px);
 }
 
-/* Diferentes estilos de tarjetas */
-.minimalista {
-border: none;
-box-shadow: none;
+.product-card[data-hover-effect="zoom"]:hover {
+transform: scale(1.03);
 }
 
-.minimalista:hover {
-box-shadow: none;
-transform: none;
+.product-card[data-hover-effect="elevacion"]:hover {
+transform: translateY(-10px);
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-.destacado {
+/* Estilos de botones según configuración */
+.product-card.redondeado .product-actions button {
+border-radius: 20px;
+}
+
+.product-card.cuadrado .product-actions button {
+border-radius: 0;
+}
+
+.product-card.con-borde .product-actions button {
 border: 2px solid var(--color-primary);
 }
 
-.informativo .product-info {
-padding: 1rem;
+.product-card.fantasma .product-actions button {
+background: transparent;
+color: var(--color-primary);
+border: 1px solid var(--color-primary);
+}
+
+.product-image {
+position: relative;
 }
 
 .product-image img {
@@ -882,8 +1028,32 @@ height: 200px;
 object-fit: cover;
 }
 
+.discount-badge {
+position: absolute;
+top: 10px;
+right: 10px;
+background-color: var(--color-secondary);
+color: white;
+padding: 0.3rem 0.6rem;
+border-radius: 20px;
+font-weight: bold;
+font-size: 0.9rem;
+}
+
 .product-info {
-padding: 1rem;
+padding: 1.2rem;
+}
+
+.product-info h3 {
+margin: 0 0 0.5rem 0;
+font-size: 1.1rem;
+color: #333;
+}
+
+.product-type {
+color: #666;
+font-size: 0.9rem;
+margin: 0 0 0.5rem 0;
 }
 
 .product-price {
@@ -893,12 +1063,126 @@ font-size: 1.2rem;
 margin: 0.5rem 0;
 }
 
-.product-rating {
-color: gold;
-font-size: 1.2rem;
+.product-price .original-price {
+text-decoration: line-through;
+color: #999;
+font-size: 0.9rem;
+margin-left: 0.5rem;
 }
 
-/* Modal de producto */
+.product-rating {
+color: gold;
+font-size: 1rem;
+margin-top: 0.5rem;
+}
+
+.product-rating span {
+color: #666;
+font-size: 0.8rem;
+margin-left: 0.3rem;
+}
+
+/*___________________INSTAGRAM FEED__________________*/
+.instagram-feed {
+margin-top: 3rem;
+padding-top: 2rem;
+border-top: 1px solid #e1e1e1;
+}
+
+.instagram-feed h3 {
+text-align: center;
+color: var(--color-primary);
+margin-bottom: 1.5rem;
+}
+
+.instagram-posts {
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+gap: 1rem;
+}
+
+/*___________________FOOTER__________________*/
+.portal-footer {
+background-color: var(--color-primary);
+color: white;
+padding: 2rem 0 1rem;
+margin-top: 3rem;
+}
+
+.footer-content {
+display: flex;
+justify-content: space-around;
+max-width: 1200px;
+margin: 0 auto;
+padding: 0 2rem;
+}
+
+.footer-section {
+flex: 1;
+padding: 0 1rem;
+}
+
+.footer-section h4 {
+margin-top: 0;
+margin-bottom: 1rem;
+color: white;
+}
+
+.footer-section p {
+margin: 0.3rem 0;
+font-size: 0.9rem;
+}
+
+.whatsapp-link {
+display: inline-block;
+color: white;
+text-decoration: none;
+margin-top: 0.5rem;
+transition: opacity 0.2s;
+}
+
+.whatsapp-link:hover {
+opacity: 0.8;
+}
+
+.copyright {
+text-align: center;
+margin-top: 2rem;
+padding-top: 1rem;
+border-top: 1px solid rgba(255, 255, 255, 0.2);
+font-size: 0.8rem;
+}
+
+/*___________________BOTÓN WHATSAPP FLOTANTE__________________*/
+.whatsapp-float {
+position: fixed;
+bottom: 30px;
+right: 30px;
+z-index: 100;
+}
+
+.whatsapp-float a {
+display: block;
+width: 60px;
+height: 60px;
+border-radius: 50%;
+background-color: #25D366;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+transition: transform 0.3s;
+}
+
+.whatsapp-float a:hover {
+transform: scale(1.1);
+}
+
+.whatsapp-float img {
+width: 100%;
+height: 100%;
+padding: 12px;
+box-sizing: border-box;
+}
+
+/*___________________MODAL DE PRODUCTO__________________*/
 .product-modal-overlay {
 position: fixed;
 top: 0;
@@ -910,16 +1194,18 @@ display: flex;
 justify-content: center;
 align-items: center;
 z-index: 1000;
+padding: 1rem;
 }
 
 .product-modal {
 background: white;
 border-radius: 8px;
 max-width: 900px;
-width: 90%;
+width: 100%;
 max-height: 90vh;
 overflow-y: auto;
 display: flex;
+position: relative;
 }
 
 .modal-close {
@@ -930,11 +1216,18 @@ background: none;
 border: none;
 font-size: 1.5rem;
 cursor: pointer;
+color: #666;
+z-index: 10;
+}
+
+.modal-close:hover {
+color: var(--color-primary);
 }
 
 .modal-product-images {
 flex: 1;
 padding: 2rem;
+min-width: 300px;
 }
 
 .modal-product-images img {
@@ -951,10 +1244,12 @@ border-left: 1px solid #e1e1e1;
 
 .product-price-section {
 margin: 1rem 0;
+display: flex;
+align-items: center;
 }
 
 .price {
-font-size: 1.5rem;
+font-size: 1.8rem;
 font-weight: bold;
 color: var(--color-primary);
 }
@@ -962,14 +1257,26 @@ color: var(--color-primary);
 .discount {
 background-color: var(--color-secondary);
 color: white;
-padding: 0.2rem 0.5rem;
-border-radius: 4px;
+padding: 0.3rem 0.8rem;
+border-radius: 20px;
 margin-left: 1rem;
+font-size: 0.9rem;
 }
 
 .product-stock {
 margin: 1rem 0;
 color: #666;
+display: flex;
+gap: 1rem;
+}
+
+.product-description {
+margin: 2rem 0;
+}
+
+.product-description h3 {
+margin-top: 0;
+color: var(--color-primary);
 }
 
 .product-actions {
@@ -982,37 +1289,90 @@ margin-top: 2rem;
 background-color: var(--color-primary);
 color: white;
 border: none;
-padding: 0.5rem 1rem;
-border-radius: 4px;
+padding: 0.8rem 1.5rem;
+font-size: 1rem;
 cursor: pointer;
+transition: background-color 0.2s;
+}
+
+.btn-add-to-cart:hover {
+background-color: var(--color-secondary);
 }
 
 .btn-favorite {
 background-color: white;
 color: var(--color-primary);
 border: 1px solid var(--color-primary);
-padding: 0.5rem 1rem;
-border-radius: 4px;
+padding: 0.8rem 1.5rem;
+font-size: 1rem;
 cursor: pointer;
+transition: all 0.2s;
 }
 
-/* Footer */
-.portal-footer {
-text-align: center;
-padding: 1rem;
-background-color: var(--color-primary);
-color: white;
+.btn-favorite:hover {
+background-color: #f8f8f8;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Estilos de botones según configuración */
+.btn-add-to-cart.redondeado,
+.btn-favorite.redondeado {
+border-radius: 20px;
+}
+
+.btn-add-to-cart.cuadrado,
+.btn-favorite.cuadrado {
+border-radius: 0;
+}
+
+.btn-add-to-cart.con-borde,
+.btn-favorite.con-borde {
+border: 2px solid var(--color-primary);
+}
+
+.btn-add-to-cart.fantasma,
+.btn-favorite.fantasma {
+background: transparent;
+color: var(--color-primary);
+border: 1px solid var(--color-primary);
+}
+
+/*___________________RESPONSIVE__________________*/
+@media (max-width: 1024px) {
+.portal-content-wrapper {
+  flex-direction: column;
+}
+
+.portal-sidebar {
+  flex: 1;
+  margin-bottom: 2rem;
+}
+
 .product-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.offers-grid {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.instagram-posts {
+  grid-template-columns: repeat(4, 1fr);
+}
+}
+
+@media (max-width: 768px) {
 .portal-header {
   flex-direction: column;
   gap: 1rem;
+  padding: 1rem;
+}
+
+.portal-search input {
+  min-width: 100%;
+}
+
+.product-grid {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .product-modal {
@@ -1023,10 +1383,51 @@ color: white;
   border-left: none;
   border-top: 1px solid #e1e1e1;
 }
+
+.instagram-posts {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.footer-content {
+  flex-direction: column;
+  gap: 2rem;
+}
 }
 
 @media (max-width: 480px) {
 .product-grid {
   grid-template-columns: 1fr;
+}
+
+.offers-grid {
+  grid-template-columns: 1fr;
+}
+
+.instagram-posts {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.modal-product-images {
+  padding: 1rem;
+  min-width: auto;
+}
+
+.modal-product-details {
+  padding: 1.5rem;
+}
+
+.product-actions {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.whatsapp-float {
+  bottom: 20px;
+  right: 20px;
+}
+
+.whatsapp-float a {
+  width: 50px;
+  height: 50px;
 }
 }
