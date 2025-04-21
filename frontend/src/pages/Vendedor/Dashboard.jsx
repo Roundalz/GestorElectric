@@ -31,7 +31,7 @@ const Dashboard = () => {
         setLoading(true);
         const response = await axios.get(`${baseURL}/api/portales/${vendedorId}/dashboard`);
         setData(response.data);
-        console.log('Datos de gastos por categoría:', response.data.gastosCategoria); // <-- Agrega esto
+        console.log('Datos de gastos por categoría:', response.data.gastosCategoria);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -43,17 +43,42 @@ const Dashboard = () => {
       fetchDashboardData();
     }
   }, [vendedorId, baseURL]);
-  // Colores para gráficos
+  
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   if (loading) return <div className="loading">Cargando dashboard...</div>;
   if (error) return <div className="error">{error}</div>;
 
+  // Componente de gráfica con zoom
+  const ChartWithZoom = ({ children }) => {
+    const [scale, setScale] = useState(1);
+  
+    return (
+      <div className="zoom-container">
+        <div className="zoom-controls">
+          <button onClick={() => setScale(s => Math.min(s + 0.1, 3))}>+</button>
+          <button onClick={() => setScale(s => Math.max(s - 0.1, 0.5))}>-</button>
+          <button onClick={() => setScale(1)}>Reset</button>
+        </div>
+        <div 
+          className="zoom-content" 
+          style={{ 
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: '100%',
+            height: '100%'
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="dashboard-container">
       <h1>Panel de Control</h1>
       
-      {/* Pestañas del dashboard */}
       <div className="dashboard-tabs">
         <button 
           className={activeTab === 'finanzas' ? 'active' : ''}
@@ -81,24 +106,25 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* Contenido de las pestañas */}
       <div className="dashboard-content">
         {activeTab === 'finanzas' && (
           <>
             <div className="dashboard-section">
               <h2>Ingresos vs Gastos</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={data.ingresosGastos}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="mes" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="ingresos" stroke="#4CAF50" strokeWidth={2} />
-                    <Line type="monotone" dataKey="gastos" stroke="#F44336" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={data.ingresosGastos}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mes" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="ingresos" stroke="#4CAF50" strokeWidth={2} />
+                      <Line type="monotone" dataKey="gastos" stroke="#F44336" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
 
@@ -106,33 +132,35 @@ const Dashboard = () => {
               <h2>Desglose de Gastos</h2>
               <div className="chart-container">
                 {data.gastosCategoria && data.gastosCategoria.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={400}>
-                    <PieChart>
-                      <Pie
-                        data={data.gastosCategoria.map(item => ({
-                          ...item,
-                          valor: Number(item.valor) // Asegura que valor sea numérico
-                        }))}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="valor"
-                        nameKey="categoria"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {data.gastosCategoria.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value) => [`$${value.toLocaleString()}`, 'Valor']}
-                        labelFormatter={(label) => `Categoría: ${label}`}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <ChartWithZoom>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <PieChart>
+                        <Pie
+                          data={data.gastosCategoria.map(item => ({
+                            ...item,
+                            valor: Number(item.valor)
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={150}
+                          fill="#8884d8"
+                          dataKey="valor"
+                          nameKey="categoria"
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {data.gastosCategoria.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [`$${value.toLocaleString()}`, 'Valor']}
+                          labelFormatter={(label) => `Categoría: ${label}`}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartWithZoom>
                 ) : (
                   <div className="no-data-message">
                     No hay datos de gastos por categoría disponibles
@@ -144,16 +172,18 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Evolución de Ventas</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={data.ventasMensuales}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="mes" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="ventas" fill="#8884d8" name="Ventas mensuales" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={data.ventasMensuales}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mes" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="ventas" fill="#8884d8" name="Ventas mensuales" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
           </>
@@ -164,20 +194,22 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Productos Más Vendidos</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    layout="vertical"
-                    data={data.topProductos.slice(0, 5)}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="nombre" type="category" width={150} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="ventas" fill="#4CAF50" name="Unidades vendidas" />
-                    <Bar dataKey="ingresos" fill="#2196F3" name="Ingresos generados" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      layout="vertical"
+                      data={data.topProductos.slice(0, 5)}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="nombre" type="category" width={150} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="ventas" fill="#4CAF50" name="Unidades vendidas" />
+                      <Bar dataKey="ingresos" fill="#2196F3" name="Ingresos generados" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
 
@@ -185,7 +217,6 @@ const Dashboard = () => {
               <h2>Productos Mejor Valorados</h2>
               <div className="products-grid">
                 {data.productosValorados.slice(0, 5).map((producto, index) => {
-                  // Convierte a número y maneja casos undefined/null
                   const calificacion = Number(producto.calificacion) || 0;
                   
                   return (
@@ -207,16 +238,18 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Productos en Favoritos</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={data.topProductos.slice(0, 5)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="nombre" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="favoritos" fill="#FF9800" name="Veces agregado a favoritos" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={data.topProductos.slice(0, 5)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="nombre" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="favoritos" fill="#FF9800" name="Veces agregado a favoritos" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
           </>
@@ -254,170 +287,178 @@ const Dashboard = () => {
             <div className="dashboard-section">
               <h2>Ticket Promedio</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={data.ventasMensuales}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="mes" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="ticket_promedio" 
-                      stroke="#9C27B0" 
-                      strokeWidth={2} 
-                      name="Ticket promedio ($)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={data.ventasMensuales}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mes" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="ticket_promedio" 
+                        stroke="#9C27B0" 
+                        strokeWidth={2} 
+                        name="Ticket promedio ($)"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
 
             <div className="dashboard-section">
               <h2>Impacto de Descuentos</h2>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={data.ventasMensuales}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="mes" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="ventas_con_descuento" fill="#FF5722" name="Ventas con descuento" />
-                    <Bar dataKey="ventas_sin_descuento" fill="#607D8B" name="Ventas sin descuento" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartWithZoom>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={data.ventasMensuales}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mes" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="ventas_con_descuento" fill="#FF5722" name="Ventas con descuento" />
+                      <Bar dataKey="ventas_sin_descuento" fill="#607D8B" name="Ventas sin descuento" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartWithZoom>
               </div>
             </div>
           </>
         )}
 
-{activeTab === 'clientes' && (
-  <>
-    <div className="dashboard-section">
-      <h2>Clientes Recurrentes</h2>
-      <div className="chart-container">
-        {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart 
-              data={data.clientesRecurrentes.map(item => ({
-                ...item,
-                valor_total: Number(item.valor_total),
-                compras: Number(item.compras)
-              }))}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="nombre" 
-                angle={-45} 
-                textAnchor="end"
-                height={70}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis />
-              <Tooltip 
-                formatter={(value, name) => [
-                  name === 'valor_total' ? `$${value.toLocaleString()}` : value,
-                  name === 'valor_total' ? 'Valor total' : 'Compras'
-                ]}
-                labelFormatter={(label) => `Cliente: ${label}`}
-              />
-              <Legend />
-              <Bar 
-                dataKey="compras" 
-                fill="#3F51B5" 
-                name="Compras realizadas" 
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar 
-                dataKey="valor_total" 
-                fill="#009688" 
-                name="Valor total ($)" 
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="no-data-message">
-            No se encontraron clientes recurrentes
-          </div>
-        )}
-      </div>
-    </div>
+        {activeTab === 'clientes' && (
+          <>
+            <div className="dashboard-section">
+              <h2>Clientes Recurrentes</h2>
+              <div className="chart-container">
+                {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
+                  <ChartWithZoom>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart 
+                        data={data.clientesRecurrentes.map(item => ({
+                          ...item,
+                          valor_total: Number(item.valor_total),
+                          compras: Number(item.compras)
+                        }))}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="nombre" 
+                          angle={-45} 
+                          textAnchor="end"
+                          height={70}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value, name) => [
+                            name === 'valor_total' ? `$${value.toLocaleString()}` : value,
+                            name === 'valor_total' ? 'Valor total' : 'Compras'
+                          ]}
+                          labelFormatter={(label) => `Cliente: ${label}`}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="compras" 
+                          fill="#3F51B5" 
+                          name="Compras realizadas" 
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar 
+                          dataKey="valor_total" 
+                          fill="#009688" 
+                          name="Valor total ($)" 
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartWithZoom>
+                ) : (
+                  <div className="no-data-message">
+                    No se encontraron clientes recurrentes
+                  </div>
+                )}
+              </div>
+            </div>
 
-    <div className="dashboard-section">
-      <h2>Valor por Cliente</h2>
-      <div className="chart-container">
-        {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              layout="vertical"
-              data={data.clientesRecurrentes
-                .map(item => ({
-                  ...item,
-                  valor_total: Number(item.valor_total)
-                }))
-                .slice(0, 5)
-              }
-              margin={{ left: 100 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis 
-                dataKey="nombre" 
-                type="category" 
-                width={150} 
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip 
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Valor generado']}
-                labelFormatter={(label) => `Cliente: ${label}`}
-              />
-              <Legend />
-              <Bar 
-                dataKey="valor_total" 
-                fill="#FF9800" 
-                name="Valor generado ($)"
-                radius={[0, 4, 4, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="no-data-message">
-            No se encontraron datos de clientes
-          </div>
-        )}
-      </div>
-    </div>
+            <div className="dashboard-section">
+              <h2>Valor por Cliente</h2>
+              <div className="chart-container">
+                {data.clientesRecurrentes && data.clientesRecurrentes.length > 0 ? (
+                  <ChartWithZoom>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart
+                        layout="vertical"
+                        data={data.clientesRecurrentes
+                          .map(item => ({
+                            ...item,
+                            valor_total: Number(item.valor_total)
+                          }))
+                          .slice(0, 5)
+                        }
+                        margin={{ left: 100 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis 
+                          dataKey="nombre" 
+                          type="category" 
+                          width={150} 
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`$${value.toLocaleString()}`, 'Valor generado']}
+                          labelFormatter={(label) => `Cliente: ${label}`}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="valor_total" 
+                          fill="#FF9800" 
+                          name="Valor generado ($)"
+                          radius={[0, 4, 4, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartWithZoom>
+                ) : (
+                  <div className="no-data-message">
+                    No se encontraron datos de clientes
+                  </div>
+                )}
+              </div>
+            </div>
 
-    <div className="dashboard-section">
-      <h2>Cumpleaños de Clientes</h2>
-      <div className="birthdays-list">
-        <h3>Próximos cumpleaños</h3>
-        {data.proximosCumpleanos && data.proximosCumpleanos.length > 0 ? (
-          <ul>
-            {data.proximosCumpleanos.map((cliente, index) => (
-              <li key={index}>
-                <span className="client-name">{cliente.nombre}</span>
-                <span className="client-birthday">
-                  {new Date(cliente.cumpleanos).toLocaleDateString('es-ES', {
-                    day: 'numeric', month: 'long'
-                  })}
-                </span>
-                <span className="client-email">{cliente.correo}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="no-data-message">
-            No hay cumpleaños próximos
-          </div>
+            <div className="dashboard-section">
+              <h2>Cumpleaños de Clientes</h2>
+              <div className="birthdays-list">
+                <h3>Próximos cumpleaños</h3>
+                {data.proximosCumpleanos && data.proximosCumpleanos.length > 0 ? (
+                  <ul>
+                    {data.proximosCumpleanos.map((cliente, index) => (
+                      <li key={index}>
+                        <span className="client-name">{cliente.nombre}</span>
+                        <span className="client-birthday">
+                          {new Date(cliente.cumpleanos).toLocaleDateString('es-ES', {
+                            day: 'numeric', month: 'long'
+                          })}
+                        </span>
+                        <span className="client-email">{cliente.correo}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="no-data-message">
+                    No hay cumpleaños próximos
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
-      </div>
-    </div>
-  </>
-)}
       </div>
     </div>
   );

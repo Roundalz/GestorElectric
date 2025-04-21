@@ -41,16 +41,35 @@ const PortalView = () => {
       setError('No se proporcionó ID de vendedor');
       setLoading(false);
     }
+    if (portalData && portalData.config) {
+      console.log('Configuración recibida:', portalData.config);
+      console.log('Productos por fila:', portalData.config.productos_por_fila);
+    }
   }, [vendedorId, baseURL]);
 
   const applyThemeStyles = (config) => {
-    return {
+    const styles = {
       '--color-primary': config.color_principal || '#4F46E5',
       '--color-secondary': config.color_secundario || '#7C3AED',
       '--color-bg': config.color_fondo || '#FFFFFF',
       '--font-family': config.fuente_principal || 'Arial, sans-serif',
-      '--title-style': config.estilo_titulo || 'bold 24px Arial'
+      '--title-style': config.estilo_titulo || 'bold 24px Arial',
+      '--products-per-row': config.productos_por_fila || 4
     };
+    console.log('Estilos aplicados:', styles);
+    return styles;
+  };
+
+  const getProductGridStyle = (config) => {
+    const styles = {};
+    console.log('Configuración para grid:', config);
+    
+    if (config.productos_por_fila) {
+      styles.gridTemplateColumns = `repeat(${config.productos_por_fila}, 1fr)`;
+      console.log('Estilos de grid aplicados:', styles);
+    }
+    
+    return styles;
   };
 
   const filteredProducts = portalData?.productos.filter(producto =>
@@ -62,13 +81,27 @@ const PortalView = () => {
     console.error('Error loading portal:', error);
     return <div className="error">{error}</div>;
   }
-  if (!portalData || !portalData.productos) {
-    console.log('Portal data:', portalData);
-    return <div>No se encontraron datos del portal o productos</div>;
-  }
+if (!portalData || !portalData.productos) {
+  return (
+    <div className="no-products">
+      <h3>No se encontraron productos disponibles</h3>
+      <p>El vendedor no tiene productos publicados en este momento.</p>
+    </div>
+  );
+}
+
+if (filteredProducts.length === 0) {
+  return (
+    <div className="no-products">
+      <h3>No se encontraron productos que coincidan con tu búsqueda</h3>
+      <p>Intenta con otros términos de búsqueda.</p>
+    </div>
+  );
+}
 
   const { vendedor, config, productos } = portalData;
   const themeStyles = applyThemeStyles(config);
+  const productGridStyle = getProductGridStyle(config);
 
   return (
     <div className="portal-view" style={themeStyles}>
@@ -111,15 +144,19 @@ const PortalView = () => {
         </h2>
         
         {/* Listado de productos */}
-        <div className={`product-grid ${config.disposicion_productos}`}>
+        <div 
+          className={`product-grid ${config.disposicion_productos} ${config.estilos_productos}`}
+          style={productGridStyle}
+        >
           {filteredProducts?.map(producto => (
             <div 
               key={producto.codigo_producto} 
               className={`product-card ${config.estilos_productos}`}
               onClick={() => setSelectedProduct(producto)}
+              data-testid="product-card"
             >
               <div className="product-image">
-              <img 
+                <img 
                   src={
                     producto.imagen_referencia_producto 
                       ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
