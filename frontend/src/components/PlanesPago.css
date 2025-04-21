@@ -1,0 +1,141 @@
+/* ---------- contenedor general ---------- */
+.planes-wrapper {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 2px solid #d0d0d0;
+    border-radius: 8px;
+    font-family: "Segoe UI", sans-serif;
+  }
+  
+  /* ---------- cabecera ---------- */
+  .planes-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .planes-logo {
+    width: 56px;
+    height: 56px;
+  }
+  .planes-welcome {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+  .planes-company {
+    color: #0066d1;
+  }
+  
+  /* ---------- subtítulo ---------- */
+  .planes-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* ---------- tarjetas de planes ---------- */
+  .planes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .planes-card {
+    border: 2px solid #c6c6c6;
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .planes-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  }
+  .planes-card--active {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35);
+  }
+  .planes-radio {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+  .planes-name {
+    text-align: center;
+    margin: 0 0 0.25rem;
+  }
+  .planes-price {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+  }
+  .planes-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+  }
+  .planes-features li::before {
+    content: "✔️";
+    margin-right: 0.35rem;
+    color: #08a10a;
+  }
+  
+  /* ---------- botón ---------- */
+  .planes-btn {
+    display: block;
+    margin: 0 auto 1rem;
+    padding: 0.65rem 2.5rem;
+    font-size: 1rem;
+    color: #fff;
+    background: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+  }
+  .planes-btn:disabled {
+    background: #9ab8e5;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  .planes-btn:not(:disabled):hover {
+    background: #0066d1;
+  }
+  
+  /* ---------- footer ---------- */
+  .planes-footer {
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  .planes-footer a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  .planes-footer a:hover {
+    text-decoration: underline;
+  }
+  
+  /* ---------- pantalla de confirmación ---------- */
+  .planes-confirm {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: center;
+  }
+  .planes-clave {
+    display: inline-block;
+    margin: 0.5rem 0 1rem;
+    padding: 0.4rem 0.75rem;
+    background: #f2f2f2;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .planes-link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #007bff;
+  }
+  

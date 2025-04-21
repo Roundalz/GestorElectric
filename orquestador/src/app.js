@@ -14,6 +14,7 @@ import clientes from "./routes/clientesRoutes.js";
 import planPagosRoutes from "./routes/planPagosRoutes.js";
 import pool from './database.js';
 import path from 'path';
+import planesRoutes   from './routes/planesRoutes.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -97,12 +98,15 @@ app.use("/api/inventario", inventarioRouter);
 
 app.use("/api/ventas", ventasRoutes);
  
+app.use("/api/planes", planesRoutes);
 
 // En tu app.js o en un archivo de rutas específico
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Orquestador funcionando correctamente" });
 });
 
+import pagoRoutes from "./routes/pagoRoutes.js";
+app.use("/api/pagos", pagoRoutes);
 
 // Puerto del servidor
 const PORT = process.env.PORT || 5000;
