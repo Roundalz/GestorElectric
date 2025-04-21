@@ -1,47 +1,40 @@
-import React, { useEffect, useState } from "react";
-import Card from './card/InicioCard';
+// src/pages/TiendasPage.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './styles/InicioStyles.css';
-import { useCart } from "../../context/CartContext";
+
+const tiendasData = [
+  { id: 1, nombre: 'Tienda Uno', descripcion: 'Ropa y accesorios de moda.' },
+  { id: 2, nombre: 'Tienda Dos', descripcion: 'Electrónica y gadgets.' },
+  { id: 3, nombre: 'Tienda Tres', descripcion: 'Alimentos y bebidas gourmet.' },
+];
 
 const Inicio = () => {
-  const [items, setItems] = useState([]);
-  const { addToCart } = useCart(); // Extraemos la función para agregar productos al carrito
-
-  // Obtener servicios
-  const fetchProductos = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/producto');
-      const data = await response.json();
-      setItems(data);
-    } catch (error) {
-      console.error("Error al obtener productos:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductos();
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <div className="cards-container">
-      <div className="cards-grid">
-        {items.map((item) => (
-          <div>
-          <Card
-            key={item.codigo_producto}
-            image="https://a.rgbimg.com/users/o/or/organza3/300/mtgVC1W.jpg"
-            title={`${item.nombre_producto}`}
-            line1={`${item.tipo_producto}`}
-            line2={`${item.precio_unidad_producto} Bs.`}
-          />
-          <br/>
-          <button class='details-button' onClick={() => addToCart(item)}>Agregar al carrito</button>
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <h2>Tiendas Disponibles</h2>
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        {tiendasData.map((tienda) => (
+          <div
+            key={tienda.id}
+            style={{
+              width: '300px',
+              border: '1px solid #ccc',
+              borderRadius: '10px',
+              padding: '1rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <h3>{tienda.nombre}</h3>
+            <p>{tienda.descripcion}</p>
+            <button onClick={() => navigate(`/cliente/portal/${tienda.id}`)}>Entrar</button>
           </div>
         ))}
       </div>
-      <br></br>
     </div>
   );
 };
-  
-  export default Inicio;
+
+export default Inicio;

@@ -13,6 +13,7 @@ import Carrito from "./pages/Cliente/Carrito";
 import Historial from "./pages/Cliente/Historial";
 import Inicio from "./pages/Cliente/Inicio";
 import PerfilCliente from "./pages/Cliente/Perfil";
+import TiendaDetallePage from './pages/Cliente/TiendaDetallePage';
 
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/Inventario";
@@ -55,6 +56,8 @@ function App() {
           <Route path="/cliente/historial" element={<Historial />} />
           <Route path="/cliente/inicio" element={<Inicio />} />
           <Route path="/cliente/perfil" element={<PerfilCliente />} />
+
+          <Route path="/cliente/portal/:id" element={<TiendaDetallePage />} />
 
           {/* Rutas de Vendedor */}
           <Route path="/vendedor/dashboard" element={<Dashboard />} />

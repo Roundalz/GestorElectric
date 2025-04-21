@@ -1,7 +1,8 @@
 import { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import { AuthContext } from "../context/AuthContext";
+import { useCart } from '../context/CartContext';
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 // Usamos FaUserCircle para representar el login
@@ -10,6 +11,17 @@ import logo from "../assets/logo.png"; // Importa el logo desde assets
 
 
 function NavBar() {
+  const navigate = useNavigate();
+
+  const { cart, removeFromCart } = useCart();
+  const [mostrarMenu, setMostrarMenu] = useState(false);
+  const toggleMenu = () => {
+    setMostrarMenu(!mostrarMenu);
+  };
+
+  const irAlCarrito = () => {
+    navigate('/cliente/carrito');
+  };
   // Para desarrollo, se mantiene el combobox; se incluye la opción 'sinrol'
   const [rol, setRol] = useState("sinrol");
   const { user, setUser } = useContext(AuthContext);
@@ -103,7 +115,32 @@ function NavBar() {
                 <>
                   <li><Link to="/">Home</Link></li>
                   <li><Link to="/about">About</Link></li>
-                  <li><Link to="/cliente/carrito">Carrito</Link></li>
+                  <div
+                    className="carrito-container"
+                    onMouseEnter={() => document.querySelector('.carrito-menu').style.display = 'block'}
+                    onMouseLeave={() => document.querySelector('.carrito-menu').style.display = 'none'}
+                  >
+                    <button className="carrito-btn" onClick={irAlCarrito}>
+                      Carrito ({cart.length})
+                    </button>
+                      <div className="carrito-menu">
+                        {cart.length === 0 ? (
+                          <p>El carrito está vacío</p>
+                        ) : (
+                          cart.map((item, index) => (
+                            <div key={index} className="item-carrito">
+                              <div className="texto-item">
+                                <p>{item.nombre_producto}</p>
+                                <p>${item.precio_unidad_producto}</p>
+                              </div>
+                              <button className="eliminar-btn" onClick={() => removeFromCart(item.id)}>
+                                ❌
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   <li><Link to="/cliente/historial">Historial</Link></li>
                   <li><Link to="/cliente/inicio">Inicio</Link></li>
                   <li><Link to="/cliente/perfil">Perfil</Link></li>
