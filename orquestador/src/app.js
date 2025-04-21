@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import testController from './controllers/testController.js';
 import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
+import vendedorRoutes from "./routes/vendedorRoutes.js";
 import autenticacionRouter from './routes/autenticacion.js';
 import portalRoutes from './routes/portalRoutes.js';
 import pedidoRoutes from './routes/pedidoRoutes.js';
@@ -12,6 +13,8 @@ import inventarioRouter from './routes/inventario.js';
 import ventasRoutes from "./routes/ventas.js"; 
 import clientes from "./routes/clientesRoutes.js"; 
 import planPagosRoutes from "./routes/planPagosRoutes.js";
+import planesRoutes   from './routes/planesRoutes.js';
+import pagoRoutes from "./routes/pagoRoutes.js";
 import pool from './database.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -45,7 +48,12 @@ app.use("/api/servicios", servicioRoutes);
 
 // Luego de otros `app.use`, monta esto:
 app.use("/api/planes_pago", planPagosRoutes);
+app.use("/api/planes", planesRoutes);
+app.use("/api/pagos", pagoRoutes);
 
+// Rutas de CRUD para VENDEDOR
+app.use("/api/vendedores", vendedorRoutes);
+ 
 // Rutas de CRUD para CLIENTES
 app.use("/api/clientes", clientes); // <-- monta tus rutas de clientes aquí
 

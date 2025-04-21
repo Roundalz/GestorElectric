@@ -54,21 +54,14 @@ function Register() {
       };
 
       if (role === 'vendedor') {
-        endpoint = '/api/auth/register/vendedor';
-        bodyData = {
-          email: formData.email,
-          nombre_vendedor: formData.nombre_vendedor,
-          telefono_vendedor: formData.telefono_vendedor,
-          nombre_empresa: formData.nombre_empresa,
-          tipo_empresa: formData.tipo_empresa,
-          logo_empresa: formData.logo_empresa,
-          correo_empresa: formData.correo_empresa,
-          telefono_empresa: formData.telefono_empresa,
-          pais_empresa: formData.pais_empresa,
-          ciudad_empresa: formData.ciudad_empresa,
-          direccion_empresa: formData.direccion_empresa,
-          banner_empresa: formData.banner_empresa
-        };
+          // 1. Guardamos todo el form en sessionStorage
+          sessionStorage.setItem(
+            'vendedorRegistro',
+            JSON.stringify({ formData })        // sin clave aún
+          );
+          // 2. Navegamos a la selección de planes
+          navigate('/planes-pago');
+          return;           
       }
 
       const response = await fetch(`http://localhost:5000${endpoint}`, {
@@ -83,12 +76,20 @@ function Register() {
         return;
       }
 
-      if (role === 'vendedor') {
-        const data = await response.json();
-        setMessage(`Registro exitoso. Tu clave de vendedor es: ${data.clave_vendedor}`);
-      } else {
-        setMessage("Registro exitoso. Por favor, inicia sesión.");
-      }
+      // justo después de recibir la respuesta del backend, antes de navigate:
+  if (role === 'vendedor') {
+    const data = await response.json();      // solo trae { clave_vendedor } AHORA NO LO NECESITAMOS
+
+      sessionStorage.setItem(
+        'vendedorRegistro',
+        JSON.stringify({
+          formData,                 // todo lo que llenó el usuario
+          // todavía no conocemos plan ni clave
+        })
+      );
+      navigate('/planes-pago');
+    return;
+  }
 
       // Si quieres redirigir tras la confirmación:
       // navigate('/login');

@@ -3,6 +3,7 @@ import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import PlanesPago from './components/PlanesPago';
 
 import CrudClientes from "./pages/Admin/CrudClientes";
 import CrudPlanPagos from "./pages/Admin/CrudPlanPagos";
@@ -44,6 +45,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/planes-pago" element={<PlanesPago />} />
 
           {/* Rutas de Admin */}
           <Route path="/admin/clientes" element={<CrudClientes />} />
