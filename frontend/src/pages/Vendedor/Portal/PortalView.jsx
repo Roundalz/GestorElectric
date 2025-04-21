@@ -58,8 +58,14 @@ const PortalView = () => {
   );
 
   if (loading) return <div className="loading">Cargando portal...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!portalData) return <div>No se encontraron datos del portal</div>;
+  if (error) {
+    console.error('Error loading portal:', error);
+    return <div className="error">{error}</div>;
+  }
+  if (!portalData || !portalData.productos) {
+    console.log('Portal data:', portalData);
+    return <div>No se encontraron datos del portal o productos</div>;
+  }
 
   const { vendedor, config, productos } = portalData;
   const themeStyles = applyThemeStyles(config);
@@ -113,8 +119,12 @@ const PortalView = () => {
               onClick={() => setSelectedProduct(producto)}
             >
               <div className="product-image">
-                <img 
-                  src={`${baseURL}/uploads/${producto.imagen_referencia_producto}`} 
+              <img 
+                  src={
+                    producto.imagen_referencia_producto 
+                      ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
+                      : 'https://via.placeholder.com/300x200?text=Producto+Sin+Imagen'
+                  } 
                   alt={producto.nombre_producto} 
                 />
               </div>
