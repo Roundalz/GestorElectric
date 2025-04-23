@@ -114,4 +114,110 @@
     width: 80%;
     max-width: 300px;
   }
-  
+  /* ────────────  SUBIDA & PREVIEW DE BANNER ──────────── */
+
+.perfil-file-label{
+  display:inline-block;
+  margin-block:1rem;
+  padding:.6rem 1.2rem;
+  background:var(--clr-primary);
+  color:#fff;
+  font-weight:500;
+  border-radius:4px;
+  cursor:pointer;
+  transition:background .2s ease;
+}
+
+.perfil-file-label:hover{
+  background:var(--clr-primary-dark);
+}
+
+/* escondemos input nativo */
+.perfil-file-input{
+  display:none;
+}
+
+/* preview en modo edición */
+.perfil-banner-preview{
+  width:100%;
+  max-height:200px;
+  object-fit:cover;
+  border:1px solid var(--clr-neutral-200);
+  border-radius:6px;
+  margin-block:1rem;
+}
+
+/* banner final en modo solo‑lectura */
+.perfil-banner{
+  width:100%;
+  max-height:250px;
+  object-fit:cover;
+  border-radius:6px;
+  margin-bottom:1rem;
+}
+
+/* botones del formulario */
+.perfil-form-buttons{
+  display:flex;
+  gap:.75rem;
+  margin-top:1rem;
+}
+
+.perfil-form-buttons button{
+  flex:1;
+  padding:.6rem 0;
+  border:none;
+  border-radius:4px;
+  font-weight:500;
+  cursor:pointer;
+  transition:background .2s ease;
+}
+
+.perfil-form-buttons button[type="submit"]{
+  background:var(--clr-secondary);
+  color:#fff;
+}
+
+.perfil-form-buttons button[type="submit"]:hover{
+  background:var(--clr-secondary-dark);
+}
+
+.perfil-form-buttons button[type="button"]{
+  background:var(--clr-neutral-200);
+}
+
+.perfil-form-buttons button[type="button"]:hover{
+  background:var(--clr-neutral-700);
+  color:#fff;
+}
+.perfil-file-label{
+  display:inline-block;
+  margin-block:1rem .5rem;
+  background:var(--clr-primary);
+  color:#fff;
+  padding:.45rem 1rem;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:var(--fs-300);
+  transition:background .2s;
+}
+.perfil-file-label:hover{background:var(--clr-primary-dark);}
+.perfil-file-input{display:none;}
+
+.perfil-img-preview,
+.perfil-banner-preview{
+  width:100%;
+  max-height:180px;
+  object-fit:cover;
+  border:1px solid var(--clr-neutral-200);
+  border-radius:6px;
+  margin-bottom:1rem;
+}
+
+.perfil-logo{
+  width:120px;
+  height:120px;
+  object-fit:contain;
+  margin-bottom:1rem;
+}
+

@@ -124,4 +124,16 @@
     width: 80%;
     max-width: 300px;
   }
+
+  /* --------  subida de imagen  -------- */
+.perfil-file-label { display:block; margin-top:1rem; font-weight:500; }
+.perfil-file-input { margin-top:.5rem; }
+
+.perfil-img,
+.perfil-img-preview{
+  width:140px; aspect-ratio:1/1; object-fit:cover;
+  border-radius:50%; border:2px solid var(--clr-primary);
+  margin-block:1rem;
+}
+
   
