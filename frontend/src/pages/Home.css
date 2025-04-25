@@ -1,0 +1,179 @@
+/* Home.css – estilos específicos de la página de inicio
+   ----------------------------------------------------- */
+
+/* espacio vertical global entre secciones */
+/* aplica el espacio solo de la segunda sección en adelante */
+.home section:not(:first-of-type){
+    margin-block:4rem;
+  }
+  
+/* ───────────── HERO ───────────────────────────────────────── */
+.home-hero{
+  /* fondo azul en toda la franja */
+  background:linear-gradient(135deg,
+      var(--clr-primary) 0%,
+      var(--clr-primary-dark) 100%);
+  color:#fff;
+  padding-block:4.5rem 3.5rem;
+}
+
+.home-hero__wrap{
+  display:flex;
+  align-items:center;
+  gap:3rem;
+  flex-wrap:wrap;
+}
+
+.home-hero__title{
+  font-size:calc(var(--fs-900) + .5rem);
+  margin-bottom:.75rem;
+}
+
+.home-hero__subtitle{
+  font-size:var(--fs-500);
+  margin-bottom:1.5rem;
+  max-width:40ch;
+  color:#e7ecff;                /* contraste extra */
+}
+
+.home-hero__img{
+  flex:1 1 320px;
+  max-width:425px;              /* ↞↓ tamaño de la imagen hero */
+  border-radius:.5rem;
+  box-shadow:0 8px 16px rgb(0 0 0 / .25);
+}
+
+/* ───────────── VISIÓN & MISIÓN ────────────────────────────── */
+.home-visionMission__grid{
+  display:grid;
+  gap:2rem;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+}
+
+.home-visionMission h2{margin-bottom:.5rem;}
+.home-visionMission p{color:var(--clr-neutral-700);}
+
+/* ───────────── FEATURES ───────────────────────────────────── */
+.home-features{
+  background:var(--clr-neutral-50);
+  padding-block:3rem;
+}
+
+.home-features__grid{
+  display:grid;
+  gap:1.5rem;
+  margin-top:2rem;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+}
+
+.home-featureCard{
+  background:#fff;
+  border:1px solid var(--clr-neutral-200);
+  border-radius:.5rem;
+  overflow:hidden;
+  box-shadow:0 4px 6px rgb(0 0 0 / .05);
+  transition:transform .25s;
+}
+.home-featureCard:hover{transform:translateY(-4px);}
+
+.home-featureCard img{
+  height:160px;object-fit:cover;width:100%;
+}
+
+.home-featureCard h3{padding:1rem 1rem .25rem;}
+
+.home-featureCard p{
+  padding:0 1rem 1rem;
+  color:var(--clr-neutral-700);
+  font-size:var(--fs-300);
+}
+
+/* ───────────── CTA ───────────────────────────────────────── */
+.home-cta{
+  background:linear-gradient(135deg,
+    var(--clr-secondary) 0%,
+    var(--clr-secondary-dark) 100%);
+  color:#fff;
+  padding-block:3rem;
+}
+
+.home-cta h2{
+  font-size:var(--fs-700);
+  margin-bottom:.5rem;
+}
+.home-cta p{
+  max-width:45ch;
+  margin-inline:auto;
+  margin-bottom:1.5rem;
+  color:#e8ffe9;
+}
+
+/* ───────────── FOOTER ────────────────────────────────────── */
+.home-footer{
+  background:var(--clr-neutral-900);
+  color:#fff;
+  padding-block:2rem;
+}
+.home-footer__grid{
+  display:grid;
+  gap:2rem;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+}
+
+.home-footer__nav a,
+.home-footer__social a{
+  display:block;
+  color:var(--clr-neutral-50);
+  margin-bottom:.5rem;
+  font-size:var(--fs-300);
+}
+.home-footer__nav a:hover,
+.home-footer__social a:hover{color:var(--clr-primary);}
+
+/* ───────────── BOTONES GENÉRICOS ─────────────────────────── */
+.btn{
+  display:inline-block;
+  padding:.85rem 2.25rem;
+  font-size:var(--fs-400);
+  font-weight:600;
+  border-radius:999px;
+  text-align:center;
+  transition:background .25s,color .25s,
+             transform .25s,box-shadow .25s;
+  box-shadow:0 4px 12px rgb(0 0 0 / .15);
+}
+.btn:active{transform:scale(.97);}
+
+.btn--primary{
+  color:var(--clr-primary-dark);
+  background:#ffffff;
+  border:2px solid transparent;
+}
+.btn--primary:hover{
+  background:#f1f5ff;
+  box-shadow:0 6px 18px rgb(0 0 0 / .2);
+}
+
+.btn--secondary{
+  color:#ffffff;
+  background:var(--clr-secondary-dark);
+  border:2px solid var(--clr-secondary-dark);
+}
+.btn--secondary:hover{
+  background:var(--clr-secondary);
+  box-shadow:0 6px 18px rgb(0 0 0 / .25);
+}
+
+/* ───────────── ENTRADAS ANIMADAS ─────────────────────────── */
+@keyframes fadeUp{
+  0%{opacity:0;transform:translateY(30px);}
+  100%{opacity:1;transform:none;}
+}
+
+.home-featureCard{
+  opacity:0;transform:translateY(24px);
+  animation:fadeUp .6s ease-out forwards;
+}
+.home-featureCard:nth-child(2){animation-delay:.1s;}
+.home-featureCard:nth-child(3){animation-delay:.2s;}
+.home-featureCard:nth-child(4){animation-delay:.3s;}

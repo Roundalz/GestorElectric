@@ -1,139 +1,162 @@
-import { useEffect, useState } from 'react';
-import { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+// Home.jsx
+import { Link } from "react-router-dom";
+import "./Home.css";
+// Home.jsx (encabezado de imports)
+import securityImg from "../assets/security-enterprise.jpg";
 
-function Home() {
-  const [servicios, setServicios] = useState([]);
-  const { user } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
-    codigo_servicio: '',
-    nombre_servicio: '',
-    costo_servicio: '',
-    descripcion_servicio: ''
-  });
 
-  // Obtener servicios
-  const fetchServicios = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/servicios');
-      const data = await response.json();
-      setServicios(data);
-    } catch (error) {
-      console.error("Error al obtener servicios:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchServicios();
-  }, []);
-
-  // Manejo del cambio en el formulario
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Manejar el envío del formulario para crear un servicio
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:5000/api/servicios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          codigo_servicio: formData.codigo_servicio,  // Se envía el código manualmente
-          nombre_servicio: formData.nombre_servicio,
-          costo_servicio: parseFloat(formData.costo_servicio),
-          descripcion_servicio: formData.descripcion_servicio
-        })
-      });
-      if (response.ok) {
-        const nuevoServicio = await response.json();
-        setServicios([...servicios, nuevoServicio]);
-        setFormData({ codigo_servicio: '', nombre_servicio: '', costo_servicio: '', descripcion_servicio: '' });
-      } else {
-        console.error("Error al crear servicio");
-      }
-    } catch (error) {
-      console.error("Error en el formulario:", error);
-    }
-  };
-
+export default function Home() {
   return (
-    
-    <div>
-      {user ? (
-  <>
-    <h1>
-      Bienvenido,{" "}
-      {user.role === 'admin'
-        ? user.nombre || user.email
-        : user.nombre_cliente || user.nombre_vendedor}
-    </h1>
-    {user.role === 'cliente' ? (
-      <p>ID de cliente: {user.codigo_cliente}</p>
-    ) : user.role === 'vendedor' ? (
-      <p>ID de vendedor: {user.codigo_vendedore}</p>
-    ) : user.role === 'admin' ? (
-      <p>ID de admin: {user.uid}</p>
-    ) : null}
-  </>
-) : (
-  <h1>Bienvenido, Invitado</h1>
-)}
-{/* Resto del contenido de la página */}
+    <main className="home">
 
-      <h1>Lista de Servicioooos</h1>
-      <ul>
-        {servicios.map((servicio) => (
-          <li key={servicio.codigo_servicio}>
-            <strong>{servicio.nombre_servicio}</strong> - ${servicio.costo_servicio} <br />
-            {servicio.descripcion_servicio}
-          </li>
-        ))}
-      </ul>
+      {/* ───── HERO ───────────────────────────────────────── */}
+      <section className="home-hero">
+        <div className="container home-hero__wrap">
+          <div className="home-hero__text">
+            <h1 className="home-hero__title">GestorElectric</h1>
+            <p className="home-hero__subtitle">
+              La plataforma&nbsp;SaaS que impulsa la gestión de
+              <strong> redes eléctricas</strong> y la venta de
+              <strong> productos energéticos</strong>.
+            </p>
 
-      <h2>Crear Servicio</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="codigo_servicio"
-          placeholder="Código del servicio"
-          value={formData.codigo_servicio}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="nombre_servicio"
-          placeholder="Nombre del servicio"
-          value={formData.nombre_servicio}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="number"
-          step="0.01"
-          name="costo_servicio"
-          placeholder="Costo del servicio"
-          value={formData.costo_servicio}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="descripcion_servicio"
-          placeholder="Descripción"
-          value={formData.descripcion_servicio}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Crear Servicio</button>
-      </form>
-    </div>
+            <Link to="/register" className="btn btn--primary">
+              ¡Empieza gratis!
+            </Link>
+          </div>
+
+          <img
+            src="https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=900&q=80"
+            alt="Panel de control GestorElectric"
+            className="home-hero__img"
+          />
+        </div>
+      </section>
+
+      {/* ───── VISIÓN & MISIÓN ───────────────────────────── */}
+      <section className="home-visionMission container">
+        <div className="home-visionMission__grid">
+          <article>
+            <h2>Visión</h2>
+            <p>
+              Ser la solución líder en Latinoamérica para la digitalización
+              inteligente de redes eléctricas y la gestión comercial de
+              productos energéticos, potenciando la sostenibilidad y la
+              innovación.
+            </p>
+          </article>
+
+          <article>
+            <h2>Misión</h2>
+            <p>
+              Facilitar a empresas y profesionales del sector eléctrico una
+              plataforma escalable, segura y en tiempo real que simplifique sus
+              operaciones, genere información accionable y promueva modelos de
+              negocio flexibles.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      {/* ───── CARACTERÍSTICAS ───────────────────────────── */}
+      <section className="home-features">
+        <div className="container">
+          <h2 className="text-center">¿Qué ofrece GestorElectric?</h2>
+
+          <div className="home-features__grid">
+            <article className="home-featureCard">
+              <img
+                src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80"
+                alt="Analítica en tiempo real"
+              />
+              <h3>Analítica en tiempo real</h3>
+              <p>
+                Dashboards interactivos que muestran consumo y costos al
+                instante. Toma decisiones basadas en datos, no en intuiciones.
+              </p>
+            </article>
+
+            <article className="home-featureCard">
+              <img
+                src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80"
+                alt="Marketplace energético"
+              />
+              <h3>Marketplace energético</h3>
+              <p>
+                Vende y administra tus productos con catálogos personalizables,
+                carrito y múltiples pasarelas de pago.
+              </p>
+            </article>
+
+            <article className="home-featureCard">
+            <img
+              src={securityImg}
+              alt="Seguridad de nivel empresarial"
+            />
+            <h3>Seguridad empresarial</h3>
+            <p>
+              Autenticación Firebase, cifrado de datos y registros de accesos
+              para proteger tu información.
+            </p>
+          </article>
+
+
+            {/* ── Modelo freemium flexible ───────────────────────── */}
+            <article className="home-featureCard">
+              <img
+                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80"
+                alt="Modelo freemium"
+              />
+              <h3>Modelo freemium flexible</h3>
+              <p>
+                Empieza gratis, escala cuando lo necesites. Cambia de plan con
+                un clic y paga solo por lo que uses.
+              </p>
+            </article>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ───── CTA ───────────────────────────────────────── */}
+      <section className="home-cta">
+        <div className="container text-center">
+          <h2>¿Listo para electrificar tu negocio?</h2>
+          <p>
+            Regístrate hoy y experimenta cómo GestorElectric puede transformar
+            la gestión de tus redes y productos.
+          </p>
+          <Link to="/register" className="btn btn--secondary">
+            Crear mi cuenta
+          </Link>
+        </div>
+      </section>
+
+      {/* ───── FOOTER ───────────────────────────────────── */}
+      <footer className="home-footer">
+        <div className="container home-footer__grid">
+          <div className="home-footer__brand">
+            <h3>GestorElectric</h3>
+            <p>© {new Date().getFullYear()} DeepSeek • Todos los derechos reservados</p>
+          </div>
+
+          <nav className="home-footer__nav">
+            <Link to="/">Inicio</Link>
+            <Link to="/about">Sobre Nosotros</Link>
+            <Link to="/login">Ingresar</Link>
+            <Link to="/register">Registro</Link>
+          </nav>
+
+          <div className="home-footer__social">
+            <a href="https://github.com/Roundalz/GestorElectric" target="_blank">
+              GitHub
+            </a>
+            <a href="https://trello.com/b/zgsE7MQt" target="_blank">
+              Trello
+            </a>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
-
-export default Home;

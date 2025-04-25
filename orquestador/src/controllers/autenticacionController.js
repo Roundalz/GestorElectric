@@ -173,3 +173,18 @@ export const loginVendedor = async (req, res) => {
     res.status(500).json({ error: 'Error en el login de vendedor' });
   }
 };
+
+/* ─────────────────────────── LOGOUT USUARIO ───────────────────────── */
+export const logoutUsuario = async (req, res) => {
+  const { usuario_id } = req.body;          // espera { usuario_id }
+  if (!usuario_id)
+    return res.status(400).json({ error: 'Falta usuario_id' });
+
+  try {
+    await addLogEvento(usuario_id, 'logout', remoteIp(req));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('logoutUsuario →', err);
+    res.status(500).json({ error: 'Error registrando logout' });
+  }
+};

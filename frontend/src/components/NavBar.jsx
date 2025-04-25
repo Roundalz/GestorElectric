@@ -23,15 +23,30 @@ function NavBar() {
     }
   }, [user]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setRol("sinrol");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+  // ...
+const handleLogout = async () => {
+  try {
+    /* 1. avisamos al backend (solo si hay user y tiene id) */
+    if (user?.codigo_cliente || user?.codigo_vendedore) {
+      const usuario_id = user.codigo_cliente ?? user.codigo_vendedore;
+      await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id })
+      });
+      console.log('Logout registrado para usuario', usuario_id);
     }
-  };
+
+    /* 2. cerramos sesión Firebase y limpiamos contexto */
+    await signOut(auth);
+    setUser(null);
+    setRol('sinrol');
+  } catch (err) {
+    console.error('Error al cerrar sesión:', err);
+  }
+};
+
+  
 
   return (
     <nav className="navbar">

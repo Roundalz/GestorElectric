@@ -61,15 +61,16 @@ img{max-width:100%;display:block;}
 
 /*─────────────────── UTILIDADES / HELPERS ────────────────────*/
 /* mayor espacio horizontal para todo el «wrap» principal */
+/* contenedor estándar —> ahora ocupa el 92 % máx. (antes 85 %) */
 .container{
-  /* antes: width:min(92%,1200px); */
-  width:min(85%,1100px);          /* 7.5 % de margen por lado */
+  width:min(92%, 1200px);   /* ±4 % de margen a cada lado en desktop */
   margin-inline:auto;
 }
 
-/* si usas la clase page-content bajo un navbar fijo */
+/* wrapper bajo el navbar fijo */
 .content{
-  padding:1.5rem 2.5rem;         /* ↑ ↓   |   ← → más amplio */
+  padding-block:1.5rem;     /* mantenemos el espacio vertical */
+  padding-inline:1rem;      /* ↓ era 2.5rem  → marco lateral más fino */
 }
 .flex{display:flex;gap:1rem;align-items:center;}
 .grid{display:grid;gap:1rem;}
