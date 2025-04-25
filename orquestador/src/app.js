@@ -4,6 +4,7 @@ import express from "express";
 import testController from "./controllers/testController.js";
 import autenticacionRouter from "./routes/autenticacion.js";
 import clientes from "./routes/clientesRoutes.js";
+import logsRoutes from "./routes/LogsRoutes.js"; // <-- Asegúrate de importar las rutas de logs
 import planPagosRoutes from "./routes/planPagosRoutes.js";
 import servicioRoutes from "./routes/servicioRoutes.js";
 import vendedorRoutes from "./routes/vendedorRoutes.js";
@@ -16,6 +17,9 @@ app.use(express.json()); // Habilitar JSON en requests
 
 // Rutas de prueba (o cualquier endpoint de prueba)
 app.use("/api", testController);
+
+// Rutas de CRUD para LOGS
+app.use("/api/logs", logsRoutes); // <-- Monta tus rutas de logs aquí
 
 // Luego de otros `app.use`, monta esto:
 app.use("/api/planes_pago", planPagosRoutes);

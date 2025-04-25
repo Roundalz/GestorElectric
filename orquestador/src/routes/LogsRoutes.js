@@ -1,5 +1,5 @@
 import express from "express";
-import { obtenerLogs } from "../controllers/logController.js";
+import { obtenerLogs } from "../controllers/logsController.js";
 
 const router = express.Router();
 
