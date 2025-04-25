@@ -1,6 +1,6 @@
-const pool = require("../config/db");
+import pool from "../database.js";
 
-exports.obtenerVendedores = async (req, res) => {
+export const obtenerVendedores = async (req, res) => {
   try {
     const resultado = await pool.query("SELECT * FROM VENDEDOR");
     res.json(resultado.rows);
@@ -9,7 +9,7 @@ exports.obtenerVendedores = async (req, res) => {
   }
 };
 
-exports.crearVendedor = async (req, res) => {
+export const crearVendedor = async (req, res) => {
   try {
     const {
       nombre_vendedor,
@@ -97,7 +97,7 @@ exports.crearVendedor = async (req, res) => {
   }
 };
 
-exports.actualizarVendedor = async (req, res) => {
+export const actualizarVendedor = async (req, res) => {
   const { id } = req.params;
   const {
     nombre_vendedor,
@@ -160,7 +160,7 @@ exports.actualizarVendedor = async (req, res) => {
   }
 };
 
-exports.eliminarVendedor = async (req, res) => {
+export const eliminarVendedor = async (req, res) => {
   const { id } = req.params;
 
   try {

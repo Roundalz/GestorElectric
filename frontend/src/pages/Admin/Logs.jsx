@@ -28,12 +28,14 @@ function Logs() {
     setFiltros({ ...filtros, [e.target.name]: e.target.value.toLowerCase() });
   };
 
+  // Filtrado de logs
   const logsFiltrados = logs.filter((log) =>
-    log.usuario.toString().toLowerCase().includes(filtros.usuario) &&
-    log.accion.toLowerCase().includes(filtros.accion) &&
-    new Date(log.fecha).toLocaleString().toLowerCase().includes(filtros.fecha) &&
-    log.tipo_log.toLowerCase().includes(filtros.tipo)
+    (log.usuario_id?.toString().toLowerCase() || "").includes(filtros.usuario) &&
+    (log.accion?.toLowerCase() || "").includes(filtros.accion) &&
+    (new Date(log.fecha_hora).toLocaleString().toLowerCase() || "").includes(filtros.fecha) &&
+    (log.tipo_log?.toLowerCase() || "").includes(filtros.tipo)
   );
+  
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
@@ -88,27 +90,28 @@ function Logs() {
           </tr>
         </thead>
         <tbody>
-          {logsFiltrados.length > 0 ? (
-            logsFiltrados.map((log) => (
-              <tr key={`${log.tipo_log}-${log.id}`}>
-                <td className="p-2 border">{log.id}</td>
-                <td className="p-2 border capitalize">{log.tipo_log}</td>
-                <td className="p-2 border">{log.accion}</td>
-                <td className="p-2 border">{log.usuario}</td>
-                <td className="p-2 border">
-                  {new Date(log.fecha).toLocaleString()}
-                </td>
-                <td className="p-2 border">{log.detalles}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" className="text-center py-4">
-                No se encontraron logs con los filtros aplicados.
-              </td>
-            </tr>
-          )}
-        </tbody>
+  {logsFiltrados.length > 0 ? (
+    logsFiltrados.map((log, index) => (
+      <tr key={log.id ?? `log-${index}`}>
+        <td className="p-2 border">{log.id}</td>
+        <td className="p-2 border capitalize">{log.tipo_log}</td>
+        <td className="p-2 border">{log.accion}</td>
+        <td className="p-2 border">{log.usuario_id}</td>
+        <td className="p-2 border">
+          {new Date(log.fecha_hora).toLocaleString()}
+        </td>
+        <td className="p-2 border">{log.detalles || "N/A"}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6" className="text-center py-4">
+        No se encontraron logs con los filtros aplicados.
+      </td>
+    </tr>
+  )}
+</tbody>
+
       </table>
     </div>
   );
