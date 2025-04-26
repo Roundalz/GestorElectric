@@ -2,7 +2,7 @@ import React from 'react';
 //import { cartProducts } from './data/CarritoData';
 import { useCart } from "../../context/CartContext";
 import Card from './card/InicioCard';
-import './styles/CarritoStylEs.css';
+import './styles/CarritoStyles.css';
 
 const Carrito = () => {
   const { cart, removeFromCart, getTotal } = useCart(); // Extraemos el carrito y las funciones

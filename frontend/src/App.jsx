@@ -17,8 +17,8 @@ import PerfilCliente from "./pages/Cliente/Perfil";
 import TiendaDetallePage from './pages/Cliente/TiendaDetallePage';
 
 import Dashboard from "./pages/Vendedor/Dashboard";
-import Inventario from "./pages/Vendedor/Inventario";
-import ProductDetail from "./pages/Vendedor/ProductDetail"; 
+import Inventario from "./pages/Vendedor/inventario/Inventario";
+import ProductDetail from "./pages/Vendedor/inventario/ProductDetail"; 
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
@@ -27,7 +27,7 @@ import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
 import { VendedorProvider } from '@context/vendedorContext';
 
 import SalesDetail from "./pages/Vendedor/SalesDetail";
-import AddProduct from "./pages/Vendedor/AddProduct"; // Nueva página para agregar productos
+import AddProduct from "./pages/Vendedor/inventario/AddProduct"; // Nueva página para agregar productos
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
