@@ -43,6 +43,15 @@ const PLAN_FEATURES = {
   5: { allowed: 'all' } // Plan Premium - todas las características
 };
 
+// Función para verificar si una característica está permitida en el plan
+function isFeatureAllowed(planId, featureName) {
+  if (!planId || !PLAN_FEATURES[planId]) return false;
+  
+  // Plan premium tiene acceso a todo
+  if (planId === 5) return true;
+  
+  return PLAN_FEATURES[planId].allowed.includes(featureName);
+}
 
 export const getPortalConfig = async (req, res) => {
   try {
@@ -102,13 +111,18 @@ export const getPortalConfig = async (req, res) => {
       });
     }
 
-    const config = configResult.rows[0] || {};
-    delete config.codigo_portal;
+    const row = configResult.rows[0];
+    const codigo_portal = row.codigo_portal;
+    const config = { ...row };
+    delete config.codigo_portal; // Eliminamos el código del portal del objeto de configuración
 
     res.json({
       success: true,
-      codigo_portal: configResult.rows[0].codigo_portal,
-      config,
+      codigo_portal,
+      config: {
+        ...defaultConfig,
+        ...config
+      },
       plan: planResult.rows[0] || null
     });
 
@@ -185,67 +199,62 @@ export const getPortalConfig = async (req, res) => {
     }
   };
   export const updatePortalConfig = async (req, res) => {
+    console.log('Solicitud recibida en updatePortalConfig:', {
+      body: req.body,
+      params: req.params
+    });
     const client = await pool.connect();
-      
-    try {
-      await client.query('BEGIN');
+    const { portal_codigo_portal, changes, vendedorId } = req.body;
   
-      const { portal_codigo_portal, ...newConfig } = req.body;
+    // Validaciones de URL al inicio
+    if (changes.logo_personalizado && !isValidUrl(changes.logo_personalizado)) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL de logo no válida'
+      });
+    }
+    
+    if (changes.banner_personalizado && !isValidUrl(changes.banner_personalizado)) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL de banner no válida'
+      });
+    } 
+    try {
+      const { portal_codigo_portal, changes, vendedorId } = req.body;
       
-      if (!portal_codigo_portal) {
+      // Validaciones de URL
+      if (changes.logo_personalizado && !isValidUrl(changes.logo_personalizado)) {
+        return res.status(400).json({
+          success: false,
+          error: 'URL de logo no válida'
+        });
+      }
+      
+      if (changes.banner_personalizado && !isValidUrl(changes.banner_personalizado)) {
+        return res.status(400).json({
+          success: false,
+          error: 'URL de banner no válida'
+        });
+      }
+  
+      console.log('Datos recibidos:', { portal_codigo_portal, changes, vendedorId });
+      // Validaciones básicas
+      if (!portal_codigo_portal || !changes || !vendedorId) {
         await client.query('ROLLBACK');
         return res.status(400).json({
           success: false,
-          error: 'Se requiere el código del portal'
+          error: 'Datos incompletos para la actualización'
         });
       }
   
-      // 1. Obtener plan del vendedor
-      const planQuery = await client.query(
-        `SELECT v.planes_pago_codigo_plan 
-         FROM portal p
-         JOIN vendedor v ON p.vendedor_codigo_vendedore = v.codigo_vendedore
-         WHERE p.codigo_portal = $1`,
-        [portal_codigo_portal]
-      );
-  
-      if (planQuery.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({
-          success: false,
-          error: 'No se pudo determinar el plan del vendedor'
-        });
-      }
-  
-      const planId = planQuery.rows[0].planes_pago_codigo_plan;
-  
-      // 2. Validar que las características a actualizar estén permitidas en el plan
-      const featuresToUpdate = Object.keys(newConfig);
-      const unauthorizedFeatures = [];
-  
-      for (const feature of featuresToUpdate) {
-        if (!isFeatureAllowed(planId, feature)) {
-          unauthorizedFeatures.push(feature);
-        }
-      }
-  
-      if (unauthorizedFeatures.length > 0) {
-        await client.query('ROLLBACK');
-        return res.status(403).json({
-          success: false,
-          error: 'Características no permitidas en el plan actual',
-          unauthorizedFeatures,
-          planId
-        });
-      }
-  
-      // 3. Obtener configuración actual para el histórico
-      const currentConfigQuery = await client.query(
+      // 1. Obtener configuración actual
+      const currentConfigResult = await client.query(
         'SELECT * FROM portal_configuracion WHERE portal_codigo_portal = $1',
         [portal_codigo_portal]
       );
   
-      if (currentConfigQuery.rows.length === 0) {
+      if (currentConfigResult.rows.length === 0) {
         await client.query('ROLLBACK');
         return res.status(404).json({
           success: false,
@@ -253,31 +262,47 @@ export const getPortalConfig = async (req, res) => {
         });
       }
   
-      const currentConfig = currentConfigQuery.rows[0];
-      
-      // 4. Preparar y ejecutar la actualización
-      const fieldsToUpdate = Object.keys(newConfig)
-        .filter(key => newConfig[key] !== undefined && key !== 'codigo_portal_configuracion')
+      const currentConfig = currentConfigResult.rows[0];
+  
+      // 2. Preparar cambios para el histórico
+      const changedFields = {};
+      Object.keys(changes).forEach(key => {
+        if (JSON.stringify(currentConfig[key]) !== JSON.stringify(changes[key])) {
+          changedFields[key] = {
+            old: currentConfig[key],
+            new: changes[key]
+          };
+        }
+      });
+  
+      // 3. Validar que hay cambios reales
+      if (Object.keys(changedFields).length === 0) {
+        await client.query('ROLLBACK');
+        return res.json({
+          success: true,
+          message: 'No hay cambios para actualizar'
+        });
+      }
+  
+      // 4. Construir la consulta de actualización
+      const updateFields = Object.keys(changes)
         .map((key, index) => `"${key}" = $${index + 1}`)
         .join(', ');
   
-      const valuesToUpdate = Object.values(newConfig)
-        .filter(val => val !== undefined);
+      const updateValues = Object.values(changes);
+      updateValues.push(portal_codigo_portal);
   
       const updateQuery = `
         UPDATE portal_configuracion
-        SET ${fieldsToUpdate}, fecha_actualizacion = NOW()
-        WHERE portal_codigo_portal = $${valuesToUpdate.length + 1}
+        SET ${updateFields}, fecha_actualizacion = NOW()
+        WHERE portal_codigo_portal = $${updateValues.length}
         RETURNING *`;
   
-      const updateResult = await client.query(
-        updateQuery, 
-        [...valuesToUpdate, portal_codigo_portal]
-      );
-  
+      // 5. Ejecutar actualización
+      const updateResult = await client.query(updateQuery, updateValues);
       const updatedConfig = updateResult.rows[0];
   
-      // 5. Registrar en histórico_configuracion
+      // 6. Registrar en el histórico
       const historicoQuery = `
         INSERT INTO historico_configuracion (
           configuracion_anterior,
@@ -285,11 +310,10 @@ export const getPortalConfig = async (req, res) => {
           fecha_cambio,
           cambiado_por,
           motivo_cambio,
-          portal_codigo_portal
-        ) VALUES ($1, $2, NOW(), $3, $4, $5)
+          portal_codigo_portal,
+          campos_cambiados
+        ) VALUES ($1, $2, NOW(), $3, $4, $5, $6)
         RETURNING codigo_historial`;
-  
-      const vendedorId = req.user?.codigo_vendedore || req.vendedorId || 1;
       
       const historicoResult = await client.query(
         historicoQuery,
@@ -297,8 +321,9 @@ export const getPortalConfig = async (req, res) => {
           JSON.stringify(currentConfig),
           JSON.stringify(updatedConfig),
           vendedorId,
-          1, // Motivo 1 = actualización manual
-          portal_codigo_portal
+          1, // 1 = Actualización manual desde la interfaz
+          portal_codigo_portal,
+          JSON.stringify(changedFields)
         ]
       );
   
@@ -308,25 +333,37 @@ export const getPortalConfig = async (req, res) => {
         success: true,
         config: updatedConfig,
         historicoId: historicoResult.rows[0].codigo_historial,
-        planId
+        changedFields: Object.keys(changedFields),
+        message: 'Configuración actualizada correctamente'
       });
   
+      console.log('Valores recibidos para actualizar:', updateValues);
+      console.log('Query a ejecutar:', updateQuery);
+  
     } catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Error en updatePortalConfig:', error);
+      console.error('Error detallado:', {
+        message: error.message,
+        stack: error.stack
+      });
       
       res.status(500).json({
         success: false,
         error: 'Error al actualizar configuración',
-        details: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          stack: error.stack
-        } : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     } finally {
       client.release();
     }
+    
   };
+  function isValidUrl(string) {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
   export const getVendedorPlan = async (req, res) => {
     try {
       const vendedorId = parseInt(req.params.id);
@@ -453,70 +490,7 @@ export const getPortalConfig = async (req, res) => {
       });
     }
   };
-  export const uploadFile = async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No se subió ningún archivo'
-        });
-      }
-  
-      const { vendedorId, type } = req.body;
-      
-      // Validar que el tipo de archivo está permitido para el plan del vendedor
-      const planQuery = await pool.query(
-        `SELECT v.planes_pago_codigo_plan 
-         FROM vendedor v 
-         WHERE v.codigo_vendedore = $1`,
-        [vendedorId]
-      );
-  
-      if (planQuery.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: 'Vendedor no encontrado'
-        });
-      }
-  
-      const planId = planQuery.rows[0].planes_pago_codigo_plan;
-      const allowedTypes = ['logo', 'banner']; // Tipos permitidos para todos los planes
-      
-      if (!allowedTypes.includes(type)) {
-        return res.status(403).json({
-          success: false,
-          error: 'Tipo de archivo no permitido'
-        });
-      }
-  
-      // Continuar con la subida del archivo
-      const fileExtension = req.file.originalname.split('.').pop();
-      const fileName = `${type}_${vendedorId}_${Date.now()}.${fileExtension}`;
-      const filePath = `portales/${fileName}`;
-  
-      const fs = require('fs');
-      const path = require('path');
-      
-      const uploadDir = path.join(__dirname, '../../uploads/portales');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      
-      fs.writeFileSync(path.join(uploadDir, fileName), req.file.buffer);
-  
-      res.json({
-        success: true,
-        filePath: `portales/${fileName}`,
-        planId
-      });
-    } catch (error) {
-      console.error('Error en uploadFile:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error al subir el archivo'
-      });
-    }
-  };
+
 /*________________________________________________________________*/
 
 /*________________________________________________________________*/

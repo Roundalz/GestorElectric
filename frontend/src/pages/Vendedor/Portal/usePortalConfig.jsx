@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -30,15 +31,15 @@ const DEFAULT_CONFIG = {
   opciones_avanzadas: {},
   scripts_personalizados: ''
 };
-
 export const usePortalConfig = (vendedorId) => {
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [state, setState] = useState({
-    config: DEFAULT_CONFIG,
+    config: null,
     loading: true,
     error: null,
     portalCodigo: null,
-    plan: null
+    plan: null,
+    isReady: false // Estado para controlar cuando la carga inicial ha terminado
   });
 
   useEffect(() => {
@@ -46,11 +47,19 @@ export const usePortalConfig = (vendedorId) => {
       try {
         if (!vendedorId) return;
 
-        // Obtener configuración y plan en paralelo
+        setState(prev => ({ ...prev, loading: true }));
+
         const [configRes, planRes] = await Promise.all([
           axios.get(`${baseURL}/api/portales/${vendedorId}/config`),
           axios.get(`${baseURL}/api/portales/vendedor/${vendedorId}/plan`)
         ]);
+
+        // Asegúrate que el backend devuelve codigo_portal
+        console.log('Respuesta de configuración:', configRes.data);
+        
+        if (!configRes.data?.codigo_portal) {
+          throw new Error('El backend no devolvió el código del portal');
+        }
 
         setState({
           loading: false,
@@ -59,17 +68,19 @@ export const usePortalConfig = (vendedorId) => {
             ...DEFAULT_CONFIG,
             ...(configRes.data?.config || {})
           },
-          portalCodigo: configRes.data?.codigo_portal || null,
-          plan: planRes.data || null
+          portalCodigo: configRes.data.codigo_portal,
+          plan: planRes.data,
+          isReady: true
         });
       } catch (err) {
         console.error('Error fetching portal config:', err);
         setState({
+          config: null,
           loading: false,
-          error: err.message,
-          config: DEFAULT_CONFIG,
+          error: err.message || 'Error al cargar configuración',
           portalCodigo: null,
-          plan: null
+          plan: null,
+          isReady: true
         });
       }
     };
@@ -77,44 +88,60 @@ export const usePortalConfig = (vendedorId) => {
     fetchData();
   }, [vendedorId, baseURL]);
 
-  const updateConfig = async (newConfig) => {
+  const updateConfig = async (changes) => {
     try {
       if (!state.portalCodigo) {
+        console.error('portalCodigo no disponible en updateConfig');
         throw new Error('No se ha cargado el código del portal');
       }
-
+  
+      console.log('Enviando cambios al backend:', changes);
+      
       const response = await axios.put(
-        `${baseURL}/api/portales/portal/config`,
+        `${baseURL}/api/portales/${vendedorId}/config`,
         {
           portal_codigo_portal: state.portalCodigo,
-          ...newConfig
+          changes,
+          vendedorId
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
       );
       
+      console.log('Respuesta completa del backend:', response);
+  
       if (response.data.success) {
+        console.log('Actualización exitosa, actualizando estado local...');
         setState(prev => ({
           ...prev,
           config: {
             ...prev.config,
-            ...newConfig
+            ...changes
           },
-          // Actualizar el plan si viene en la respuesta
-          plan: response.data.plan || prev.plan
+          originalConfig: {
+            ...prev.originalConfig,
+            ...changes
+          }
         }));
+        
         return { 
           success: true,
-          plan: response.data.plan || state.plan
+          changes: Object.keys(changes)
         };
       }
+      
+      console.error('Error en la respuesta del backend:', response.data);
       throw new Error(response.data?.error || 'Error al actualizar');
     } catch (err) {
-      console.error('Error updating config:', err);
-      return { 
-        success: false, 
-        error: err.response?.data?.error || err.message,
-        unauthorizedFeatures: err.response?.data?.unauthorizedFeatures,
-        currentPlan: state.plan
-      };
+      console.error('Error detallado en updateConfig:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response?.data
+      });
+      throw err;
     }
   };
 

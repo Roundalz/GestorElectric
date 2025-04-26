@@ -12,6 +12,27 @@ const PortalView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+  /* ───────────────  Utilidad para validar URLs  ────────────── */
+  const isValidUrl = (string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  /* ───────────────  Función para obtener URL de imagen  ────────────── */
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // Si ya es una URL completa (de ImgBB u otro servicio)
+    if (isValidUrl(imagePath)) {
+      return imagePath;
+    }
+    // Si es una ruta local (para retrocompatibilidad)
+    return `${baseURL}/uploads/${imagePath}`;
+  };
+
   useEffect(() => {
     const loadPortalData = async () => {
       try {
@@ -54,7 +75,6 @@ const PortalView = () => {
       '--button-style': config.estilos_botones || 'redondeado'
     };
     
-    // Aplicar estilos de hover si están definidos
     if (config.efecto_hover_productos) {
       styles['--product-hover-effect'] = config.efecto_hover_productos;
     }
@@ -93,16 +113,13 @@ const PortalView = () => {
   const renderInstagramFeed = (config) => {
     if (!config.mostrar_instragram_feed || !config.instagram_link) return null;
     
-    // Extraer el nombre de usuario de Instagram del link
     const instagramUser = config.instagram_link.split('/').filter(Boolean).pop();
     
     return (
       <div className="instagram-feed">
         <h3>Síguenos en Instagram</h3>
         <div className="instagram-posts">
-          {/* Aquí iría la integración con la API de Instagram */}
-          <p>@${instagramUser}</p>
-          {/* Esto es un placeholder - en producción usarías la API real */}
+          <p>@{instagramUser}</p>
         </div>
       </div>
     );
@@ -199,8 +216,12 @@ const PortalView = () => {
         <div className="portal-logo">
           {config.logo_personalizado ? (
             <img 
-              src={`${baseURL}/uploads/${config.logo_personalizado}`} 
-              alt={`Logo de ${vendedor.nombre_empresa}`} 
+              src={getImageUrl(config.logo_personalizado)} 
+              alt={`Logo de ${vendedor.nombre_empresa}`}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/200x200?text=Logo+no+disponible';
+              }}
             />
           ) : (
             <h1 style={{ font: themeStyles['--title-style'] }}>
@@ -225,8 +246,12 @@ const PortalView = () => {
       {config.mostrar_banner && config.banner_personalizado && (
         <div className="portal-banner">
           <img 
-            src={`${baseURL}/uploads/${config.banner_personalizado}`} 
-            alt="Banner del portal" 
+            src={getImageUrl(config.banner_personalizado)} 
+            alt="Banner del portal"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/1200x400?text=Banner+no+disponible';
+            }}
           />
         </div>
       )}
@@ -261,12 +286,13 @@ const PortalView = () => {
                         onClick={() => setSelectedProduct(producto)}
                       >
                         <img 
-                          src={
-                            producto.imagen_referencia_producto 
-                              ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
-                              : 'https://via.placeholder.com/300x200?text=Oferta'
-                          } 
-                          alt={producto.nombre_producto} 
+                          src={getImageUrl(producto.imagen_referencia_producto) || 
+                               'https://via.placeholder.com/300x200?text=Oferta'}
+                          alt={producto.nombre_producto}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible';
+                          }}
                         />
                         <div className="offer-badge">
                           -{producto.descuento_producto}%
@@ -291,12 +317,13 @@ const PortalView = () => {
                 >
                   <div className="product-image">
                     <img 
-                      src={
-                        producto.imagen_referencia_producto 
-                          ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
-                          : 'https://via.placeholder.com/300x200?text=Producto+Sin+Imagen'
-                      } 
-                      alt={producto.nombre_producto} 
+                      src={getImageUrl(producto.imagen_referencia_producto) || 
+                           'https://via.placeholder.com/300x200?text=Producto+Sin+Imagen'}
+                      alt={producto.nombre_producto}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible';
+                      }}
                     />
                     {producto.descuento_producto > 0 && (
                       <span className="discount-badge">
@@ -381,8 +408,13 @@ const PortalView = () => {
             
             <div className="modal-product-images">
               <img 
-                src={`${baseURL}/uploads/${selectedProduct.imagen_referencia_producto}`} 
-                alt={selectedProduct.nombre_producto} 
+                src={getImageUrl(selectedProduct.imagen_referencia_producto) || 
+                     'https://via.placeholder.com/600x400?text=Imagen+no+disponible'}
+                alt={selectedProduct.nombre_producto}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/600x400?text=Imagen+no+disponible';
+                }}
               />
             </div>
             
