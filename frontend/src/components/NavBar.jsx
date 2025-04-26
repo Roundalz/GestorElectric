@@ -46,7 +46,6 @@ const handleLogout = async () => {
   }
 };
 
-  
 
   return (
     <nav className="navbar">

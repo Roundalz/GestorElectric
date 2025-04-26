@@ -1,6 +1,82 @@
 // orquestador/src/controllers/autenticacionController.js
 import pool   from '../database.js';
 import crypto from 'crypto';
+/* ─────────── BLOQUEO POR INTENTOS FALLIDOS (solo BD) ──────────── */
+const MAX_FALLOS   = 3;          // 3 intentos
+const BLOQUEO_MIN  = 30;         // 30 min
+
+// ① inserta (o actualiza) la tabla LOGIN_ATTEMPT
+const insertLoginAttempt = (email, role, ok, ip) =>
+  pool.query(
+    `INSERT INTO LOGIN_ATTEMPT (email, role, success, ip_origin)
+     VALUES ($1,$2,$3,$4)`,
+    [email, role, ok, ip ?? null]
+  );
+  const recordLoginAttempt = insertLoginAttempt;   // alias legible
+
+
+// ② cuántos fallos lleva en la última ½ hora
+const countRecentFails = async (email, role) => {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*)::int AS n
+       FROM LOGIN_ATTEMPT
+      WHERE email=$1 AND role=$2 AND success=false
+        AND ts > NOW() - INTERVAL '30 minutes'`,
+    [email, role]
+  );
+  return rows[0].n;
+};
+
+// ③ registrar bloqueo y devolver fecha de desbloqueo
+const lockAccount = async (email, role, ip) => {
+  const { rows } = await pool.query(
+    `INSERT INTO ACCOUNT_LOCK (email, role, unlock_at, ip_origin, motivo)
+     VALUES ($1,$2, NOW() + INTERVAL '${BLOQUEO_MIN} minutes',$3,'exceso_fallos')
+     RETURNING unlock_at`,
+    [email, role, ip ?? null]
+  );
+  return rows[0].unlock_at;
+};
+
+// ④ ¿está ya bloqueado?
+const accountIsLocked = async (email, role) => {
+  const { rows } = await pool.query(
+    `SELECT unlock_at
+       FROM ACCOUNT_LOCK
+      WHERE email=$1 AND role=$2 AND unlock_at > NOW()
+   ORDER BY unlock_at DESC LIMIT 1`,
+    [email, role]
+  );
+  return rows.length ? rows[0].unlock_at : null;
+};
+
+// ⑤ endpoint *SOLAMENTE* para registrar fallos desde el frontend
+export const intentoFallido = async (req, res) => {
+  const { email, role } = req.body;          // role = 'cliente' | 'vendedor'
+  const ip           = remoteIp(req);
+  const desbloqueo   = await accountIsLocked(email, role);
+  if (desbloqueo) {
+    return res.status(423).json({
+      bloqueado: true,
+      unlock_at: desbloqueo
+    });
+  }
+
+  await insertLoginAttempt(email, role, false, ip);
+  const fallos = await countRecentFails(email, role);
+
+  if (fallos >= MAX_FALLOS) {
+    const unlock_at = await lockAccount(email, role, ip);
+    return res.status(423).json({
+      bloqueado: true,
+      unlock_at
+    });
+  }
+  res.json({
+    bloqueado: false,
+    restantes: MAX_FALLOS - fallos
+  });
+};
 
 /* ─────────────────────── HELPERS PARA LOGS ──────────────────────── */
 const addLogEvento  = async (usuario_id, accion, ip) =>
@@ -127,14 +203,16 @@ export const loginCliente = async (req, res) => {
       'SELECT * FROM CLIENTE WHERE correo_cliente = $1',
       [email]
     );
-    if (!rows.length) return res.status(404).json({ error: 'Cliente no encontrado' });
+    if (!rows.length)
+      return res.status(404).json({ error: 'Cliente no encontrado' });
 
     const id = rows[0].codigo_cliente;
 
-    /* LOG_USUARIO + LOG_EVENTO → login_cliente */
     await Promise.all([
       addLogUsuario(id, remoteIp(req)),
-      addLogEvento(id, 'login_cliente', remoteIp(req))
+      addLogEvento(id, 'login_cliente', remoteIp(req)),
+      /* NUEVO → intento exitoso */
+      recordLoginAttempt(email, 'cliente', true, remoteIp(req))
     ]);
 
     res.json(rows[0]);
@@ -152,19 +230,23 @@ export const loginVendedor = async (req, res) => {
       'SELECT * FROM VENDEDOR WHERE correo_vendedor = $1',
       [email]
     );
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Vendedor no encontrado con este correo' });
-    }
-    if (rows[0].clave_vendedor !== clave_vendedor) {
-      return res.status(400).json({ error: 'La clave de vendedor no coincide' });
-    }
+    if (!rows.length)
+      return res
+        .status(404)
+        .json({ error: 'Vendedor no encontrado con este correo' });
+
+    if (rows[0].clave_vendedor !== clave_vendedor)
+      return res
+        .status(400)
+        .json({ error: 'La clave de vendedor no coincide' });
 
     const id = rows[0].codigo_vendedore;
 
-    /* LOG_USUARIO + LOG_EVENTO → login_vendedor */
     await Promise.all([
       addLogUsuario(id, remoteIp(req)),
-      addLogEvento(id, 'login_vendedor', remoteIp(req))
+      addLogEvento(id, 'login_vendedor', remoteIp(req)),
+      /* NUEVO → intento exitoso */
+      recordLoginAttempt(email, 'vendedor', true, remoteIp(req))
     ]);
 
     res.json(rows[0]);
@@ -173,6 +255,7 @@ export const loginVendedor = async (req, res) => {
     res.status(500).json({ error: 'Error en el login de vendedor' });
   }
 };
+
 
 /* ─────────────────────────── LOGOUT USUARIO ───────────────────────── */
 export const logoutUsuario = async (req, res) => {
@@ -188,3 +271,4 @@ export const logoutUsuario = async (req, res) => {
     res.status(500).json({ error: 'Error registrando logout' });
   }
 };
+
