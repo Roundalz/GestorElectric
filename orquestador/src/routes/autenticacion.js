@@ -8,9 +8,6 @@ import {
 } from '../controllers/autenticacionController.js';
 import { intentoFallido } from '../controllers/autenticacionController.js';
 
-
-
-
 const router = express.Router();
 
 // RUTAS DE REGISTRO
