@@ -7,7 +7,8 @@ import {
   getPortalView,
   updateProducto,
   deleteProducto,
-  getDashboardData
+  getDashboardData,
+  getHistoricoConfiguracion
 } from '../controllers/portalController.js';
 import multer from 'multer';
 
@@ -28,6 +29,8 @@ router.put('/:vendedorId/config', updatePortalConfig);
 router.put('/productos/:productId', updateProducto);
 router.delete('/productos/:productId', deleteProducto);
 
+
+router.get('/historico/:portalCodigo', getHistoricoConfiguracion);
 
 
 router.use((err, req, res, next) => {

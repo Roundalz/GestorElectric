@@ -490,7 +490,94 @@ export const getPortalConfig = async (req, res) => {
       });
     }
   };
+/*________________________________________________________________*/
 
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+  /*___________________HISTORICO CONFIGURACION____________________*/
+  
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+/*________________________________________________________________*/
+
+export const getHistoricoConfiguracion = async (req, res) => {
+  try {
+    const { portalCodigo } = req.params;
+    const { vendedorId } = req.query;
+
+    console.log(`Fetching history for portal: ${portalCodigo}`);
+
+    const result = await pool.query(`
+      SELECT 
+        h.codigo_historial,
+        h.configuracion_anterior,
+        h.configuracion_nueva,
+        h.fecha_cambio,
+        h.cambiado_por,
+        h.motivo_cambio,
+        h.portal_codigo_portal,
+        h.campos_cambiados,
+        v.nombre_vendedor as vendedor_nombre
+      FROM historico_configuracion h
+      LEFT JOIN vendedor v ON h.cambiado_por = v.codigo_vendedore
+      WHERE h.portal_codigo_portal = $1
+      ORDER BY h.fecha_cambio DESC
+    `, [portalCodigo]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No se encontraron registros históricos para este portal'
+      });
+    }
+
+    // Función mejorada para parsear JSON
+    const safeParse = (data) => {
+      if (typeof data === 'object') return data;
+      try {
+        return data ? JSON.parse(data) : {};
+      } catch (e) {
+        console.error('Error parsing JSON:', { data, error: e.message });
+        return {};
+      }
+    };
+
+    const historico = result.rows.map(row => ({
+      ...row,
+      configuracion_anterior: safeParse(row.configuracion_anterior),
+      configuracion_nueva: safeParse(row.configuracion_nueva),
+      campos_cambiados: safeParse(row.campos_cambiados)
+    }));
+
+    console.log('Histórico preparado:', historico);
+    res.json(historico);
+  } catch (error) {
+    console.error('Error en getHistoricoConfiguracion:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener el historial de configuración',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Función helper para parsear JSON seguro
+function tryParseJSON(jsonString) {
+  try {
+    return jsonString ? JSON.parse(jsonString) : {};
+  } catch (e) {
+    console.error('Error parsing JSON:', e);
+    return {};
+  }
+}
 /*________________________________________________________________*/
 
 /*________________________________________________________________*/

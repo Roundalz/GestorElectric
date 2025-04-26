@@ -3,7 +3,7 @@ import { usePortalConfig } from '../portal/usePortalConfig.jsx';
 import { useVendedor } from '@context/vendedorContext';
 import axios from 'axios';
 import './styles.css';
-
+import HistoricoConfiguracion from '../portal/HistoricoConfiguracion.jsx'
 // Primero definimos las características base para cada plan
 const plan1Features = [
   'color_principal', 'color_secundario', 'color_fondo', 
@@ -350,6 +350,12 @@ const ConfigPortal = () => {
           disabled={!isFeatureAllowed('scripts_personalizados')}
         >
           Avanzado
+        </button>
+        <button 
+          className={activeTab === 'historico' ? 'active' : ''}
+          onClick={() => setActiveTab('historico')}
+        >
+          Histórico
         </button>
       </div>
 
@@ -815,7 +821,13 @@ const ConfigPortal = () => {
             </div>
           </>
         )}
-
+        {activeTab === 'historico' && (
+          <HistoricoConfiguracion 
+            portalCodigo={portalCodigo} 
+            vendedorId={vendedorId}
+            updateConfig={updateConfig}
+          />
+        )}
         <button 
           className="btn-save" 
           onClick={handleSave}

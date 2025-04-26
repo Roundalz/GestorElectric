@@ -19,14 +19,15 @@ import Inventario from "./pages/Vendedor/Inventario";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
-import PortalView from './pages/Vendedor/Portal/PortalView';
-import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
+import PortalView from './pages/Vendedor/portal/PortalView';
+import HistoricoConfiguracion from "./pages/Vendedor/portal/HistoricoConfiguracion";
 import { VendedorProvider } from '@context/vendedorContext';
 
 
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
 import Register from "./components/Register";
+
 
 function App() {
   return (
@@ -59,7 +60,7 @@ function App() {
           <Route path="/vendedor/perfil" element={<PerfilVendedor />} />
           <Route path="/vendedor/portal/config" element={<ConfigPortal />} />
           <Route path="/vendedor/portal/view" element={<PortalView />} />
-          <Route path="/vendedor/portal/productos" element={<ProductEditor />} />
+          <Route path="/vendedor/portal/historico" element={<HistoricoConfiguracion />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
 
           {/* Ruta para manejar páginas no encontradas */}
