@@ -28,7 +28,12 @@ const DEFAULT_CONFIG = {
   whatsapp_numero: 0,
   mostrar_instragram_feed: false,
   instagram_link: '',
-  opciones_avanzadas: {},
+  opciones_avanzadas: {
+      checkout: {
+        metodos_pago: ['tarjeta', 'transferencia'],
+        politica_devoluciones: ''
+      }
+  },
   scripts_personalizados: ''
 };
 export const usePortalConfig = (vendedorId) => {

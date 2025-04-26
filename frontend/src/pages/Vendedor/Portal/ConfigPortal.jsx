@@ -27,7 +27,8 @@ const plan3Features = [
 
 const plan4Features = [
   ...plan3Features,
-  'scripts_personalizados'
+  'scripts_personalizados',
+  'metodos_pago'
 ];
 
 // Configuración por defecto extendida con todas las opciones
@@ -795,6 +796,110 @@ const ConfigPortal = () => {
                       })}
                     />
                     <label htmlFor="filtro-categorias">Habilitar filtro por categorías</label>
+                  </div>
+
+                  <div className="config-section">
+                    <h3>Métodos de Pago</h3>
+                    
+                    {![4, 5].includes(plan?.codigo_plan) ? (
+                      <FeatureLocked message="Actualiza al Plan Estándar Plus o Premium para configurar métodos de pago" />
+                    ) : (
+                      <>
+                        <div className="form-group checkbox">
+                          <input
+                            type="checkbox"
+                            id="pago-tarjeta"
+                            name="tarjeta"
+                            checked={localConfig.opciones_avanzadas?.checkout?.metodos_pago?.includes('tarjeta') || false}
+                            onChange={(e) => {
+                              const metodos = localConfig.opciones_avanzadas?.checkout?.metodos_pago || [];
+                              const newMetodos = e.target.checked
+                                ? [...metodos, 'tarjeta']
+                                : metodos.filter(m => m !== 'tarjeta');
+                              
+                              handleConfigChange('opciones_avanzadas', {
+                                ...localConfig.opciones_avanzadas,
+                                checkout: {
+                                  ...localConfig.opciones_avanzadas?.checkout,
+                                  metodos_pago: newMetodos
+                                }
+                              });
+                            }}
+                          />
+                          <label htmlFor="pago-tarjeta">Aceptar pagos con tarjeta</label>
+                        </div>
+
+                        <div className="form-group checkbox">
+                          <input
+                            type="checkbox"
+                            id="pago-transferencia"
+                            name="transferencia"
+                            checked={localConfig.opciones_avanzadas?.checkout?.metodos_pago?.includes('transferencia') || false}
+                            onChange={(e) => {
+                              const metodos = localConfig.opciones_avanzadas?.checkout?.metodos_pago || [];
+                              const newMetodos = e.target.checked
+                                ? [...metodos, 'transferencia']
+                                : metodos.filter(m => m !== 'transferencia');
+                              
+                              handleConfigChange('opciones_avanzadas', {
+                                ...localConfig.opciones_avanzadas,
+                                checkout: {
+                                  ...localConfig.opciones_avanzadas?.checkout,
+                                  metodos_pago: newMetodos
+                                }
+                              });
+                            }}
+                          />
+                          <label htmlFor="pago-transferencia">Aceptar transferencias bancarias</label>
+                        </div>
+
+                        {plan?.codigo_plan === 5 && (
+                          <div className="form-group checkbox">
+                            <input
+                              type="checkbox"
+                              id="pago-efectivo"
+                              name="efectivo"
+                              checked={localConfig.opciones_avanzadas?.checkout?.metodos_pago?.includes('efectivo') || false}
+                              onChange={(e) => {
+                                const metodos = localConfig.opciones_avanzadas?.checkout?.metodos_pago || [];
+                                const newMetodos = e.target.checked
+                                  ? [...metodos, 'efectivo']
+                                  : metodos.filter(m => m !== 'efectivo');
+                                
+                                handleConfigChange('opciones_avanzadas', {
+                                  ...localConfig.opciones_avanzadas,
+                                  checkout: {
+                                    ...localConfig.opciones_avanzadas?.checkout,
+                                    metodos_pago: newMetodos
+                                  }
+                                });
+                              }}
+                            />
+                            <label htmlFor="pago-efectivo">Aceptar pagos en efectivo</label>
+                          </div>
+                        )}
+
+                        {plan?.codigo_plan === 5 && (
+                          <div className="form-group">
+                            <label htmlFor="politica-devoluciones">Política de devoluciones</label>
+                            <input
+                              type="text"
+                              id="politica-devoluciones"
+                              name="politica_devoluciones"
+                              value={localConfig.opciones_avanzadas?.checkout?.politica_devoluciones || ''}
+                              onChange={(e) => handleConfigChange('opciones_avanzadas', {
+                                ...localConfig.opciones_avanzadas,
+                                checkout: {
+                                  ...localConfig.opciones_avanzadas?.checkout,
+                                  politica_devoluciones: e.target.value
+                                }
+                              })}
+                              placeholder="Ej: 30 días para devoluciones"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </>
               )}

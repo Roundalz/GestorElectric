@@ -906,6 +906,30 @@
 .product-preview.detailed .product-rating {
   width: 50%;
 }
+/* Metodos pago*/
+.config-section .payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.payment-method-option {
+  border: 1px solid #ddd;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-method-option.active {
+  border-color: #4F46E5;
+  background-color: #f0f7ff;
+}
+
+.payment-method-option input {
+  margin-right: 8px;
+}
 /*________________________________________________________________*/
 
 /*________________________________________________________________*/
@@ -1578,5 +1602,88 @@
   .whatsapp-float a {
     width: 50px;
     height: 50px;
+  }
+}
+/* Estilos para el modal de producto */
+.modal-product-images {
+  position: relative;
+  width: 50%;
+}
+
+.image-navigation {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  padding: 0 10px;
+}
+
+.image-navigation button {
+  background: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-thumbnails {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.image-thumbnails img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.image-thumbnails img.active {
+  border-color: var(--color-primary);
+}
+
+/* Estilos para métodos de pago */
+.payment-methods {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.payment-methods h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.method-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.payment-icon {
+  font-size: 24px;
+  cursor: help;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-product-images {
+    width: 100%;
+  }
+  
+  .product-modal {
+    flex-direction: column;
   }
 }

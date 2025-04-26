@@ -93,6 +93,12 @@ export const getPortalConfig = async (req, res) => {
       banner_personalizado: '',
       estilos_botones: 'redondeado',
       efecto_hover_productos: 'sombra',
+      opciones_avanzadas: {
+        checkout: {
+          metodos_pago: ['tarjeta', 'transferencia'],
+          politica_devoluciones: ''
+        }
+      },
       opciones_filtrados: { precio: true, categorias: true },
       mostrar_ofertas: false,
       mostrar_boton_whatsapp: false,
@@ -134,8 +140,38 @@ export const getPortalConfig = async (req, res) => {
     });
   }
 };
+  /*________________IMAGENS IMG_PRODUCTO_PORTALVIEW_______ */
+  export const getProductImages = async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      const result = await pool.query(
+        `SELECT primer_angulo, segundo_angulo, tercer_angulo, cuarto_angulo 
+         FROM IMG_PRODUCTO 
+         WHERE PRODUCTOS_codigo_producto = $1`,
+        [productId]
+      );
   
-
+      if (result.rows.length === 0) {
+        return res.json({
+          success: true,
+          imagenes: {}
+        });
+      }
+  
+      res.json({
+        success: true,
+        imagenes: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Error en getProductImages:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error al obtener imágenes del producto'
+      });
+    }
+  };
+  /*_______________________________________________________ */
   export const updateProducto = async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);
