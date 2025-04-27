@@ -1,22 +1,27 @@
 import express from 'express';
 import cors from 'cors';
+
 import testController from './controllers/testController.js';
-import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
-import vendedorRoutes from "./routes/vendedorRoutes.js";
+
 import autenticacionRouter from './routes/autenticacion.js';
-import portalRoutes from './routes/portalRoutes.js';
-import pedidoRoutes from './routes/pedidoRoutes.js';
-import productoRoutes from './routes/productoRoutes.js';
-import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
-import dotenv from 'dotenv';
-import inventarioRouter from './routes/inventario.js';
-import ventasRoutes from "./routes/ventas.js"; 
 import clientes from "./routes/clientesRoutes.js"; 
+import inventarioRouter from './routes/inventario.js';
+import logsRoutes from "./routes/LogsRoutes.js"; // <-- Asegúrate de importar las rutas de logs
+import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
+import pagoRoutes from "./routes/pagoRoutes.js";
 import planPagosRoutes from "./routes/planPagosRoutes.js";
 import planesRoutes   from './routes/planesRoutes.js';
-import pagoRoutes from "./routes/pagoRoutes.js";
+import pedidoRoutes from './routes/pedidoRoutes.js';
+import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
+import portalRoutes from './routes/portalRoutes.js';
+import productoRoutes from './routes/productoRoutes.js';
+import vendedorRoutes from "./routes/vendedorRoutes.js";
+import ventasRoutes from "./routes/ventas.js"; 
+
+import dotenv from 'dotenv';
 import pool from './database.js';
 import path from 'path';
+
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -42,6 +47,15 @@ app.use(express.json()); // Habilitar JSON en requests
 
 // Rutas de prueba (o cualquier endpoint de prueba)
 app.use("/api", testController);
+
+// Rutas de CRUD para LOGS
+app.use("/api/logs", logsRoutes); // <-- Monta tus rutas de logs aquí
+
+// Luego de otros `app.use`, monta esto:
+app.use("/api/planes_pago", planPagosRoutes);
+
+// Rutas de CRUD para VENDEDOR
+app.use("/api/vendedores", vendedorRoutes);
 
 // Rutas de CRUD para SERVICIO
 app.use("/api/servicios", servicioRoutes);

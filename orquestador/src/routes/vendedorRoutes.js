@@ -1,10 +1,10 @@
 // routes/vendedorRoutes.js
 import express from "express";
 import {
-  obtenerVendedores,
-  crearVendedor,
   actualizarVendedor,
+  crearVendedor,
   eliminarVendedor,
+  obtenerVendedores,
 } from "../controllers/vendedorController.js";
 
 const router = express.Router();

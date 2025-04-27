@@ -99,5 +99,3 @@ export const eliminarPlan = async (req, res) => {
     res.status(500).json({ error: "Error al eliminar el plan de pago." });
   }
 };
-
-//
