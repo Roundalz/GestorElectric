@@ -111,7 +111,6 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Orquestador funcionando correctamente" });
 });
 
-import pagoRoutes from "./routes/pagoRoutes.js";
 app.use("/api/pagos", pagoRoutes);
 
 // Puerto del servidor
