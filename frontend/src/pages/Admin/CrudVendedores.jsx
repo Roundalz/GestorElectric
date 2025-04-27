@@ -20,7 +20,6 @@ function CrudVendedores() {
     banner_empresa: "default_banner.png",
     PLANES_PAGO_codigo_plan: 1,
   });
-
   const [modoEditar, setModoEditar] = useState(false);
   const [vendedorActual, setVendedorActual] = useState(null);
   const [error, setError] = useState(null);
@@ -43,12 +42,23 @@ function CrudVendedores() {
   }, []);
 
   const validarFormulario = () => {
-    if (!form.nombre_vendedor || !form.correo_vendedor || !form.telefono_vendedor || 
-        !form.clave_vendedor || !form.nombre_empresa || !form.tipo_empresa || 
-        !form.correo_empresa || !form.telefono_empresa || !form.ciudad_empresa || 
-        !form.direccion_empresa) {
-      setError("Por favor complete todos los campos requeridos");
-      return false;
+    const camposObligatorios = [
+      "nombre_vendedor",
+      "correo_vendedor",
+      "telefono_vendedor",
+      "clave_vendedor",
+      "nombre_empresa",
+      "tipo_empresa",
+      "correo_empresa",
+      "telefono_empresa",
+      "ciudad_empresa",
+      "direccion_empresa",
+    ];
+    for (const campo of camposObligatorios) {
+      if (!form[campo]) {
+        setError("Por favor complete todos los campos requeridos");
+        return false;
+      }
     }
     setError(null);
     return true;
@@ -56,7 +66,6 @@ function CrudVendedores() {
 
   const crearVendedor = async () => {
     if (!validarFormulario()) return;
-    
     try {
       await axios.post(API_URL, form);
       alert("Vendedor creado exitosamente");
@@ -66,7 +75,7 @@ function CrudVendedores() {
       console.error("Error completo:", {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
       });
       setError(error.response?.data?.detalle || error.response?.data?.error || error.message);
     }
@@ -77,12 +86,10 @@ function CrudVendedores() {
       setError("No se ha seleccionado un vendedor para editar");
       return;
     }
-    
     try {
       await axios.put(`${API_URL}/${vendedorActual}`, form);
       alert("Vendedor actualizado exitosamente");
       obtenerVendedores();
-      setModoEditar(false);
       resetForm();
     } catch (error) {
       console.error("Error al actualizar vendedor:", error);
@@ -92,7 +99,6 @@ function CrudVendedores() {
 
   const eliminarVendedor = async (id) => {
     if (!window.confirm("¿Está seguro de eliminar este vendedor?")) return;
-    
     try {
       await axios.delete(`${API_URL}/${id}`);
       alert("Vendedor eliminado exitosamente");
@@ -104,10 +110,11 @@ function CrudVendedores() {
   };
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: name === "PLANES_PAGO_codigo_plan" ? Number(value) : value,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -139,10 +146,8 @@ function CrudVendedores() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">
-        {modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}
-      </h1>
+    <div className="p-4 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">{modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -247,15 +252,15 @@ function CrudVendedores() {
         </div>
 
         <div className="flex justify-end space-x-2">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={resetForm}
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
           >
-             Cancelar
+            Cancelar
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           >
             {modoEditar ? "Actualizar" : "Crear"}
@@ -272,6 +277,8 @@ function CrudVendedores() {
               <th className="p-2 border">Correo</th>
               <th className="p-2 border">Teléfono</th>
               <th className="p-2 border">Empresa</th>
+              <th className="p-2 border">Logo</th>
+              <th className="p-2 border">Banner</th>
               <th className="p-2 border">Acciones</th>
             </tr>
           </thead>
@@ -283,20 +290,37 @@ function CrudVendedores() {
                 <td className="p-2 border">{vendedor.telefono_vendedor}</td>
                 <td className="p-2 border">{vendedor.nombre_empresa}</td>
                 <td className="p-2 border">
+                  <img
+                    src={vendedor.logo_empresa}
+                    alt="Logo Empresa"
+                    className="h-12 w-12 object-cover mx-auto"
+                  />
+                </td>
+                <td className="p-2 border">
+                  <img
+                    src={vendedor.banner_empresa}
+                    alt="Banner Empresa"
+                    className="h-12 w-24 object-cover mx-auto"
+                  />
+                </td>
+                <td className="p-2 border">
                   <div className="flex space-x-2 justify-center">
                     <button
                       onClick={() => {
                         setModoEditar(true);
-                        setForm({ ...vendedor });
+                        setForm({
+                          ...vendedor,
+                          PLANES_PAGO_codigo_plan: vendedor.PLANES_PAGO_codigo_plan || 1,
+                        });
                         setVendedorActual(vendedor.codigo_vendedore);
                       }}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => eliminarVendedor(vendedor.codigo_vendedore)}
-                      className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition"
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
                     >
                       Eliminar
                     </button>
