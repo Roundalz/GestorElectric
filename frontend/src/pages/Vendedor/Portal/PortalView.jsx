@@ -3,6 +3,147 @@ import { useVendedor } from '@context/vendedorContext';
 import axios from 'axios';
 import './styles.css';
 
+
+const ProductModal = ({ product, config, onClose }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [productImages, setProductImages] = useState([]);
+  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  const isValidUrl = (string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (isValidUrl(imagePath)) {
+      return imagePath;
+    }
+    return `${baseURL}/uploads/${imagePath}`;
+  };
+
+  useEffect(() => {
+    const loadProductImages = async () => {
+      try {
+        const response = await axios.get(`${baseURL}/api/productos/${product.codigo_producto}/imagenes`);
+        if (response.data && response.data.success) {
+          const images = [
+            product.imagen_referencia_producto,
+            ...Object.values(response.data.imagenes).filter(img => img)
+          ];
+          setProductImages(images);
+        }
+      } catch (error) {
+        console.error('Error al cargar imágenes adicionales:', error);
+        setProductImages([product.imagen_referencia_producto]);
+      }
+    };
+
+    loadProductImages();
+  }, [product.codigo_producto]);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
+
+  return (
+    <div className="product-modal-overlay" onClick={onClose}>
+      <div className="product-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>&times;</button>
+        
+        <div className="modal-product-images">
+          {productImages.length > 0 && (
+            <>
+              <img 
+                src={getImageUrl(productImages[currentImageIndex])} 
+                alt={`${product.nombre_producto} - Imagen ${currentImageIndex + 1}`}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/600x400?text=Imagen+no+disponible';
+                }}
+              />
+              {productImages.length > 1 && (
+                <div className="image-navigation">
+                  <button onClick={(e) => { e.stopPropagation(); prevImage(); }}>&lt;</button>
+                  <span>{currentImageIndex + 1} / {productImages.length}</span>
+                  <button onClick={(e) => { e.stopPropagation(); nextImage(); }}>&gt;</button>
+                </div>
+              )}
+              <div className="image-thumbnails">
+                {productImages.map((img, index) => (
+                  <img
+                    key={index}
+                    src={getImageUrl(img)}
+                    alt={`Miniatura ${index + 1}`}
+                    className={index === currentImageIndex ? 'active' : ''}
+                    onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        
+        <div className="modal-product-details">
+          <h2>{product.nombre_producto}</h2>
+          <p className="product-type">{product.tipo_producto}</p>
+          
+          <div className="product-price-section">
+            <span className="price">${product.precio_unidad_producto}</span>
+            {product.descuento_producto > 0 && (
+              <span className="discount">-{product.descuento_producto}%</span>
+            )}
+          </div>
+          
+          <div className="product-stock">
+            <span>Disponibles: {product.cantidad_disponible_producto}</span>
+            <span>Estado: {product.estado_producto}</span>
+          </div>
+          
+          <div className="product-description">
+            <h3>Descripción</h3>
+            <p>{product.descripcion || 'No hay descripción disponible'}</p>
+          </div>
+          
+          {config.opciones_avanzadas?.checkout?.metodos_pago && (
+            <div className="payment-methods">
+              <h3>Métodos de pago aceptados</h3>
+              <div className="method-icons">
+                {config.opciones_avanzadas.checkout.metodos_pago.includes('tarjeta') && (
+                  <span className="payment-icon" title="Tarjeta de crédito/débito">💳</span>
+                )}
+                {config.opciones_avanzadas.checkout.metodos_pago.includes('transferencia') && (
+                  <span className="payment-icon" title="Transferencia bancaria">🏦</span>
+                )}
+                {config.opciones_avanzadas.checkout.metodos_pago.includes('efectivo') && (
+                  <span className="payment-icon" title="Efectivo">💵</span>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <div className="product-actions">
+            <button className={`btn-add-to-cart ${config.estilos_botones}`}>
+              Añadir al carrito
+            </button>
+            <button className={`btn-favorite ${config.estilos_botones}`}>
+              ❤️ Favorito
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PortalView = () => {
   const { vendedorId } = useVendedor();
   const [portalData, setPortalData] = useState(null);
@@ -11,6 +152,25 @@ const PortalView = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  /* ───────────────  Utilidad para validar URLs  ────────────── */
+  const isValidUrl = (string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  /* ───────────────  Función para obtener URL de imagen  ────────────── */
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (isValidUrl(imagePath)) {
+      return imagePath;
+    }
+    return `${baseURL}/uploads/${imagePath}`;
+  };
 
   useEffect(() => {
     const loadPortalData = async () => {
@@ -54,7 +214,6 @@ const PortalView = () => {
       '--button-style': config.estilos_botones || 'redondeado'
     };
     
-    // Aplicar estilos de hover si están definidos
     if (config.efecto_hover_productos) {
       styles['--product-hover-effect'] = config.efecto_hover_productos;
     }
@@ -93,16 +252,13 @@ const PortalView = () => {
   const renderInstagramFeed = (config) => {
     if (!config.mostrar_instragram_feed || !config.instagram_link) return null;
     
-    // Extraer el nombre de usuario de Instagram del link
     const instagramUser = config.instagram_link.split('/').filter(Boolean).pop();
     
     return (
       <div className="instagram-feed">
         <h3>Síguenos en Instagram</h3>
         <div className="instagram-posts">
-          {/* Aquí iría la integración con la API de Instagram */}
-          <p>@${instagramUser}</p>
-          {/* Esto es un placeholder - en producción usarías la API real */}
+          <p>@{instagramUser}</p>
         </div>
       </div>
     );
@@ -199,8 +355,12 @@ const PortalView = () => {
         <div className="portal-logo">
           {config.logo_personalizado ? (
             <img 
-              src={`${baseURL}/uploads/${config.logo_personalizado}`} 
-              alt={`Logo de ${vendedor.nombre_empresa}`} 
+              src={getImageUrl(config.logo_personalizado)} 
+              alt={`Logo de ${vendedor.nombre_empresa}`}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/200x200?text=Logo+no+disponible';
+              }}
             />
           ) : (
             <h1 style={{ font: themeStyles['--title-style'] }}>
@@ -225,8 +385,12 @@ const PortalView = () => {
       {config.mostrar_banner && config.banner_personalizado && (
         <div className="portal-banner">
           <img 
-            src={`${baseURL}/uploads/${config.banner_personalizado}`} 
-            alt="Banner del portal" 
+            src={getImageUrl(config.banner_personalizado)} 
+            alt="Banner del portal"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/1200x400?text=Banner+no+disponible';
+            }}
           />
         </div>
       )}
@@ -261,12 +425,13 @@ const PortalView = () => {
                         onClick={() => setSelectedProduct(producto)}
                       >
                         <img 
-                          src={
-                            producto.imagen_referencia_producto 
-                              ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
-                              : 'https://via.placeholder.com/300x200?text=Oferta'
-                          } 
-                          alt={producto.nombre_producto} 
+                          src={getImageUrl(producto.imagen_referencia_producto) || 
+                               'https://via.placeholder.com/300x200?text=Oferta'}
+                          alt={producto.nombre_producto}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible';
+                          }}
                         />
                         <div className="offer-badge">
                           -{producto.descuento_producto}%
@@ -291,12 +456,13 @@ const PortalView = () => {
                 >
                   <div className="product-image">
                     <img 
-                      src={
-                        producto.imagen_referencia_producto 
-                          ? `${baseURL}/uploads/${producto.imagen_referencia_producto}`
-                          : 'https://via.placeholder.com/300x200?text=Producto+Sin+Imagen'
-                      } 
-                      alt={producto.nombre_producto} 
+                      src={getImageUrl(producto.imagen_referencia_producto) || 
+                           'https://via.placeholder.com/300x200?text=Producto+Sin+Imagen'}
+                      alt={producto.nombre_producto}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/300x200?text=Imagen+no+disponible';
+                      }}
                     />
                     {producto.descuento_producto > 0 && (
                       <span className="discount-badge">
@@ -370,54 +536,11 @@ const PortalView = () => {
 
       {/* Modal de producto */}
       {selectedProduct && (
-        <div className="product-modal-overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="product-modal" onClick={e => e.stopPropagation()}>
-            <button 
-              className="modal-close"
-              onClick={() => setSelectedProduct(null)}
-            >
-              &times;
-            </button>
-            
-            <div className="modal-product-images">
-              <img 
-                src={`${baseURL}/uploads/${selectedProduct.imagen_referencia_producto}`} 
-                alt={selectedProduct.nombre_producto} 
-              />
-            </div>
-            
-            <div className="modal-product-details">
-              <h2>{selectedProduct.nombre_producto}</h2>
-              <p className="product-type">{selectedProduct.tipo_producto}</p>
-              
-              <div className="product-price-section">
-                <span className="price">${selectedProduct.precio_unidad_producto}</span>
-                {selectedProduct.descuento_producto > 0 && (
-                  <span className="discount">-{selectedProduct.descuento_producto}%</span>
-                )}
-              </div>
-              
-              <div className="product-stock">
-                <span>Disponibles: {selectedProduct.cantidad_disponible_producto}</span>
-                <span>Estado: {selectedProduct.estado_producto}</span>
-              </div>
-              
-              <div className="product-description">
-                <h3>Descripción</h3>
-                <p>{selectedProduct.descripcion || 'No hay descripción disponible'}</p>
-              </div>
-              
-              <div className="product-actions">
-                <button className={`btn-add-to-cart ${config.estilos_botones}`}>
-                  Añadir al carrito
-                </button>
-                <button className={`btn-favorite ${config.estilos_botones}`}>
-                  ❤️ Favorito
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProductModal 
+          product={selectedProduct} 
+          config={config} 
+          onClose={() => setSelectedProduct(null)} 
+        />
       )}
     </div>
   );

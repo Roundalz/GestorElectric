@@ -170,7 +170,7 @@ const handleLogout = async () => {
             <li><Link to="/vendedor/perfil">Perfil</Link></li>
             <li><Link to="/vendedor/portal/view">Vista</Link></li>
             <li><Link to="/vendedor/portal/config">Config</Link></li>
-            <li><Link to="/vendedor/portal/productos">Productos</Link></li>
+            <li><Link to="/vendedor/portal/historico">Historico</Link></li>
             <li><Link to="/vendedor/ventas">Ventas</Link></li>
                 </>
               )}

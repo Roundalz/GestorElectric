@@ -22,8 +22,8 @@ import ProductDetail from "./pages/Vendedor/ProductDetail";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
-import PortalView from './pages/Vendedor/Portal/PortalView';
-import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
+import PortalView from './pages/Vendedor/portal/PortalView';
+import HistoricoConfiguracion from "./pages/Vendedor/portal/HistoricoConfiguracion";
 import { VendedorProvider } from '@context/vendedorContext';
 
 import SalesDetail from "./pages/Vendedor/SalesDetail";
@@ -32,6 +32,7 @@ import AddProduct from "./pages/Vendedor/AddProduct"; // Nueva página para agre
 import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
 import Register from "./components/Register";
+
 
 function App() {
   return (
@@ -67,7 +68,7 @@ function App() {
           <Route path="/vendedor/perfil" element={<PerfilVendedor />} />
           <Route path="/vendedor/portal/config" element={<ConfigPortal />} />
           <Route path="/vendedor/portal/view" element={<PortalView />} />
-          <Route path="/vendedor/portal/productos" element={<ProductEditor />} />
+          <Route path="/vendedor/portal/historico" element={<HistoricoConfiguracion />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
           <Route path="/inventario/:id" element={<ProductDetail />} />
           <Route path="/ventas/:id" element={<SalesDetail />} />

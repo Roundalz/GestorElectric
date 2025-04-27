@@ -7,8 +7,9 @@ import {
   getPortalView,
   updateProducto,
   deleteProducto,
-  uploadFile,
-  getDashboardData
+  getDashboardData,
+  getHistoricoConfiguracion,
+  getProductImages
 } from '../controllers/portalController.js';
 import multer from 'multer';
 
@@ -25,10 +26,13 @@ router.get('/:vendedorId/dashboard', getDashboardData);
 router.get('/:vendedorId/view', getPortalView);
 
 // Otras rutas
-router.put('/portal/config', updatePortalConfig);
+router.put('/:vendedorId/config', updatePortalConfig);
 router.put('/productos/:productId', updateProducto);
 router.delete('/productos/:productId', deleteProducto);
-router.post('/upload', upload.single('file'), uploadFile);
+router.get('/productos/:productId/imagenes', getProductImages);
+
+
+router.get('/historico/:portalCodigo', getHistoricoConfiguracion);
 
 
 router.use((err, req, res, next) => {
