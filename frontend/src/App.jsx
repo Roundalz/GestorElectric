@@ -3,7 +3,7 @@ import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import PlanesPago from './components/PlanesPago';
+import PlanesPago from './components/planesPago';
 
 import CrudClientes from "./pages/Admin/CrudClientes";
 import CrudPlanPagos from "./pages/Admin/CrudPlanPagos";

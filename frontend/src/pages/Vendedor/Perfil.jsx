@@ -1,16 +1,35 @@
-// frontend/src/pages/Vendedor/VendedorPerfil.jsx
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { updatePassword } from "firebase/auth";
 import { auth } from "../../firebase";
 import "./VendedorPerfil.css";
 
+/* ───────────────  Utilidad para subir imágenes a ImgBB  ────────────── */
+const uploadImgToImgbb = async (file) => {
+  const key = import.meta.env.VITE_IMGBB_KEY;
+  if (!key) throw new Error("Falta VITE_IMGBB_KEY en .env");
+  const form = new FormData();
+  form.append("image", file);
+  form.append("name", file.name.split(".")[0]);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
+    method: "POST",
+    body: form
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error("Upload failed");
+  return data.data.url; // 🔗 URL final
+};
+/* ─────────────────────────────────────────────────────────────────── */
+
 const Perfil = () => {
   const { user, setUser } = useContext(AuthContext);
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
   const [formData, setFormData] = useState({
     nombre_vendedor: "",
     telefono_vendedor: "",
@@ -25,8 +44,9 @@ const Perfil = () => {
     banner_empresa: ""
   });
 
+  /* ────── cargar datos iniciales ────── */
   useEffect(() => {
-    if (user && user.role === "vendedor") {
+    if (user?.role === "vendedor") {
       setFormData({
         nombre_vendedor: user.nombre_vendedor || "",
         telefono_vendedor: user.telefono_vendedor || "",
@@ -47,29 +67,48 @@ const Perfil = () => {
     return <p>No estás autenticado como vendedor.</p>;
   }
 
-  const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
-  };
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
     setMessage(null);
   };
 
+  /* ────── Subir logo o banner ────── */
+  const handleFile = async (e, campo) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const url = await uploadImgToImgbb(file);
+      setFormData((f) => ({ ...f, [campo]: url }));
+    } catch (err) {
+      console.error(err);
+      setMessage("No se pudo subir la imagen.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /* ────── guardar cambios ────── */
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5000/api/perfil/vendedor/${user.codigo_vendedore}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        setMessage(`Error: ${errData.error || "No se pudo actualizar el perfil"}`);
+      const res = await fetch(
+        `http://localhost:5000/api/perfil/vendedor/${user.codigo_vendedore}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        setMessage(`Error: ${err.error || "No se pudo actualizar el perfil"}`);
         return;
       }
-      const updatedUser = await response.json();
+      const updatedUser = await res.json();
       setUser({ ...user, ...updatedUser });
       setMessage("Perfil actualizado con éxito");
       setIsEditing(false);
@@ -92,13 +131,15 @@ const Perfil = () => {
     }
   };
 
+  /* ─────────────────────────────── JSX ───────────────────────────── */
   return (
     <div className="perfil-container">
       <h1>Perfil del Vendedor</h1>
       {message && <p className="perfil-message">{message}</p>}
-      
+
       {isEditing ? (
         <form onSubmit={handleSave} className="perfil-form">
+          {/* datos personales */}
           <label>
             Nombre:
             <input
@@ -109,6 +150,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             Teléfono:
             <input
@@ -119,6 +161,8 @@ const Perfil = () => {
               required
             />
           </label>
+
+          {/* empresa */}
           <label>
             Nombre de la Empresa:
             <input
@@ -129,6 +173,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             Tipo de Empresa:
             <input
@@ -139,16 +184,26 @@ const Perfil = () => {
               required
             />
           </label>
-          <label>
-            URL del Logo:
+
+          {/* LOGO (nuevo input archivo) */}
+          <label className="perfil-file-label">
+            Logo de la Empresa:
             <input
-              type="text"
-              name="logo_empresa"
-              value={formData.logo_empresa}
-              onChange={handleChange}
-              required
+              type="file"
+              accept="image/*"
+              className="perfil-file-input"
+              onChange={(e) => handleFile(e, "logo_empresa")}
             />
           </label>
+          {formData.logo_empresa && (
+            <img
+              src={formData.logo_empresa}
+              alt="Logo preview"
+              className="perfil-img-preview"
+            />
+          )}
+
+          {/* resto de campos */}
           <label>
             Correo de la Empresa:
             <input
@@ -159,6 +214,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             Teléfono de la Empresa:
             <input
@@ -169,6 +225,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             País:
             <input
@@ -179,6 +236,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             Ciudad:
             <input
@@ -189,6 +247,7 @@ const Perfil = () => {
               required
             />
           </label>
+
           <label>
             Dirección:
             <input
@@ -199,44 +258,79 @@ const Perfil = () => {
               required
             />
           </label>
-          <label>
-            URL del Banner:
+
+          {/* BANNER archivo */}
+          <label className="perfil-file-label">
+            Banner de Empresa:
             <input
-              type="text"
-              name="banner_empresa"
-              value={formData.banner_empresa}
-              onChange={handleChange}
-              required
+              type="file"
+              accept="image/*"
+              className="perfil-file-input"
+              onChange={(e) => handleFile(e, "banner_empresa")}
             />
           </label>
+          {formData.banner_empresa && (
+            <img
+              src={formData.banner_empresa}
+              alt="Banner preview"
+              className="perfil-banner-preview"
+            />
+          )}
+
           <div className="perfil-form-buttons">
-            <button type="submit">Guardar</button>
-            <button type="button" onClick={handleEditToggle}>Cancelar</button>
+            <button type="submit" disabled={uploading}>
+              {uploading ? "Subiendo…" : "Guardar"}
+            </button>
+            <button type="button" onClick={handleEditToggle}>
+              Cancelar
+            </button>
           </div>
         </form>
       ) : (
         <div className="perfil-details">
+          {user.banner_empresa && (
+            <img
+              src={user.banner_empresa}
+              alt="Banner"
+              className="perfil-banner"
+            />
+          )}
+
+          {user.logo_empresa && (
+            <img
+              src={user.logo_empresa}
+              alt="Logo"
+              className="perfil-logo"
+            />
+          )}
+
           <p><strong>ID:</strong> {user.codigo_vendedore}</p>
           <p><strong>Nombre:</strong> {user.nombre_vendedor}</p>
           <p><strong>Correo:</strong> {user.correo_vendedor}</p>
           <p><strong>Teléfono:</strong> {user.telefono_vendedor}</p>
           <p><strong>Estado:</strong> {user.estado_vendedor}</p>
+
           <p><strong>Empresa:</strong> {user.nombre_empresa}</p>
           <p><strong>Tipo de Empresa:</strong> {user.tipo_empresa}</p>
-          <p><strong>Correo de Empresa:</strong> {user.correo_empresa}</p>
-          <p><strong>Teléfono de Empresa:</strong> {user.telefono_empresa}</p>
+          <p><strong>Correo Empresa:</strong> {user.correo_empresa}</p>
+          <p><strong>Teléfono Empresa:</strong> {user.telefono_empresa}</p>
           <p><strong>País:</strong> {user.pais_empresa}</p>
           <p><strong>Ciudad:</strong> {user.ciudad_empresa}</p>
           <p><strong>Dirección:</strong> {user.direccion_empresa}</p>
-          <p><strong>Banner:</strong> {user.banner_empresa}</p>
+
           <button onClick={handleEditToggle}>Editar Perfil</button>
         </div>
       )}
 
+      {/* ─── contraseña ─── */}
       <div className="password-section">
-        <button onClick={() => setShowPasswordForm(!showPasswordForm)} className="change-password-btn">
+        <button
+          onClick={() => setShowPasswordForm(!showPasswordForm)}
+          className="change-password-btn"
+        >
           Cambiar de Contraseña
         </button>
+
         {showPasswordForm && (
           <form onSubmit={handlePasswordUpdate} className="password-form">
             <input
@@ -247,7 +341,9 @@ const Perfil = () => {
               required
               className="password-input"
             />
-            <button type="submit" className="update-password-btn">Actualizar</button>
+            <button type="submit" className="update-password-btn">
+              Actualizar
+            </button>
           </form>
         )}
       </div>

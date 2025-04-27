@@ -1,3 +1,5 @@
+import pool from "../database.js";
+// GET
 export const obtenerLogs = async (req, res) => {
   try {
     // Obtener logs de LOG_EVENTO con información del usuario

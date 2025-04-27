@@ -1,6 +1,5 @@
 // controllers/PlanController.js (versión pg)
 import db from "../database.js";
- 
 export const obtenerPlanesPago = async (_, res) => {
   try {
     const result = await db.query("SELECT * FROM PLANES_PAGO"); // pg devuelve objeto
