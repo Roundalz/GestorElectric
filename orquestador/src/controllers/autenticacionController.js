@@ -8,8 +8,8 @@ const BLOQUEO_MIN  = 30;         // 30 min
 // ① inserta (o actualiza) la tabla LOGIN_ATTEMPT
 const insertLoginAttempt = (email, role, ok, ip) =>
   pool.query(
-    `INSERT INTO LOGIN_ATTEMPT (email, role, success, ip_origin)
-     VALUES ($1,$2,$3,$4)`,
+    `INSERT INTO LOGIN_ATTEMPT (email, role, ts, success, ip_origin)
+     VALUES ($1,$2, (NOW() AT TIME ZONE 'America/La_Paz'), $3,$4)`,
     [email, role, ok, ip ?? null]
   );
   const recordLoginAttempt = insertLoginAttempt;   // alias legible
@@ -21,7 +21,7 @@ const countRecentFails = async (email, role) => {
     `SELECT COUNT(*)::int AS n
        FROM LOGIN_ATTEMPT
       WHERE email=$1 AND role=$2 AND success=false
-        AND ts > NOW() - INTERVAL '30 minutes'`,
+        AND ts > (NOW() AT TIME ZONE 'America/La_Paz') - INTERVAL '30 minutes'`,
     [email, role]
   );
   return rows[0].n;
@@ -30,9 +30,9 @@ const countRecentFails = async (email, role) => {
 // ③ registrar bloqueo y devolver fecha de desbloqueo
 const lockAccount = async (email, role, ip) => {
   const { rows } = await pool.query(
-    `INSERT INTO ACCOUNT_LOCK (email, role, unlock_at, ip_origin, motivo)
-     VALUES ($1,$2, NOW() + INTERVAL '${BLOQUEO_MIN} minutes',$3,'exceso_fallos')
-     RETURNING unlock_at`,
+    `INSERT INTO ACCOUNT_LOCK (email, role, locked_at, unlock_at, ip_origin, motivo)
+     VALUES ($1,$2, (NOW() AT TIME ZONE 'America/La_Paz'), (NOW() AT TIME ZONE 'America/La_Paz') + INTERVAL '${BLOQUEO_MIN} minutes',$3,'exceso_fallos')
+     RETURNING locked_at`,
     [email, role, ip ?? null]
   );
   return rows[0].unlock_at;
@@ -43,7 +43,7 @@ const accountIsLocked = async (email, role) => {
   const { rows } = await pool.query(
     `SELECT unlock_at
        FROM ACCOUNT_LOCK
-      WHERE email=$1 AND role=$2 AND unlock_at > NOW()
+      WHERE email=$1 AND role=$2 AND unlock_at > (NOW() AT TIME ZONE 'America/La_Paz')
    ORDER BY unlock_at DESC LIMIT 1`,
     [email, role]
   );
@@ -55,10 +55,15 @@ export const intentoFallido = async (req, res) => {
   const { email, role } = req.body;          // role = 'cliente' | 'vendedor'
   const ip           = remoteIp(req);
   const desbloqueo   = await accountIsLocked(email, role);
+
   if (desbloqueo) {
+    // 🔥 Corregir desfase de 4 horas SOLO aquí
+    const unlockDate = new Date(desbloqueo);
+    unlockDate.setHours(unlockDate.getHours() + 4);
+
     return res.status(423).json({
       bloqueado: true,
-      unlock_at: desbloqueo
+      unlock_at: unlockDate.toISOString()   // en ISO para el frontend
     });
   }
 
@@ -67,29 +72,35 @@ export const intentoFallido = async (req, res) => {
 
   if (fallos >= MAX_FALLOS) {
     const unlock_at = await lockAccount(email, role, ip);
+
+    const unlockDate = new Date(unlock_at);
+    unlockDate.setHours(unlockDate.getHours() + 4);
+
     return res.status(423).json({
       bloqueado: true,
-      unlock_at
+      unlock_at: unlockDate.toISOString()
     });
   }
+
   res.json({
     bloqueado: false,
     restantes: MAX_FALLOS - fallos
   });
 };
 
+
 /* ─────────────────────── HELPERS PARA LOGS ──────────────────────── */
 const addLogEvento  = async (usuario_id, accion, ip) =>
   pool.query(
     `INSERT INTO LOG_EVENTO (usuario_id, fecha_hora, accion, ip_origen)
-     VALUES ($1, NOW(), $2, $3)`,
+     VALUES ($1, (NOW() AT TIME ZONE 'America/La_Paz'), $2, $3)`,
     [usuario_id, accion, ip ?? null]
   );
 
 const addLogUsuario = async (usuario_id, ip) =>
   pool.query(
     `INSERT INTO LOG_USUARIO (usuario_id, fecha_hora, ip_origen)
-     VALUES ($1, NOW(), $2)`,
+     VALUES ($1, (NOW() AT TIME ZONE 'America/La_Paz'), $2)`,
     [usuario_id, ip ?? null]
   );
 
@@ -122,7 +133,7 @@ export const registerCliente = async (req, res) => {
       `INSERT INTO CLIENTE
        (nombre_cliente, correo_cliente, fecha_registro_cliente,
         telefono_cliente, cumpleanos_cliente, foto_perfil_cliente)
-       VALUES ($1,$2,NOW(),$3,$4,$5)
+       VALUES ($1,$2,(NOW() AT TIME ZONE 'America/La_Paz'),$3,$4,$5)
        RETURNING codigo_cliente`,
       [nombre_cliente, email, telefono_cliente, cumpleanos_cliente, foto_perfil_cliente]
     );
@@ -199,6 +210,20 @@ export const registerVendedor = async (req, res) => {
 export const loginCliente = async (req, res) => {
   const { email } = req.body;
   try {
+    // 🔴 Primero, revisamos si la cuenta está bloqueada
+    const { rows: lock } = await pool.query(
+      `SELECT unlock_at
+         FROM ACCOUNT_LOCK
+        WHERE email=$1 AND role='cliente' AND unlock_at > (NOW() AT TIME ZONE 'America/La_Paz')
+     ORDER BY unlock_at DESC LIMIT 1`,
+      [email]
+    );
+    if (lock.length) {
+      return res.status(423).json({
+        error: `Cuenta bloqueada hasta las ${new Date(lock[0].unlock_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+      });
+    }
+
     const { rows } = await pool.query(
       'SELECT * FROM CLIENTE WHERE correo_cliente = $1',
       [email]
@@ -211,7 +236,6 @@ export const loginCliente = async (req, res) => {
     await Promise.all([
       addLogUsuario(id, remoteIp(req)),
       addLogEvento(id, 'login_cliente', remoteIp(req)),
-      /* NUEVO → intento exitoso */
       recordLoginAttempt(email, 'cliente', true, remoteIp(req))
     ]);
 
@@ -222,30 +246,40 @@ export const loginCliente = async (req, res) => {
   }
 };
 
+
 /* ───────────────────────────  LOGIN VENDEDOR  ────────────────────── */
 export const loginVendedor = async (req, res) => {
   const { email, clave_vendedor } = req.body;
   try {
+    // 🔴 Primero, revisamos si la cuenta está bloqueada
+    const { rows: lock } = await pool.query(
+      `SELECT unlock_at
+         FROM ACCOUNT_LOCK
+        WHERE email=$1 AND role='vendedor' AND unlock_at > (NOW() AT TIME ZONE 'America/La_Paz')
+     ORDER BY unlock_at DESC LIMIT 1`,
+      [email]
+    );
+    if (lock.length) {
+      return res.status(423).json({
+        error: `Cuenta bloqueada hasta las ${new Date(lock[0].unlock_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+      });
+    }
+
     const { rows } = await pool.query(
       'SELECT * FROM VENDEDOR WHERE correo_vendedor = $1',
       [email]
     );
     if (!rows.length)
-      return res
-        .status(404)
-        .json({ error: 'Vendedor no encontrado con este correo' });
+      return res.status(404).json({ error: 'Vendedor no encontrado con este correo' });
 
     if (rows[0].clave_vendedor !== clave_vendedor)
-      return res
-        .status(400)
-        .json({ error: 'La clave de vendedor no coincide' });
+      return res.status(400).json({ error: 'La clave de vendedor no coincide' });
 
     const id = rows[0].codigo_vendedore;
 
     await Promise.all([
       addLogUsuario(id, remoteIp(req)),
       addLogEvento(id, 'login_vendedor', remoteIp(req)),
-      /* NUEVO → intento exitoso */
       recordLoginAttempt(email, 'vendedor', true, remoteIp(req))
     ]);
 
@@ -255,6 +289,7 @@ export const loginVendedor = async (req, res) => {
     res.status(500).json({ error: 'Error en el login de vendedor' });
   }
 };
+
 
 
 /* ─────────────────────────── LOGOUT USUARIO ───────────────────────── */
