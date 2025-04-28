@@ -1,7 +1,7 @@
 // servicios/ventas/src/app.js
-const express = require('express');
-const ventaRoutes = require('./routes/ventaRoutes');
-const errorHandler = require('./middlewares/errorHandler'); // Opcional si quieres capturar errores globales
+import express from 'express';
+import ventaRoutes from './routes/ventaRoutes.js';
+import errorHandler from './middlewares/errorHandler.js'; // Opcional si quieres capturar errores globales
 
 const app = express();
 
