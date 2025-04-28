@@ -1,12 +1,15 @@
-version: '3.8'
-
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
-    depends_on:
-      - orquestador
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     networks:
       - app_network
 
@@ -20,11 +23,12 @@ services:
     environment:
       DB_HOST: postgres              # Mismo nombre de servicio
       DB_PORT: 5432
-      DB_USER: root                  # Cambiado a root
-      DB_PASSWORD: 'admin'           # Cambiado a 'admin'
+      DB_USER: postgres
+      DB_PASSWORD: 'admin'        # Cambiado a 'admin'
       DB_NAME: 'gestor_nuevo'         # Cambiado a gestor_nuevo
-      INVENTARIO_SERVICE_URL: http://localhost:3001
-      VENTAS_SERVICE_URL: http://localhost:4000
+      INVENTARIO_SERVICE_URL: http://inventario:3001
+      VENTAS_SERVICE_URL: http://ventas:4000
+    networks:
       - app_network
 
   autenticacion:
@@ -35,10 +39,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://root:admin@postgres:5432/gestor_nuevo
+      DATABASE_URL: postgres://postgres:admin@postgres:5432/gestor_nuevo
     networks:
       - app_network
-
   inventario:
     build: ./servicios/inventario
     ports:
@@ -48,7 +51,7 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: root
+      DB_USER: postgres
       DB_PASSWORD: 'admin'
       DB_NAME: 'gestor_nuevo'
     networks:
@@ -63,7 +66,7 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: root
+      DB_USER: postgres
       DB_PASSWORD: 'admin'
       DB_NAME: 'gestor_nuevo'
     networks:
@@ -76,7 +79,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: root
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 'admin'
       POSTGRES_DB: 'gestor_nuevo'
     volumes:
@@ -86,10 +89,10 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d gestor_nuevo"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gestor_nuevo"]
       interval: 10s
-      retries: 5
       timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
