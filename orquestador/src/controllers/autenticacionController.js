@@ -284,10 +284,12 @@ export const loginCliente = async (req, res) => {
 
 
 /* ───────────────────────────  LOGIN VENDEDOR  ────────────────────── */
+// controllers/authController.js
+
 export const loginVendedor = async (req, res) => {
   const { email, clave_vendedor } = req.body;
   try {
-    // 🔴 Primero, revisamos si la cuenta está bloqueada
+    // 🔴 Revisión de cuenta bloqueada
     const { rows: lock } = await pool.query(
       `SELECT unlock_at
          FROM ACCOUNT_LOCK
@@ -297,14 +299,20 @@ export const loginVendedor = async (req, res) => {
     );
     if (lock.length) {
       return res.status(423).json({
-        error: `Cuenta bloqueada hasta las ${new Date(lock[0].unlock_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+        error: `Cuenta bloqueada hasta las ${new Date(lock[0].unlock_at)
+          .toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
       });
     }
 
+    // 🔵 Buscar vendedor
     const { rows } = await pool.query(
-      'SELECT * FROM VENDEDOR WHERE correo_vendedor = $1',
+      `SELECT v.*, p.duracion_dias, p.tipo_pago_plan
+         FROM VENDEDOR v
+    LEFT JOIN PLANES_PAGO p ON v.PLANES_PAGO_codigo_plan = p.codigo_plan
+        WHERE v.correo_vendedor = $1`,
       [email]
     );
+
     if (!rows.length)
       return res.status(404).json({ error: 'Vendedor no encontrado con este correo' });
 
@@ -319,13 +327,27 @@ export const loginVendedor = async (req, res) => {
       recordLoginAttempt(email, 'vendedor', true, remoteIp(req))
     ]);
 
-    res.json(rows[0]);
+    const vendedor = rows[0];
+
+    /* ⚡ calcular fecha de expiración si aplica */
+    let fechaExpiracion = null;
+    if (vendedor.tipo_pago_plan && vendedor.tipo_pago_plan.toLowerCase() !== "ilimitado") {
+      const hoy = new Date();
+      hoy.setDate(hoy.getDate() + (vendedor.duracion_dias || 30)); // si no tiene duración, asumimos 30 días
+      fechaExpiracion = hoy.toISOString().split('T')[0]; // formato yyyy-mm-dd
+    }
+
+    // 🔥 Devolvemos toda la info + nueva fecha de expiración
+    res.json({
+      ...vendedor,
+      fecha_expiracion_plan: fechaExpiracion
+    });
+
   } catch (e) {
     console.error('loginVendedor →', e);
     res.status(500).json({ error: 'Error en el login de vendedor' });
   }
 };
-
 
 
 /* ─────────────────────────── LOGOUT USUARIO ───────────────────────── */

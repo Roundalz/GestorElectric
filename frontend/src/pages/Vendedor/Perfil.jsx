@@ -26,6 +26,10 @@ const Perfil = () => {
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [planes, setPlanes] = useState([]);
+  const [mostrarCambioPlan, setMostrarCambioPlan] = useState(false);
+  const [confirmacion, setConfirmacion] = useState(null);
+  const [nuevoPlan, setNuevoPlan] = useState(null);
 
   const [formData, setFormData] = useState({
     nombre_vendedor: "",
@@ -58,6 +62,13 @@ const Perfil = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/planes")
+      .then((res) => res.json())
+      .then(setPlanes)
+      .catch(console.error);
+  }, []);
 
   if (!user || user.role !== "vendedor") {
     return <p>No estás autenticado como vendedor.</p>;
@@ -121,10 +132,57 @@ const Perfil = () => {
     }
   };
 
+  const [mostrarConfetti, setMostrarConfetti] = useState(false);
+
+// Al confirmar cambio de plan
+const handlePlanChange = async () => {
+  if (!nuevoPlan) return;
+  try {
+    const res = await fetch(`http://localhost:5000/api/planes/cambiar/${user.codigo_vendedore}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nuevo_plan_id: nuevoPlan.codigo_plan })
+    });
+    if (!res.ok) throw new Error("Error cambiando de plan");
+    const updated = await res.json();
+    setUser({ ...user, ...updated });
+    setConfirmacion(`¡Cambio exitoso al plan ${nuevoPlan.nombre_plan}!`);
+    setMostrarCambioPlan(false);
+
+    setMostrarConfetti(true); // ✨ Mostrar confetti
+    setTimeout(() => setMostrarConfetti(false), 4000); // ✨ Solo 4 segundos
+
+  } catch (err) {
+    console.error(err);
+    setMessage("No se pudo cambiar de plan.");
+  }
+};
+
+  const planActual = planes.find(p => p.codigo_plan === user.PLANES_PAGO_codigo_plan);
+  const esGratis = planActual?.tipo_pago_plan?.toLowerCase() === "ilimitado";
+
   return (
     <div className="vendedorPerfil-container">
       <h1 className="vendedorPerfil-title">Perfil del Vendedor</h1>
+      {mostrarConfetti && (
+        <div className="confetti-container">
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className="confetti"
+              style={{
+                left: Math.random() * 100 + "%",
+                backgroundColor: ["#61dafb", "#ff4757", "#2ed573", "#ffa502"][i % 4],
+                animationDelay: Math.random() * 2 + "s",
+                animationDuration: Math.random() * 2 + 2 + "s",
+              }}
+            ></div>
+          ))}
+        </div>
+      )}
+
       {message && <p className="vendedorPerfil-message">{message}</p>}
+      {confirmacion && <p className="vendedorPerfil-confirm">{confirmacion}</p>}
 
       {isEditing ? (
         <form onSubmit={handleSave} className="vendedorPerfil-form">
@@ -257,6 +315,16 @@ const Perfil = () => {
           {user.logo_empresa && (
             <img src={user.logo_empresa} alt="Logo" className="vendedorPerfil-logo" />
           )}
+          <p><strong>Plan Actual:</strong> {user.nombre_plan ?? "N/A"}</p>
+          {user.fecha_expiracion_plan ? (
+            <p><strong>Vigente hasta:</strong> {new Date(user.fecha_expiracion_plan).toLocaleDateString()}</p>
+          ) : (
+            <p><strong>Vigente:</strong> Ilimitado</p>
+          )}
+
+          <button onClick={() => setMostrarCambioPlan(true)} className="vendedorPerfil-changePlan-btn">
+            Cambiar de Plan
+          </button>
           <p><strong>ID:</strong> {user.codigo_vendedore}</p>
           <p><strong>Nombre:</strong> {user.nombre_vendedor}</p>
           <p><strong>Correo:</strong> {user.correo_vendedor}</p>
@@ -300,6 +368,49 @@ const Perfil = () => {
           </form>
         )}
       </div>
+      {/* Modal de cambio de plan */}
+      {mostrarCambioPlan && (
+        <div className="planes-modal">
+          <div className="planes-modal-content">
+            <button className="planes-modal-close" onClick={() => setMostrarCambioPlan(false)}>×</button>
+            <h2>Selecciona tu nuevo plan</h2>
+            <div className="planes-grid">
+              {planes.map((pl) => (
+                <label key={pl.codigo_plan} className={`planes-card ${nuevoPlan?.codigo_plan === pl.codigo_plan ? "planes-card--active" : ""}`}>
+                  <input
+                    type="radio"
+                    name="plan"
+                    className="planes-radio"
+                    onChange={() => setNuevoPlan(pl)}
+                  />
+                  <h3 className="planes-name">{pl.nombre_plan}</h3>
+                  <p className="planes-price">${Number(pl.precio_m_s_a).toFixed(2)}</p>
+                  <ul className="planes-features">
+                    {pl.tipo_pago_plan && <li>Tipo: {pl.tipo_pago_plan}</li>}
+                    {pl.duracion_dias && <li>Duración: {pl.duracion_dias} días</li>}
+                    {pl.descripcion && <li>{pl.descripcion}</li>}
+                    {pl.max_productos && <li>{pl.max_productos} productos</li>}
+                    {pl.comision_venta != null && <li>Comisión: {pl.comision_venta}%</li>}
+                  </ul>
+                </label>
+              ))}
+            </div>
+
+            {nuevoPlan && (
+              <>
+                <p className="planes-aviso">
+                  {esGratis
+                    ? "El cambio será inmediato porque tu plan actual es gratuito."
+                    : `Actualmente tienes un plan activo. El nuevo plan se aplicará cuando termine tu actual suscripción.`}
+                </p>
+                <button className="planes-btn" onClick={handlePlanChange}>
+                  Confirmar Cambio
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
