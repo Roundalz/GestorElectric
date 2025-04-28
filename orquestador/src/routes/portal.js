@@ -9,7 +9,9 @@ import {
   deleteProducto,
   getDashboardData,
   getHistoricoConfiguracion,
-  getProductImages
+  getProductImages,
+  portalActivo,
+  visita
 } from '../controllers/portalController.js';
 import multer from 'multer';
 
@@ -33,6 +35,9 @@ router.get('/productos/:productId/imagenes', getProductImages);
 
 
 router.get('/historico/:portalCodigo', getHistoricoConfiguracion);
+
+router.get('/activos', portalActivo);
+router.put('/:codigoPortal/visita', visita); 
 
 
 router.use((err, req, res, next) => {

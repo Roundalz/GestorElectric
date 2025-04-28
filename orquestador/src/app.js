@@ -14,6 +14,7 @@ import planesRoutes   from './routes/planesRoutes.js';
 import pedidoRoutes from './routes/pedidoRoutes.js';
 import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del perfil
 import portalRoutes from './routes/portalRoutes.js';
+import portalRouter from './routes/portal.js';
 import productoRoutes from './routes/productoRoutes.js';
 import vendedorRoutes from "./routes/vendedorRoutes.js";
 import ventasRoutes from "./routes/ventas.js"; 
@@ -92,8 +93,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// Importar rutas
-import portalRouter from './routes/portal.js';
+
 
 // Usar rutas
 app.use("/api/servicios", servicioRoutes);

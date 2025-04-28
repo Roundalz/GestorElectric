@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useCart } from "../../context/CartContext";
+import { AuthContext } from "../../context/AuthContext";
 import Card from './card/InicioCard';
 import './styles/CarritoStylEs.css';
 
 const Carrito = () => {
+  const { user } = useContext(AuthContext);
   const { cart, removeFromCart, getTotal, clearCart } = useCart(); // Agregué clearCart por si quieres limpiar el carrito al final
 
   const handleCrearPedido = async () => {
@@ -13,7 +15,7 @@ const Carrito = () => {
     }
 
     try {
-      const clienteId = 1; // 🔥 aquí debes poner el ID del cliente actual (puedes traerlo de otra variable global si quieres)
+      const clienteId = user.codigo_cliente; // 🔥 aquí debes poner el ID del cliente actual (puedes traerlo de otra variable global si quieres)
 
       const productos = cart.map((item) => ({
         codigo_producto: item.codigo_producto,

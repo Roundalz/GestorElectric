@@ -83,7 +83,34 @@ export default function NavBar() {
             )}
             {user?.role === "cliente" && (
               <>
-                <li><Link to="/cliente/carrito" onClick={toggleMenu}>Carrito</Link></li>
+                <div className="carrito-container"
+                    onMouseEnter={() => document.querySelector('.carrito-menu').style.display = 'block'}
+                    onMouseLeave={() => document.querySelector('.carrito-menu').style.display = 'none'}
+                  >
+                    <button className="carrito-btn" onClick={irAlCarrito}>
+                      Carrito ({cart.reduce((acc, item) => acc + item.cantidad, 0)})
+                    </button>
+                      <div className="carrito-menu">
+                        {cart.length === 0 ? (
+                        <p>El carrito está vacío</p>
+                      ) : (
+                        cart.map((item) => (
+                          <div key={item.codigo_producto} className="item-carrito">
+                            <div className="texto-item">
+                              <p>{item.nombre_producto} (x{item.cantidad})</p>
+                              <p>${item.precio_unidad_producto * item.cantidad}</p>
+                            </div>
+                            <button
+                              className="eliminar-btn"
+                              onClick={() => removeFromCart(item.codigo_producto)}
+                            >
+                              ❌
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 <li><Link to="/cliente/historial" onClick={toggleMenu}>Historial</Link></li>
                 <li><Link to="/cliente/inicio" onClick={toggleMenu}>Inicio</Link></li>
                 <li><Link to="/cliente/perfil" onClick={toggleMenu}>Perfil</Link></li>
@@ -124,78 +151,6 @@ export default function NavBar() {
         </div>
 
         {/* Menú de navegación */}
-        <ul className="nav-links">
-          {user ? (
-            <>
-              {user.role === "admin" && (
-                <>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/about">About</Link></li>
-                  <li><Link to="/admin/clientes">Clientes</Link></li>
-                  <li><Link to="/admin/plan-pagos">Plan de Pagos</Link></li>
-                  <li><Link to="/admin/vendedores">Vendedores</Link></li>
-                  <li><Link to="/admin/logs">Logs</Link></li>
-                </>
-              )}
-              {user.role === "cliente" && (
-                <>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/about">About</Link></li>
-                  <div className="carrito-container"
-                    onMouseEnter={() => document.querySelector('.carrito-menu').style.display = 'block'}
-                    onMouseLeave={() => document.querySelector('.carrito-menu').style.display = 'none'}
-                  >
-                    <button className="carrito-btn" onClick={irAlCarrito}>
-                      Carrito ({cart.reduce((acc, item) => acc + item.cantidad, 0)})
-                    </button>
-                      <div className="carrito-menu">
-                        {cart.length === 0 ? (
-                        <p>El carrito está vacío</p>
-                      ) : (
-                        cart.map((item) => (
-                          <div key={item.codigo_producto} className="item-carrito">
-                            <div className="texto-item">
-                              <p>{item.nombre_producto} (x{item.cantidad})</p>
-                              <p>${item.precio_unidad_producto * item.cantidad}</p>
-                            </div>
-                            <button
-                              className="eliminar-btn"
-                              onClick={() => removeFromCart(item.codigo_producto)}
-                            >
-                              ❌
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                  <li><Link to="/cliente/historial">Historial</Link></li>
-                  <li><Link to="/cliente/inicio">Inicio</Link></li>
-                  <li><Link to="/cliente/perfil">Perfil</Link></li>
-                </>
-              )}
-              {user.role === "vendedor" && (
-                <>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/vendedor/dashboard">Dashboard</Link></li>
-            <li><Link to="/vendedor/inventario">Inventario</Link></li>
-            <li><Link to="/vendedor/perfil">Perfil</Link></li>
-            <li><Link to="/vendedor/portal/view">Vista</Link></li>
-            <li><Link to="/vendedor/portal/config">Config</Link></li>
-            <li><Link to="/vendedor/portal/historico">Historico</Link></li>
-            <li><Link to="/vendedor/ventas">Ventas</Link></li>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/about">About</Link></li>
-            </>
-          )}
-        </ul>
       </div>
     </nav>
   );

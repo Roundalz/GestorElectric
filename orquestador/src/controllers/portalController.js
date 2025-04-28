@@ -1,13 +1,4 @@
-import pkg from 'pg';
-const { Pool } = pkg;
-
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '123456',
-  database: process.env.DB_NAME || 'gestor_nuevo',
-  port: parseInt(process.env.DB_PORT) || 5432
-});
+import pool from '../database.js';
 
 // Definición de características permitidas por plan
 const plan1Features = [
@@ -524,6 +515,33 @@ export const getPortalConfig = async (req, res) => {
         error: 'Error interno del servidor',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
+    }
+  };
+
+  
+  export const portalActivo = async (req, res) => {
+    try {
+      const portales = await pool.query(
+        "SELECT * FROM portal WHERE estado_portal = 'Activo'"
+      );
+      res.json(portales);
+    } catch (error) {
+      console.error('Error en portalActivo:', error.message);
+      res.status(500).send('Error al obtener portales');
+    }
+  };
+  
+  export const visita = async (req, res) => {
+    const { codigoPortal } = req.params;
+    try {
+      await pool.query(
+        `UPDATE portal SET contador_visitas = contador_visitas + 1 WHERE codigo_portal = $1 RETURNING *`,
+        [codigoPortal]
+      );
+      res.send('Visita registrada');
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Error al registrar visita');
     }
   };
 /*________________________________________________________________*/
