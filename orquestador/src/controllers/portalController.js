@@ -644,7 +644,8 @@ function tryParseJSON(jsonString) {
         clientesRecurrentes,
         conversiones,
         gastosCategoria,
-        proximosCumpleanos
+        proximosCumpleanos,
+        rendimientoPortales
       ] = await Promise.all([
         // 1. Ingresos vs Gastos mensuales
         pool.query(`
@@ -766,6 +767,24 @@ function tryParseJSON(jsonString) {
           AND EXTRACT(MONTH FROM cumpleanos_cliente) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '1 month')
           ORDER BY EXTRACT(DAY FROM cumpleanos_cliente)
           LIMIT 10
+        `, [vendedorId]),
+
+        // 9. Rendimiento de portales por visitas
+        pool.query(`
+        SELECT 
+          p.codigo_portal AS nombre,
+          p.contador_visitas AS visitas,
+          p.estado_portal AS estado,
+          COUNT(DISTINCT ped.codigo_pedido) AS pedidos,
+          ROUND(COUNT(DISTINCT ped.codigo_pedido) * 100.0 / 
+            NULLIF(p.contador_visitas, 0), 2) AS tasaConversion
+        FROM PORTAL p
+        LEFT JOIN PRODUCTOS pr ON p.codigo_portal = pr.PORTAL_codigo_portal
+        LEFT JOIN DETALLE_PEDIDO dp ON pr.codigo_producto = dp.PRODUCTOS_codigo_producto
+        LEFT JOIN PEDIDO ped ON dp.PEDIDO_codigo_pedido = ped.codigo_pedido
+        WHERE p.VENDEDOR_codigo_vendedore = $1
+        GROUP BY p.codigo_portal, p.contador_visitas, p.estado_portal
+        ORDER BY visitas DESC
         `, [vendedorId])
       ]);
   
@@ -778,7 +797,8 @@ function tryParseJSON(jsonString) {
         clientesRecurrentes: clientesRecurrentes.rows,
         conversiones: conversiones.rows[0],
         gastosCategoria: gastosCategoria.rows,
-        proximosCumpleanos: proximosCumpleanos.rows
+        proximosCumpleanos: proximosCumpleanos.rows,
+        rendimientoPortales: rendimientoPortales.rows
       });
   
     } catch (error) {

@@ -22,7 +22,7 @@ router.get('/vendedor/:id/plan', getVendedorPlan);
 // Rutas con parámetros similares después
 router.get('/:vendedorId/config', getPortalConfig);
 router.get('/:vendedorId/productos', getProductosPortal);
-router.get('/:vendedorId/dashboard', getDashboardData);
+router.get('/:vendedorId/dashboard', getDashboardData); 
 router.get('/:vendedorId/view', getPortalView);
 
 // Otras rutas
