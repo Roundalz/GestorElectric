@@ -1,22 +1,46 @@
-// En tu archivo de contexto (VendedorContext.js)
-import React, { createContext, useState, useContext } from 'react';
+// src/context/VendedorContext.js
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+} from "react";
+import { AuthContext } from "./AuthContext";
 
-const vendedorContext = createContext();
+const VendedorContext = createContext();
 
 export const VendedorProvider = ({ children }) => {
-  const [vendedorId, setVendedorId] = useState(2); // O el ID inicial que corresponda
+  const { user } = useContext(AuthContext);
+
+  /*  ID inicial si ya hay un vendedor en sesión  */
+  const [vendedorId, setVendedorId] = useState(
+    user?.role === "vendedor" ? user.codigo_vendedore : null
+  );
+
+  /*  Sincroniza ID cuando cambia el usuario  */
+  useEffect(() => {
+    if (user && user.role === "vendedor") {
+      setVendedorId(user.codigo_vendedore);
+    } else {
+      setVendedorId(null);
+    }
+  }, [user]);
+
+  /*  Log a consola cada vez que cambie el ID  */
+  useEffect(() => {
+    console.log("🔌 Vendedor ID actualizado →", vendedorId);
+  }, [vendedorId]);
 
   return (
-    <vendedorContext.Provider value={{ vendedorId, setVendedorId }}>
+    <VendedorContext.Provider value={{ vendedorId, setVendedorId }}>
       {children}
-    </vendedorContext.Provider>
+    </VendedorContext.Provider>
   );
 };
 
 export const useVendedor = () => {
-  const context = useContext(vendedorContext);
-  if (!context) {
-    throw new Error('useVendedor debe usarse dentro de un VendedorProvider');
-  }
-  return context;
+  const ctx = useContext(VendedorContext);
+  if (!ctx)
+    throw new Error("useVendedor debe usarse dentro de un VendedorProvider");
+  return ctx;
 };

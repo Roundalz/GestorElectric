@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import productoRoutes from './routes/productoRoutes.js';
 import cors from 'cors';
 import pool from './database.js';
-
+import { validarVendedorId }from './middlewares/validateVendedorId.js';
 
 // Carga variables de entorno
 dotenv.config();
@@ -11,16 +11,18 @@ dotenv.config();
 const app = express();
 
 // Permitir CORS
-dotenv.config();  // Already loaded env
 // app.js en inventario service
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://frontend','http://localhost:5000'],
-  methods: ['GET','POST','PUT','DELETE']
+  origin: ['http://localhost:3000', 'http://frontend','http://localhost:5000','http://localhost:5173'],
+  methods: ['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type','X-Vendedor-Id'], 
+  exposedHeaders:  ['X-Vendedor-Id']  
 }));
 
 
-// Middleware para parsear JSON
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 
 // Conexión a la base de datos al iniciar
 pool.connect()
@@ -28,6 +30,8 @@ pool.connect()
   .catch(err => console.error('❌ Error al conectar con la base de datos:', err));
 
 // Montamos las rutas del CRUD de productos bajo el prefijo "/inventario"
+
+app.use('/inventario', validarVendedorId);
 app.use('/inventario', productoRoutes);
 
 // Ruta raíz de prueba

@@ -1,84 +1,54 @@
+// servicios/inventario/src/services/productoService.js
 import * as productModel from "../models/productoModel.js";
 
 /**
- * productService: orquesta la lógica de negocio para inventario/productos
- * delegando en productoModel y respetando las reglas de negocio.
+ * productService: Orquesta la lógica de negocio para productos,
+ * asegurando siempre que vendedorId sea un número válido.
  */
 
-/**
- * Crea un nuevo producto junto con sus imágenes y características.
- * @param {Object} data  
- *  - nombre_producto, tipo_producto, precio_unidad_producto, cantidad_disponible_producto,
- *    imagen_referencia_producto, estado_producto, calificacion_producto, costo_producto,
- *    descuento_producto, caracteristicas: Array, imagenes: Array
- * @returns {Object} Registro del producto creado
- */
-export async function createProduct(data) {
-  // TODO: validar campos de entrada si se requiere (e.g. campos obligatorios)
-  const product = await productModel.createProduct(data);
-  return product;
+function validateVendedorId(vendedorId) {
+  const id = Number(vendedorId);
+  if (!id || isNaN(id)) {
+    const error = new Error('VendedorId inválido');
+    error.status = 400;
+    throw error;
+  }
+  return id;
 }
 
-/**
- * Recupera todos los productos del vendedor con sus detalles.
- * @returns {Array<Object>} Listado de productos
- */
-export async function getAllProducts() {
-  const products = await productModel.getAllProducts();
-  return products;
+export async function createProduct(data, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.createProduct(data, validVendedorId);
 }
 
-/**
- * Recupera un producto específico por su ID.
- * @param {number} id
- * @returns {Object|null} Producto encontrado o null
- */
-export async function getProductById(id) {
-  const product = await productModel.getProductById(id);
-  return product;
+export async function getAllProducts(vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.getAllProducts(validVendedorId);
 }
 
-/**
- * Busca productos por nombre (coincidencia parcial).
- * @param {string} name
- * @returns {Array<Object>} Productos que coinciden
- */
-export async function getProductsByName(name) {
-  const products = await productModel.getProductsByName(name);
-  return products;
+export async function getProductById(id, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.getProductById(id, validVendedorId);
 }
 
-/**
- * Actualiza campos de un producto y sus relaciones (imágenes/características).
- * @param {number} id
- * @param {Object} data  Nuevos valores para actualizar
- * @returns {Object} Producto actualizado
- */
-export async function updateProduct(id, data) {
-  // TODO: validar data (e.g. tipos, rangos)
-  const updated = await productModel.updateProduct(id, data);
-  return updated;
+export async function getProductsByName(name, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.getProductsByName(name, validVendedorId);
 }
 
-/**
- * Actualiza únicamente la cantidad disponible de un producto.
- * @param {number} id
- * @param {number} newQuantity
- * @returns {number} Nueva cantidad disponible
- */
-export async function updateQuantity(id, newQuantity) {
-  // TODO: validar newQuantity >= 0
-  const qty = await productModel.updateQuantity(id, newQuantity);
-  return qty;
+export async function updateProduct(id, data, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.updateProduct(id, data, validVendedorId);
 }
 
-/**
- * Elimina un producto y todo su contenido relacionado.
- * @param {number} id
- * @returns {void}
- */
-export async function deleteProduct(id) {
-  await productModel.deleteProduct(id);
+export async function updateQuantity(id, newQuantity, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  return await productModel.updateQuantity(id, newQuantity, validVendedorId);
+}
+
+export async function deleteProduct(id, vendedorId) {
+  const validVendedorId = validateVendedorId(vendedorId);
+  await productModel.deleteProduct(id, validVendedorId);
 }
 
 export default {

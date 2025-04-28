@@ -18,7 +18,8 @@ import TiendaDetallePage from './pages/Cliente/TiendaDetallePage';
 
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/inventario/Inventario";
-import ProductDetail from "./pages/Vendedor/inventario/ProductDetail"; 
+import ProductDetails from "./pages/Vendedor/inventario/ProductDetails";
+import EditProduct from "./pages/Vendedor/inventario/EditProduct";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
@@ -69,7 +70,9 @@ function App() {
           <Route path="/vendedor/portal/view" element={<PortalView />} />
           <Route path="/vendedor/portal/productos" element={<ProductEditor />} />
           <Route path="/vendedor/ventas" element={<Ventas />} />
-          <Route path="/inventario/:id" element={<ProductDetail />} />
+          <Route path="/inventario/:id" element={<ProductDetails />} />
+          <Route path="/inventario/editar/:id" element={<EditProduct />} />
+          {/* Ruta para ver detalles de ventas */}
           <Route path="/ventas/:id" element={<SalesDetail />} />
           <Route path="/agregar-producto" element={<AddProduct />} />
 

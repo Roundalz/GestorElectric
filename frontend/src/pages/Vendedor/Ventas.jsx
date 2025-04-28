@@ -1,90 +1,76 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { List, BarChart2, Users, FileSpreadsheet } from 'lucide-react';
+import styles from './Ventas.module.css';
 
-function Ventas() {
+const API_BASE = 'http://localhost:5000/api/ventas';
+
+export default function Ventas() {
   const [ventas, setVentas] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/ventas")
-      .then((response) => response.json())
-      .then((data) => setVentas(data))
-      .catch((error) => console.error("Error al obtener ventas:", error));
+    fetch(`${API_BASE}`)
+      .then(res => res.json())
+      .then(data => setVentas(data))
+      .catch(err => console.error('Error al obtener ventas:', err));
   }, []);
 
   const handleExportExcel = () => {
-    // Redirigir para descargar el Excel
-    window.location.href = "http://localhost:5000/api/ventas/export";
+    window.location.href = `${API_BASE}/export`;
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>Ventas</h2>
-      
-      {/* Botones superiores */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <button style={{ backgroundColor: "#ccc", cursor: "default" }}>
-          Lista de ventas
+    <div className={styles.container}>
+      <nav className={styles.navbar}>
+        <button className={`${styles.tab} ${styles.active}`}>
+          <List size={16} /> Lista de ventas
         </button>
-        <button onClick={() => alert("Estadísticas - (No implementado)")}>
-          Estadísticas
+        <button className={styles.tab} onClick={() => alert('Estadísticas - No implementado')}>          
+          <BarChart2 size={16} /> Estadísticas
         </button>
-        <button onClick={() => alert("Clientes - (No implementado)")}>
-          Clientes
+        <button className={styles.tab} onClick={() => alert('Clientes - No implementado')}>
+          <Users size={16} /> Clientes
         </button>
-        <button onClick={handleExportExcel}>
-          Exportar Excel (Ventas)
+        <button className={styles.button} onClick={handleExportExcel}>
+          <FileSpreadsheet size={16} /> Exportar Excel
         </button>
-      </div>
+      </nav>
 
-      {/* Tabla de Ventas */}
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f2f2f2" }}>
-            <th style={thStyle}>Fecha de Venta</th>
-            <th style={thStyle}>Cliente</th>
-            <th style={thStyle}>Estado Venta</th>
-            <th style={thStyle}>Monto Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ventas.length === 0 ? (
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
             <tr>
-              <td colSpan="4" style={{ textAlign: "center", padding: "1rem" }}>
-                No hay ventas registradas.
-              </td>
+              <th>Fecha de Venta</th>
+              <th>Cliente</th>
+              <th>Estado Venta</th>
+              <th>Monto Total</th>
             </tr>
-          ) : (
-            ventas.map((venta) => (
-              // Al hacer clic en la fila, navega al detalle de la venta
-              <tr
-                key={venta.codigo_pedido}
-                style={{ cursor: "pointer" }}
-                onClick={() => navigate(`/ventas/${venta.codigo_pedido}`)}
-              >
-                <td style={tdStyle}>{venta.fecha_pedido}</td>
-                <td style={tdStyle}>{venta.nombre_cliente || "N/A"}</td>
-                <td style={tdStyle}>{venta.estado_pedido}</td>
-                <td style={tdStyle}>${venta.total_pedido}</td>
+          </thead>
+          <tbody>
+            {ventas.length === 0 ? (
+              <tr>
+                <td colSpan="4" className={styles.empty}>
+                  No hay ventas registradas.
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              ventas.map(v => (
+                <tr
+                  key={v.codigo_pedido}
+                  className={styles.row}
+                  onClick={() => navigate(`/ventas/${v.codigo_pedido}`)}
+                >
+                  <td>{v.fecha_pedido}</td>
+                  <td>{v.nombre_cliente || 'N/A'}</td>
+                  <td>{v.estado_pedido}</td>
+                  <td>${v.total_pedido}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
-
-const thStyle = {
-  border: "1px solid #ddd",
-  padding: "8px",
-  fontWeight: "bold",
-  textAlign: "left",
-};
-
-const tdStyle = {
-  border: "1px solid #ddd",
-  padding: "8px",
-};
-
-export default Ventas;

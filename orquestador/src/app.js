@@ -22,6 +22,9 @@ import planesRoutes from './routes/planesRoutes.js';
 import pagoRoutes from './routes/pagoRoutes.js';
 import inventarioRouter from './routes/inventario.js';
 import ventasRoutes from './routes/ventas.js';
+import validarVendedorId from './middlewares/validarVendedorId.js';
+
+
 
 // Load environment variables
 dotenv.config();
@@ -41,12 +44,15 @@ const app = express();
 // Global middleware
 app.use(cors({
   origin: ['http://localhost:3000','http://localhost', 'http://frontend'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization','X-Vendedor-Id'],
   exposedHeaders: ['Content-Disposition']
 }));
-app.options('*', cors());
-app.use(express.json());
+
+app.use(validarVendedorId);
+// ↑ Aquí subimos el tamaño máximo del body
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Mount routes

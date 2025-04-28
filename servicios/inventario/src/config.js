@@ -1,13 +1,20 @@
-// Archivo de configuración con valores estáticos temporales
-
+import pool from './database.js';
 /**
- * Identificador estático de vendedor (se reemplazará más adelante
- * con datos dinámicos desde el frontend o JWT).
+ * Recupera el PORTAL.codigo_portal asociado al vendedor dado.
+ * @param {number} vendedorId 
+ * @returns {Promise<string>} portalCode
  */
-export const VENDEDOR_ID = 1;
-
-/**
- * Código estático de portal (se reemplazará más adelante
- * con datos dinámicos desde el frontend).
- */
-export const PORTAL_CODE = 'electrovaldez';
+export async function getPortalCodeByVendedor(vendedorId) {
+    const { rows } = await pool.query(
+      `SELECT codigo_portal FROM PORTAL WHERE VENDEDOR_codigo_vendedore = $1`,
+      [vendedorId]
+    );
+    if (rows.length === 0) {
+      throw new Error("Portal no encontrado para el vendedor");
+    }
+    return rows[0].codigo_portal;
+  }
+  
+export default {
+  getPortalCodeByVendedor,
+};

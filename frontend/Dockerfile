@@ -5,6 +5,9 @@ COPY package.json package-lock.json ./
 RUN npm install
 RUN npm install qrcode.react
 RUN npm install react-barcode
+RUN npm install axios react-router-dom jsbarcode
+RUN npm install framer-motion lucide-react
+RUN npm install lucide-react
 RUN npm install exceljs
 COPY . .
 RUN npm run build
