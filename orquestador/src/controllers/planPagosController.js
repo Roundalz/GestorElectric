@@ -1,5 +1,5 @@
 import pool from "../database.js";
-import { registrarLog } from "./logsController.js"; // Importar función para registrar logs
+import { registrarLog } from "./logsController.js";
 
 // Obtener todos los planes
 export const obtenerPlanes = async (req, res) => {
@@ -17,31 +17,32 @@ export const crearPlan = async (req, res) => {
   const {
     nombre_plan,
     descripcion,
+    tipo_pago_plan,
+    duracion_dias,
     precio_m_s_a,
     comision_venta,
     max_productos,
-    fecha_expiracion_plan,
   } = req.body;
 
   try {
     const result = await pool.query(
       `INSERT INTO planes_pago 
-        (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan)
-       VALUES ($1, $2, $3, $4, $5, $6) 
+        (nombre_plan, descripcion, tipo_pago_plan, duracion_dias, precio_m_s_a, comision_venta, max_productos)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
       [
         nombre_plan,
         descripcion,
+        tipo_pago_plan,
+        duracion_dias,
         precio_m_s_a,
         comision_venta,
         max_productos,
-        fecha_expiracion_plan,
       ]
     );
 
-    // Registrar log después de crear el plan
     await registrarLog({
-      usuario_id: 1, // Luego puedes sacar del token
+      usuario_id: 1,
       accion: `Creó un nuevo plan: ${nombre_plan}`,
       ip_origen: req.ip,
     });
@@ -59,26 +60,28 @@ export const actualizarPlan = async (req, res) => {
   const {
     nombre_plan,
     descripcion,
+    tipo_pago_plan,
+    duracion_dias,
     precio_m_s_a,
     comision_venta,
     max_productos,
-    fecha_expiracion_plan,
   } = req.body;
 
   try {
     const result = await pool.query(
       `UPDATE planes_pago 
-       SET nombre_plan = $1, descripcion = $2, precio_m_s_a = $3, comision_venta = $4, 
-           max_productos = $5, fecha_expiracion_plan = $6
-       WHERE codigo_plan = $7
+       SET nombre_plan = $1, descripcion = $2, tipo_pago_plan = $3, duracion_dias = $4,
+           precio_m_s_a = $5, comision_venta = $6, max_productos = $7
+       WHERE codigo_plan = $8
        RETURNING *`,
       [
         nombre_plan,
         descripcion,
+        tipo_pago_plan,
+        duracion_dias,
         precio_m_s_a,
         comision_venta,
         max_productos,
-        fecha_expiracion_plan,
         id,
       ]
     );
@@ -87,7 +90,6 @@ export const actualizarPlan = async (req, res) => {
       return res.status(404).json({ mensaje: "Plan no encontrado." });
     }
 
-    // Registrar log después de actualizar el plan
     await registrarLog({
       usuario_id: 1,
       accion: `Actualizó el plan con ID ${id}`,
@@ -115,7 +117,6 @@ export const eliminarPlan = async (req, res) => {
       return res.status(404).json({ mensaje: "Plan no encontrado." });
     }
 
-    // Registrar log después de eliminar el plan
     await registrarLog({
       usuario_id: 1,
       accion: `Eliminó el plan con ID ${id}`,
