@@ -21,6 +21,7 @@ import Ventas from "./pages/Vendedor/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
 import PortalView from './pages/Vendedor/portal/PortalView';
 import HistoricoConfiguracion from "./pages/Vendedor/portal/HistoricoConfiguracion";
+import GiftCards from "./pages/Vendedor/GiftCards"
 import { VendedorProvider } from '@context/vendedorContext';
 
 
@@ -61,6 +62,7 @@ function App() {
           <Route path="/vendedor/portal/config" element={<ConfigPortal />} />
           <Route path="/vendedor/portal/view" element={<PortalView />} />
           <Route path="/vendedor/portal/historico" element={<HistoricoConfiguracion />} />
+          <Route path= "/vendedor/giftcard" element={<GiftCards/>}/>
           <Route path="/vendedor/ventas" element={<Ventas />} />
 
           {/* Ruta para manejar páginas no encontradas */}

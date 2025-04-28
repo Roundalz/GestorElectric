@@ -24,7 +24,7 @@ app.use(express.json());
 import servicioRoutes from './routes/servicioRoutes.js';
 import portalRouter from './routes/portal.js';
 import autenticacionRouter from './routes/autenticacion.js';
-
+import giftCardRoutes from './routes/giftCardRoutes.js';
 // Usar rutas
 app.use("/api/servicios", servicioRoutes);
 app.use("/api/portales", portalRouter);
@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
 app.get("/", (req, res) => {
   res.send("Orquestador funcionando 🚀");
 });
-
+app.use("/api/gift-cards", giftCardRoutes);
 // Puerto del servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
