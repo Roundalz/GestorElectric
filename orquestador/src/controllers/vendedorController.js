@@ -1,4 +1,5 @@
 import pool from "../database.js";
+import { registrarLog } from "./logsController.js";
 
 export const obtenerVendedores = async (req, res) => {
   try {
@@ -87,6 +88,13 @@ export const crearVendedor = async (req, res) => {
       ]
     );
 
+    // Registrar log
+    await registrarLog({
+      usuario_id: result.rows[0].codigo_vendedore,
+      accion: "Crear vendedor",
+      ip_origen: req.ip,
+    });
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error al crear vendedor:", error);
@@ -149,6 +157,13 @@ export const actualizarVendedor = async (req, res) => {
       return res.status(404).json({ error: "Vendedor no encontrado" });
     }
 
+    // Registrar log
+    await registrarLog({
+      usuario_id: id,
+      accion: "Actualizar vendedor",
+      ip_origen: req.ip,
+    });
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error("Error al actualizar vendedor:", error);
@@ -171,6 +186,13 @@ export const eliminarVendedor = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Vendedor no encontrado" });
     }
+
+    // Registrar log
+    await registrarLog({
+      usuario_id: id,
+      accion: "Eliminar vendedor",
+      ip_origen: req.ip,
+    });
 
     res.json({
       mensaje: "Vendedor eliminado correctamente",

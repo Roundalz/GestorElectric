@@ -1,0 +1,66 @@
+/* Logs.css */
+
+.logsContainer {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logsTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.logsFilters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.inputFiltro {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.tablaLogsContainer {
+  overflow-x: auto;
+}
+
+.tablaLogs {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tablaLogs thead {
+  background-color: #2d1919;
+}
+
+.tablaLogs th,
+.tablaLogs td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.tablaLogs tr:nth-child(even) {
+  background-color: #3d1b1b;
+}
+
+.tablaLogs th {
+  font-weight: bold;
+}
+
+.noLogs {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}

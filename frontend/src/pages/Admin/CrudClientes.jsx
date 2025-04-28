@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import '../../styles/crudCliente.css'; // importamos estilos propios
 
 export default function CrudCliente() {
   const [clientes, setClientes] = useState([]);
@@ -7,7 +8,6 @@ export default function CrudCliente() {
   const [modoEditar, setModoEditar] = useState(false);
   const [clienteActual, setClienteActual] = useState(null);
 
-  // GET: Obtener clientes
   const obtenerClientes = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/clientes");
@@ -21,14 +21,13 @@ export default function CrudCliente() {
     obtenerClientes();
   }, []);
 
-  // POST: Crear nuevo cliente
   const crearCliente = async () => {
     try {
       await axios.post("http://localhost:5000/api/clientes", {
         nombre_cliente: form.nombre,
         correo_cliente: form.correo,
         telefono_cliente: form.telefono,
-        cumpleanos_cliente: "2000-01-01", // valor por defecto
+        cumpleanos_cliente: "2000-01-01",
         foto_perfil_cliente: "default.png"
       });
 
@@ -39,7 +38,6 @@ export default function CrudCliente() {
     }
   };
 
-  // PUT: Actualizar cliente
   const actualizarCliente = async () => {
     try {
       await axios.put(`http://localhost:5000/api/clientes/${clienteActual}`, {
@@ -59,7 +57,6 @@ export default function CrudCliente() {
     }
   };
 
-  // DELETE: Eliminar cliente
   const eliminarCliente = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/clientes/${id}`);
@@ -69,27 +66,25 @@ export default function CrudCliente() {
     }
   };
 
-  // Manejo de inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Enviar formulario
   const handleSubmit = (e) => {
     e.preventDefault();
     modoEditar ? actualizarCliente() : crearCliente();
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{modoEditar ? "Editar Cliente" : "Nuevo Cliente"}</h1>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
+    <div className="crud-cliente-container">
+      <h1 className="crud-cliente-title">{modoEditar ? "Editar Cliente" : "Nuevo Cliente"}</h1>
+      <form onSubmit={handleSubmit} className="crud-cliente-form">
         <input
           name="nombre"
           value={form.nombre}
           onChange={handleChange}
           placeholder="Nombre"
-          className="border p-2 w-full"
+          className="crud-cliente-input"
           required
         />
         <input
@@ -97,7 +92,7 @@ export default function CrudCliente() {
           value={form.correo}
           onChange={handleChange}
           placeholder="Correo"
-          className="border p-2 w-full"
+          className="crud-cliente-input"
           required
         />
         <input
@@ -105,59 +100,60 @@ export default function CrudCliente() {
           value={form.telefono}
           onChange={handleChange}
           placeholder="Teléfono"
-          className="border p-2 w-full"
+          className="crud-cliente-input"
           required
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button type="submit" className="crud-cliente-button">
           {modoEditar ? "Actualizar" : "Crear"}
         </button>
       </form>
 
-      <h2 className="text-xl font-semibold mb-2">Lista de Clientes</h2>
-      <table className="w-full table-auto border">
-      <thead className="bg-gray-100">
-  <tr>
-    <th className="p-2 border">Perfil</th>
-    <th className="p-2 border">Nombre</th>
-    <th className="p-2 border">Correo</th>
-    <th className="p-2 border">Teléfono</th>
-    <th className="p-2 border">Acciones</th>
-  </tr>
-</thead>
-<tbody>
-  {clientes.map((cliente) => (
-    <tr key={cliente.codigo_cliente}>
-      <td className="p-2 border text-center text-2xl">👤</td>
-      <td className="p-2 border">{cliente.nombre_cliente}</td>
-      <td className="p-2 border">{cliente.correo_cliente}</td>
-      <td className="p-2 border">{cliente.telefono_cliente}</td>
-      <td className="p-2 border space-x-2">
-        <button
-          onClick={() => {
-            setModoEditar(true);
-            setForm({
-              nombre: cliente.nombre_cliente,
-              correo: cliente.correo_cliente,
-              telefono: cliente.telefono_cliente
-            });
-            setClienteActual(cliente.codigo_cliente);
-          }}
-          className="bg-yellow-500 text-white px-2 py-1 rounded"
-        >
-          Editar
-        </button>
-        <button
-          onClick={() => eliminarCliente(cliente.codigo_cliente)}
-          className="bg-red-600 text-white px-2 py-1 rounded"
-        >
-          Eliminar
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
-      </table>
+      <h2 className="crud-cliente-subtitle">Lista de Clientes</h2>
+      <div className="crud-cliente-table-container">
+        <table className="crud-cliente-table">
+          <thead>
+            <tr>
+              <th>Perfil</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clientes.map((cliente) => (
+              <tr key={cliente.codigo_cliente}>
+                <td className="crud-cliente-center">👤</td>
+                <td>{cliente.nombre_cliente}</td>
+                <td>{cliente.correo_cliente}</td>
+                <td>{cliente.telefono_cliente}</td>
+                <td className="crud-cliente-actions">
+                  <button
+                    onClick={() => {
+                      setModoEditar(true);
+                      setForm({
+                        nombre: cliente.nombre_cliente,
+                        correo: cliente.correo_cliente,
+                        telefono: cliente.telefono_cliente
+                      });
+                      setClienteActual(cliente.codigo_cliente);
+                    }}
+                    className="crud-cliente-edit-button"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => eliminarCliente(cliente.codigo_cliente)}
+                    className="crud-cliente-delete-button"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

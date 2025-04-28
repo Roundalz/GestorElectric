@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import "../../styles/crudVendedores.css"; // Solo lo importamos, no como módulo
 
 function CrudVendedores() {
   const [vendedores, setVendedores] = useState([]);
@@ -139,164 +140,116 @@ function CrudVendedores() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">
+    <div className="container">
+      <h1 className="title">
         {modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}
       </h1>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="errorBox">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="form">
+        <div className="grid">
+          {/* Inputs */}
+          {[
+            { label: "Nombre del vendedor*", name: "nombre_vendedor", type: "text" },
+            { label: "Correo electrónico*", name: "correo_vendedor", type: "email" },
+            { label: "Teléfono*", name: "telefono_vendedor", type: "tel" },
+            { label: "Clave*", name: "clave_vendedor", type: "password" },
+            { label: "Nombre de la empresa*", name: "nombre_empresa", type: "text" },
+            { label: "Tipo de empresa*", name: "tipo_empresa", type: "text" },
+            { label: "Logo de la empresa", name: "logo_empresa", type: "text" },
+            { label: "Correo de la empresa*", name: "correo_empresa", type: "email" },
+            { label: "Teléfono de la empresa*", name: "telefono_empresa", type: "text" },
+            { label: "País", name: "pais_empresa", type: "text" },
+            { label: "Ciudad", name: "ciudad_empresa", type: "text" },
+            { label: "Dirección", name: "direccion_empresa", type: "text" },
+            { label: "Banner", name: "banner_empresa", type: "text" },
+            { label: "Código del plan", name: "PLANES_PAGO_codigo_plan", type: "number" },
+          ].map(({ label, name, type }) => (
+            <div key={name}>
+              <label className="label">{label}</label>
+              <input
+                name={name}
+                type={type}
+                value={form[name]}
+                onChange={handleChange}
+                className="input"
+                required={label.includes('*')}
+              />
+            </div>
+          ))}
+          {/* Estado */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del vendedor*</label>
-            <input name="nombre_vendedor" value={form.nombre_vendedor} onChange={handleChange} 
-              className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico*</label>
-            <input name="correo_vendedor" value={form.correo_vendedor} onChange={handleChange} 
-              type="email" className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono*</label>
-            <input name="telefono_vendedor" value={form.telefono_vendedor} onChange={handleChange} 
-              type="tel" className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Clave*</label>
-            <input name="clave_vendedor" value={form.clave_vendedor} onChange={handleChange} 
-              type="password" className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <select name="estado_vendedor" value={form.estado_vendedor} onChange={handleChange} 
-              className="border p-2 w-full rounded">
+            <label className="label">Estado</label>
+            <select
+              name="estado_vendedor"
+              value={form.estado_vendedor}
+              onChange={handleChange}
+              className="input"
+            >
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la empresa*</label>
-            <input name="nombre_empresa" value={form.nombre_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de empresa*</label>
-            <input name="tipo_empresa" value={form.tipo_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Logo de la empresa</label>
-            <input name="logo_empresa" value={form.logo_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo de la empresa*</label>
-            <input name="correo_empresa" value={form.correo_empresa} onChange={handleChange} 
-              type="email" className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono de la empresa*</label>
-            <input name="telefono_empresa" value={form.telefono_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" required />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">País</label>
-            <input name="pais_empresa" value={form.pais_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
-            <input name="ciudad_empresa" value={form.ciudad_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-            <input name="direccion_empresa" value={form.direccion_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Banner</label>
-            <input name="banner_empresa" value={form.banner_empresa} onChange={handleChange} 
-              className="border p-2 w-full rounded" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Código del plan</label>
-            <input name="PLANES_PAGO_codigo_plan" value={form.PLANES_PAGO_codigo_plan} 
-              onChange={handleChange} type="number" className="border p-2 w-full rounded" />
-          </div>
         </div>
 
-        <div className="flex justify-end space-x-2">
-          <button 
-            type="button" 
-            onClick={resetForm}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
-          >
-             Cancelar
+        <div className="buttonGroup">
+          <button type="button" onClick={resetForm} className="cancelButton">
+            Cancelar
           </button>
-          <button 
-            type="submit" 
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
+          <button type="submit" className="submitButton">
             {modoEditar ? "Actualizar" : "Crear"}
           </button>
         </div>
       </form>
 
-      <h2 className="text-xl font-semibold mb-2">Lista de Vendedores</h2>
+      <h2 className="subTitle">Lista de Vendedores</h2>
+
       <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border">
-          <thead className="bg-gray-100">
+        <table className="table">
+          <thead className="tableHead">
             <tr>
-              <th className="p-2 border">Nombre</th>
-              <th className="p-2 border">Correo</th>
-              <th className="p-2 border">Teléfono</th>
-              <th className="p-2 border">Empresa</th>
-              <th className="p-2 border">Acciones</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Empresa</th>
+              <th>Logo</th>
+              <th>Banner</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {vendedores.map((vendedor) => (
-              <tr key={vendedor.codigo_vendedore} className="hover:bg-gray-50">
-                <td className="p-2 border">{vendedor.nombre_vendedor}</td>
-                <td className="p-2 border">{vendedor.correo_vendedor}</td>
-                <td className="p-2 border">{vendedor.telefono_vendedor}</td>
-                <td className="p-2 border">{vendedor.nombre_empresa}</td>
-                <td className="p-2 border">
-                  <div className="flex space-x-2 justify-center">
+              <tr key={vendedor.codigo_vendedore} className="tableRow">
+                <td>{vendedor.nombre_vendedor}</td>
+                <td>{vendedor.correo_vendedor}</td>
+                <td>{vendedor.telefono_vendedor}</td>
+                <td>{vendedor.nombre_empresa}</td>
+                <td>
+                  <img src={vendedor.logo_empresa} alt="Logo" className="logoImg" />
+                </td>
+                <td>
+                  <img src={vendedor.banner_empresa} alt="Banner" className="bannerImg" />
+                </td>
+                <td>
+                  <div className="actions">
                     <button
                       onClick={() => {
                         setModoEditar(true);
                         setForm({ ...vendedor });
                         setVendedorActual(vendedor.codigo_vendedore);
                       }}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                      className="editButton"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => eliminarVendedor(vendedor.codigo_vendedore)}
-                      className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition"
+                      className="deleteButton"
                     >
                       Eliminar
                     </button>
