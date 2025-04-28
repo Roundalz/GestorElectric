@@ -1,10 +1,30 @@
 /* frontend/src/pages/Vendedor/ventas/Ventas.module.css */
 
+/* Tabs de navegación */
+.tabs button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: var(--fs-400);
+  font-weight: 600;
+  color: var(--clr-neutral-700);
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.tabs .tabActivo {
+  color: var(--clr-primary);
+  border-color: var(--clr-primary);
+}
+
+/* Tabla de ventas */
 .ventasTabla {
-  display: grid;
+  width: 100%;
+  margin-top: 1rem;
   border: 1px solid var(--clr-neutral-200);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .ventasHeader {
@@ -30,4 +50,24 @@
 
 .ventasRow:hover {
   background-color: var(--clr-neutral-200);
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .ventasHeader,
+  .ventasRow {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    text-align: left;
+    padding: 1rem;
+  }
+
+  .ventasRow span:nth-child(3),
+  .ventasRow span:nth-child(4),
+  .ventasRow span:nth-child(5),
+  .ventasHeader span:nth-child(3),
+  .ventasHeader span:nth-child(4),
+  .ventasHeader span:nth-child(5) {
+    display: none;
+  }
 }
