@@ -145,35 +145,34 @@ export default function PlanesPago() {
             </p>
 
             {/* cálculo de duración en días: fecha_expiracion_plan – hoy */}
-{(() => {
-  let duracion = '‑';
-  if (pl.fecha_expiracion_plan) {
-    const hoy    = new Date();
-    const fin    = new Date(pl.fecha_expiracion_plan);
-    const diffMs = fin - hoy;
-    duracion     = diffMs > 0
-      ? Math.round(diffMs / 86_400_000)   // 1000*60*60*24
-      : 0;
-  }
-  return (
-    <ul className="planes-features">
-      <li>Duración: 30 días</li>
+            {(() => (
+  <ul className="planes-features">
+    {/* Tipo de pago del plan (Mensual, Anual, Ilimitado, etc.) */}
+    {pl.tipo_pago_plan && (
+      <li>Tipo de pago: {pl.tipo_pago_plan}</li>
+    )}
 
-      {/* descripción corta proveniente del campo “descripcion” */}
-      {pl.descripcion && <li>{pl.descripcion}</li>}
+    {/* Duración en días si no es ilimitado */}
+    {pl.tipo_pago_plan !== 'Ilimitado' && pl.duracion_dias && (
+      <li>Duración: {pl.duracion_dias} días</li>
+    )}
 
-      {/* máximo de productos que permite el plan */}
-      {pl.max_productos && (
-        <li>{pl.max_productos.toLocaleString()} productos</li>
-      )}
+    {/* Descripción corta del plan */}
+    {pl.descripcion && (
+      <li>{pl.descripcion}</li>
+    )}
 
-      {/* comisión de venta (%) */}
-      {pl.comision_venta !== null && (
-        <li>Comisión {pl.comision_venta}%</li>
-      )}
-    </ul>
-  );
-})()}
+    {/* Máximo de productos permitidos */}
+    {pl.max_productos && (
+      <li>Hasta {pl.max_productos.toLocaleString()} productos</li>
+    )}
+
+    {/* Comisión de venta */}
+    {pl.comision_venta !== null && (
+      <li>Comisión de venta: {pl.comision_venta}%</li>
+    )}
+  </ul>
+))()}
 
           </label>
         ))}
