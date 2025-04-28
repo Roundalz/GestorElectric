@@ -8,10 +8,11 @@ function CrudPlanPagos() {
   const [form, setForm] = useState({
     nombre_plan: "",
     descripcion: "",
+    tipo_pago_plan: "",
+    duracion_dias: "",
     precio_m_s_a: "",
     comision_venta: "",
     max_productos: "",
-    fecha_expiracion_plan: "",
   });
   const [modoEditar, setModoEditar] = useState(false);
   const [planActual, setPlanActual] = useState(null);
@@ -63,10 +64,11 @@ function CrudPlanPagos() {
     setForm({
       nombre_plan: "",
       descripcion: "",
+      tipo_pago_plan: "",
+      duracion_dias: "",
       precio_m_s_a: "",
       comision_venta: "",
       max_productos: "",
-      fecha_expiracion_plan: "",
     });
   };
 
@@ -103,10 +105,27 @@ function CrudPlanPagos() {
           required
         />
         <input
+          name="tipo_pago_plan"
+          value={form.tipo_pago_plan}
+          onChange={handleChange}
+          placeholder="Tipo de pago (mensual, anual, etc.)"
+          className="crud-input"
+          required
+        />
+        <input
+          name="duracion_dias"
+          value={form.duracion_dias}
+          onChange={handleChange}
+          placeholder="Duración en días"
+          type="number"
+          className="crud-input"
+          required
+        />
+        <input
           name="precio_m_s_a"
           value={form.precio_m_s_a}
           onChange={handleChange}
-          placeholder="Precio mensual (Bs)"
+          placeholder="Precio (Bs)"
           type="number"
           step="0.01"
           className="crud-input"
@@ -131,14 +150,6 @@ function CrudPlanPagos() {
           className="crud-input"
           required
         />
-        <input
-          name="fecha_expiracion_plan"
-          value={form.fecha_expiracion_plan}
-          onChange={handleChange}
-          type="date"
-          className="crud-input"
-          required
-        />
 
         <button type="submit" className="crud-button">
           {modoEditar ? "Actualizar" : "Crear"}
@@ -153,10 +164,11 @@ function CrudPlanPagos() {
             <tr>
               <th>Nombre</th>
               <th>Descripción</th>
+              <th>Tipo</th>
+              <th>Duración (días)</th>
               <th>Precio</th>
               <th>Comisión</th>
               <th>Máx. Productos</th>
-              <th>Expira</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -165,10 +177,11 @@ function CrudPlanPagos() {
               <tr key={plan.codigo_plan}>
                 <td>{plan.nombre_plan}</td>
                 <td>{plan.descripcion}</td>
+                <td>{plan.tipo_pago_plan}</td>
+                <td>{plan.duracion_dias}</td>
                 <td>{plan.precio_m_s_a} Bs</td>
                 <td>{plan.comision_venta}%</td>
                 <td>{plan.max_productos}</td>
-                <td>{plan.fecha_expiracion_plan}</td>
                 <td className="crud-actions">
                   <button
                     onClick={() => {
@@ -176,10 +189,11 @@ function CrudPlanPagos() {
                       setForm({
                         nombre_plan: plan.nombre_plan,
                         descripcion: plan.descripcion,
+                        tipo_pago_plan: plan.tipo_pago_plan,
+                        duracion_dias: plan.duracion_dias,
                         precio_m_s_a: plan.precio_m_s_a,
                         comision_venta: plan.comision_venta,
                         max_productos: plan.max_productos,
-                        fecha_expiracion_plan: plan.fecha_expiracion_plan,
                       });
                       setPlanActual(plan.codigo_plan);
                     }}
