@@ -1,24 +1,52 @@
-// src/routes/routes-inventario.js
-import express from "express";
-import inventarioController from "../controllers/inventarioController.js";
+import express from 'express';
+import inventarioController from '../controllers/inventarioController.js';
 
 const router = express.Router();
+// ← ALIAS: GET /api/inventario  → listAllProducts
+router.get('/', inventarioController.getProducts);
 
-// Rutas del CRUD de productos:
+// Productos CRUD
+router.post('/productos', inventarioController.createProduct);
+router.get('/productos', inventarioController.getProducts);
+router.get('/productos/:id', inventarioController.getProductById);
+router.put('/productos/:id', inventarioController.updateProduct);
+router.patch('/productos/:id/cantidad', inventarioController.updateQuantity);
+router.delete('/productos/:id', inventarioController.deleteProduct);
 
-// Obtener lista de productos
-router.get("/", inventarioController.getAllProductos);
+// Características
+router.post(
+  '/productos/:productId/caracteristicas',
+  inventarioController.setCharacteristics
+);
+router.get(
+  '/productos/:productId/caracteristicas',
+  inventarioController.getCharacteristics
+);
+router.put(
+  '/caracteristicas/:charId',
+  inventarioController.updateCharacteristic
+);
+router.delete(
+  '/productos/:productId/caracteristicas',
+  inventarioController.deleteCharacteristics
+);
 
-// Obtener detalle de un producto (por su id)
-router.get("/:id", inventarioController.getProductoDetail);
-
-// Crear un producto nuevo
-router.post("/", inventarioController.createProducto);
-
-// Actualizar un producto existente
-router.put("/:id", inventarioController.updateProducto);
-
-// Eliminar un producto (y registros relacionados)
-router.delete("/:id", inventarioController.deleteProducto);
+// Imágenes
+router.post(
+  '/productos/:productId/imagenes',
+  inventarioController.setImages
+);
+router.get(
+  '/productos/:productId/imagenes',
+  inventarioController.getImages
+);
+router.put(
+  '/imagenes/:imgId',
+  inventarioController.updateImage
+);
+router.delete(
+  '/productos/:productId/imagenes',
+  inventarioController.deleteImages
+);
 
 export default router;

@@ -1,25 +1,59 @@
-// routes/productoRoutes.js
-import express from "express";
-import productoController from "../controllers/productoController.js";
+import express from 'express';
+import {
+  productController,
+  characteristicController,
+  imageController,
+  eventLogController
+} from '../controllers/index.js';
 
 const router = express.Router();
 
-// Crear un producto
-router.post("/", productoController.createProducto);
+// PRODUCTOS
+router.post('/productos', productController.createProduct);
+router.get('/productos', productController.getProducts);
+router.get('/productos/:id', productController.getProductById);
+router.put('/productos/:id', productController.updateProduct);
+router.patch('/productos/:id/cantidad', productController.updateQuantity);
+router.delete('/productos/:id', productController.deleteProduct);
 
-// Listar productos (sólo del vendedor 1)
-router.get("/", productoController.getProductos);
+// CARACTERISTICAS
+router.post(
+  '/productos/:productId/caracteristicas',
+  characteristicController.setCharacteristics
+);
+router.get(
+  '/productos/:productId/caracteristicas',
+  characteristicController.getCharacteristicsByProduct
+);
+router.put(
+  '/caracteristicas/:charId',
+  characteristicController.updateCharacteristic
+);
+router.delete(
+  '/productos/:productId/caracteristicas',
+  characteristicController.deleteCharacteristicsByProduct
+);
 
-// Obtener detalle de producto (incluye características e imágenes)
-router.get("/:id", productoController.getProductoDetail);
+// IMAGENES
+router.post(
+  '/productos/:productId/imagenes',
+  imageController.setImages
+);
+router.get(
+  '/productos/:productId/imagenes',
+  imageController.getImagesByProduct
+);
+router.put(
+  '/imagenes/:imgId',
+  imageController.updateImage
+);
+router.delete(
+  '/productos/:productId/imagenes',
+  imageController.deleteImagesByProduct
+);
 
-// Actualizar producto
-router.put("/:id", productoController.updateProducto);
-
-// Eliminar producto (remover registros relacionados)
-router.delete("/:id", productoController.deleteProducto);
-
-router.get("/export", productoController.exportProductos);
-
+// LOG EVENTO
+router.get('/logs', eventLogController.getAllLogs);
+router.get('/logs/:id', eventLogController.getLogById);
 
 export default router;

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { useCart } from "../../context/CartContext";
 import { AuthContext } from "../../context/AuthContext";
 import Card from './card/InicioCard';
-import './styles/CarritoStylEs.css';
+import './styles/CarritoStyles.css';
 
 const Carrito = () => {
   const { user } = useContext(AuthContext);

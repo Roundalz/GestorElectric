@@ -1,89 +1,114 @@
-// controllers/productoController.js
-import productoService from "../services/productoService.js";
-import { exportProductosExcel } from "../utils/excelExport.js";
+import productService from "../services/productoService.js";
 
-const VENDEDOR_ID = 1; // Para ejemplo, vendedor 1
+/**
+ * Controlador para rutas relacionadas con PRODUCTOS.
+ */
 
-export const createProducto = async (req, res) => {
+/**
+ * POST /productos
+ * Crea un nuevo producto con sus características e imágenes.
+ */
+export async function createProduct(req, res) {
   try {
-    const producto = await productoService.createProducto(req.body, VENDEDOR_ID, { ip: req.ip });
-    res.status(201).json(producto);
+    const data = req.body;
+    const newProduct = await productService.createProduct(data);
+    return res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error al crear producto:", error.message);
-    res.status(500).json({ error: "Error al crear producto", details: error.message });
+    console.error("Error en createProduct:", error);
+    return res.status(400).json({ error: error.message });
   }
-};
+}
 
-export const getProductos = async (req, res) => {
+/**
+ * GET /productos
+ * Obtiene todos los productos o filtra por nombre si se pasa query ?name=
+ */
+export async function getProducts(req, res) {
   try {
-    const productos = await productoService.getProductos(VENDEDOR_ID, { ip: req.ip });
-    res.json(productos);
-  } catch (error) {
-    console.error("Error al listar productos:", error.message);
-    res.status(500).json({ error: "Error al listar productos", details: error.message });
-  }
-};
-
-export const getProductoDetail = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const producto = await productoService.getProductoDetail(id, VENDEDOR_ID, { ip: req.ip });
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
-    res.json(producto);
-  } catch (error) {
-    console.error("Error al obtener detalle del producto:", error.message);
-    res.status(500).json({ error: "Error al obtener detalle del producto", details: error.message });
-  }
-};
-
-export const updateProducto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const producto = await productoService.updateProducto(id, req.body, { ip: req.ip });
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
-    res.json(producto);
-  } catch (error) {
-    console.error("Error al actualizar producto:", error.message);
-    res.status(500).json({ error: "Error al actualizar producto", details: error.message });
-  }
-};
-
-export const deleteProducto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await productoService.deleteProducto(id, VENDEDOR_ID, { ip: req.ip });
-    res.status(204).send();
-  } catch (error) {
-    console.error("Error al eliminar producto:", error.message);
-    res.status(500).json({ error: "Error al eliminar producto", details: error.message });
-  }
-};
-export const exportProductos = async (req, res) => {
-    try {
-      // Asumir que getProductos devuelve los productos del vendedor 1
-      const productos = await productoService.getProductos(1, { ip: req.ip });
-      const workbook = await exportProductosExcel(productos);
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=productos.xlsx"
-      );
-      await workbook.xlsx.write(res);
-      res.end();
-    } catch (error) {
-      console.error("Error exportando productos:", error.message);
-      res.status(500).json({ error: "Error exportando productos", details: error.message });
+    const { name } = req.query;
+    let products;
+    if (name) {
+      products = await productService.getProductsByName(name);
+    } else {
+      products = await productService.getAllProducts();
     }
-  };
+    return res.status(200).json(products);
+  } catch (error) {
+    console.error("Error en getProducts:", error);
+    return res.status(500).json({ error: "Error al obtener productos" });
+  }
+}
+
+/**
+ * GET /productos/:id
+ * Obtiene un producto por su ID.
+ */
+export async function getProductById(req, res) {
+  try {
+    const { id } = req.params;
+    const product = await productService.getProductById(Number(id));
+    if (!product) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    return res.status(200).json(product);
+  } catch (error) {
+    console.error("Error en getProductById:", error);
+    return res.status(500).json({ error: "Error al obtener el producto" });
+  }
+}
+
+/**
+ * PUT /productos/:id
+ * Actualiza un producto y sus relaciones (características, imágenes).
+ */
+export async function updateProduct(req, res) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const updated = await productService.updateProduct(Number(id), data);
+    return res.status(200).json(updated);
+  } catch (error) {
+    console.error("Error en updateProduct:", error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+/**
+ * PATCH /productos/:id/cantidad
+ * Actualiza sólo la cantidad disponible de un producto.
+ */
+export async function updateQuantity(req, res) {
+  try {
+    const { id } = req.params;
+    const { cantidad } = req.body;
+    const newQty = await productService.updateQuantity(Number(id), Number(cantidad));
+    return res.status(200).json({ cantidad_disponible_producto: newQty });
+  } catch (error) {
+    console.error("Error en updateQuantity:", error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+/**
+ * DELETE /productos/:id
+ * Elimina un producto y sus datos relacionados.
+ */
+export async function deleteProduct(req, res) {
+  try {
+    const { id } = req.params;
+    await productService.deleteProduct(Number(id));
+    return res.status(204).send();
+  } catch (error) {
+    console.error("Error en deleteProduct:", error);
+    return res.status(400).json({ error: error.message });
+  }
+}
 
 export default {
-  createProducto,
-  getProductos,
-  getProductoDetail,
-  updateProducto,
-  deleteProducto,
-  exportProductos
+  createProduct,
+  getProducts,
+  getProductById,
+  updateProduct,
+  updateQuantity,
+  deleteProduct,
 };
