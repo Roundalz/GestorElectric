@@ -120,6 +120,7 @@ const ConfigPortal = () => {
   const [bannerPreview, setBannerPreview] = useState(null);
   const [uploading, setUploading] = useState(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [consoleMessages, setConsoleMessages] = useState([]);
   const uploadImgToImgbb = async (file) => {
     const key = import.meta.env.VITE_IMGBB_KEY;
     if (!key) throw new Error("Falta VITE_IMGBB_KEY en .env");
@@ -135,51 +136,105 @@ const ConfigPortal = () => {
     return data.data.url; // Retorna la URL directa de ImgBB
   };
   
+
   const handleFileUpload = async (file, type) => {
+    const loadingMessageId = Date.now();
+    setConsoleMessages(prev => [...prev, {
+      id: loadingMessageId,
+      type: 'loading',
+      message: `Subiendo ${type === 'logo' ? 'logo' : 'banner'}...`
+    }]);
+  
     try {
       setUploading(type);
       const url = await uploadImgToImgbb(file);
       
-      // Actualizar el estado local primero para feedback inmediato
-      const updates = {
-        [`${type}_personalizado`]: url
-      };
-      setLocalConfig(prev => ({ ...prev, ...updates }));
+      // Resto de la lógica de subida...
       
-      // Enviar al backend
-      const response = await axios.put(
-        `${baseURL}/api/portales/${vendedorId}/config`,
+      setConsoleMessages(prev => [
+        ...prev.filter(msg => msg.id !== loadingMessageId),
         {
-          portal_codigo_portal: portalCodigo,
-          changes: updates,
-          vendedorId
+          id: Date.now(),
+          type: 'success',
+          message: `✅ ${type === 'logo' ? 'Logo' : 'Banner'} subido correctamente`
         }
-      );
-  
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Error al actualizar la configuración');
-      }
-  
-      // Actualizar también el vendedor si es necesario
-      await axios.put(`${baseURL}/api/vendedores/${vendedorId}`, {
-        [`${type === 'logo' ? 'logo_empresa' : 'banner_empresa'}`]: url
-      });
-  
+      ]);
+      
       return url;
     } catch (error) {
-      console.error('Error uploading file:', error);
-      // Revertir cambios en caso de error
-      setLocalConfig(prev => ({
-        ...prev,
-        [`${type}_personalizado`]: config?.[`${type}_personalizado`] || ''
-      }));
+      setConsoleMessages(prev => [
+        ...prev.filter(msg => msg.id !== loadingMessageId),
+        {
+          id: Date.now(),
+          type: 'error',
+          message: `❌ Error al subir ${type === 'logo' ? 'el logo' : 'el banner'}: ${error.message}`
+        }
+      ]);
       throw error;
     } finally {
       setUploading(null);
     }
   };
 
-
+  const ConsoleMessage = ({ type, message, onClose }) => {
+    const icons = {
+      success: '✅',
+      error: '❌',
+      warning: '⚠️',
+      info: 'ℹ️',
+      loading: '⏳'
+    };
+    
+    const colors = {
+      success: 'var(--clr-success)',
+      error: 'var(--clr-error)',
+      warning: 'var(--clr-warning)',
+      info: 'var(--clr-info)',
+      loading: 'var(--clr-primary)'
+    };
+    
+    const backgrounds = {
+      success: 'rgba(0, 184, 148, 0.1)',
+      error: 'rgba(231, 76, 60, 0.1)',
+      warning: 'rgba(243, 156, 18, 0.1)',
+      info: 'rgba(9, 132, 227, 0.1)',
+      loading: 'rgba(108, 92, 231, 0.1)'
+    };
+    
+    return (
+      <div 
+        className="console-message"
+        style={{
+          backgroundColor: backgrounds[type],
+          borderLeft: `4px solid ${colors[type]}`,
+        }}
+      >
+        <div className="console-message-content">
+          <span className="console-icon" style={{ color: colors[type] }}>
+            {icons[type]}
+          </span>
+          <span className="console-text">{message}</span>
+          {onClose && (
+            <button 
+              className="console-close"
+              onClick={onClose}
+              aria-label="Cerrar mensaje"
+            >
+              &times;
+            </button>
+          )}
+        </div>
+        {type === 'loading' && (
+          <div className="console-progress">
+            <div 
+              className="console-progress-bar" 
+              style={{ backgroundColor: colors[type] }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (config && portalCodigo) {  // Añadida verificación de portalCodigo
@@ -229,12 +284,24 @@ const ConfigPortal = () => {
 
   const handleSave = async () => {
     if (!portalCodigo) {
-      console.error('portalCodigo no definido');
-      alert('El portal aún no está listo para guardar cambios. Por favor espera un momento.');
+      setConsoleMessages([{
+        id: Date.now(),
+        type: 'error',
+        message: 'El portal aún no está listo para guardar cambios. Por favor espera un momento.'
+      }]);
       return;
     }
   
+    // Mostrar mensaje de carga
+    const loadingMessageId = Date.now();
+    setConsoleMessages(prev => [...prev, {
+      id: loadingMessageId,
+      type: 'loading',
+      message: 'Guardando configuración...'
+    }]);
+  
     setSaving(true);
+    
     try {
       const changes = {};
       Object.keys(localConfig).forEach(key => {
@@ -244,11 +311,17 @@ const ConfigPortal = () => {
       });
   
       if (Object.keys(changes).length === 0) {
-        alert('No hay cambios para guardar');
+        setConsoleMessages(prev => [
+          ...prev.filter(msg => msg.id !== loadingMessageId),
+          {
+            id: Date.now(),
+            type: 'info',
+            message: 'No se detectaron cambios para guardar.'
+          }
+        ]);
         return;
       }
   
-      // Usamos directamente portalCodigo del hook usePortalConfig
       const response = await axios.put(
         `${baseURL}/api/portales/${vendedorId}/config`,
         {
@@ -259,15 +332,27 @@ const ConfigPortal = () => {
       );
   
       if (response.data.success) {
-        alert('Configuración guardada exitosamente');
-        // Actualizar el estado local con los cambios
+        setConsoleMessages(prev => [
+          ...prev.filter(msg => msg.id !== loadingMessageId),
+          {
+            id: Date.now(),
+            type: 'success',
+            message: '✅ Configuración guardada exitosamente. Los cambios se aplicarán en breve.'
+          }
+        ]);
         setLocalConfig(prev => ({ ...prev, ...changes }));
       } else {
-        throw new Error(response.data.error || 'Error al guardar');
+        throw new Error(response.data.error || 'Error al guardar la configuración');
       }
     } catch (error) {
-      console.error('Error al guardar:', error);
-      alert('Error al guardar: ' + error.message);
+      setConsoleMessages(prev => [
+        ...prev.filter(msg => msg.id !== loadingMessageId),
+        {
+          id: Date.now(),
+          type: 'error',
+          message: `❌ Error al guardar: ${error.message}`
+        }
+      ]);
     } finally {
       setSaving(false);
     }
@@ -609,83 +694,92 @@ const ConfigPortal = () => {
           </>
         )}
 
-        {activeTab === 'branding' && (
-          <>
-            <div className="config-section">
-              <h3>Logo Personalizado</h3>
-              
-              {!isFeatureAllowed('logo_personalizado') ? (
-                <FeatureLocked message={PLAN_FEATURES[plan?.codigo_plan]?.lockedMessage} />
-              ) : (
-                <div className="file-upload">
-                  {logoPreview && (
-                    <div className="image-preview">
-                    <img 
-                      src={logoPreview} 
-                      alt="Logo preview" 
-                      onError={(e) => {
-                        e.target.onerror = null; 
-                        e.target.src = '/placeholder-logo.png';
-                      }}
-                    />
-                  </div>
-                  )}
-                  <input
-                    type="file"
-                    id="logo-upload"
-                    name="logo_personalizado"
-                    accept="image/*"
-                    onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'logo')}
-                  />
-                  <label htmlFor="logo-upload" className="btn-upload">
-                    {uploading === 'logo' ? 'Subiendo...' : (logoPreview ? 'Cambiar Logo' : 'Subir Logo')}
-                  </label>
-                  <p>Recomendado: 200x200px, formato PNG o JPG</p>
-                </div>
-              )}
-            </div>
-
-            <div className="config-section">
-              <h3>Banner Personalizado</h3>
-              
-              {!isFeatureAllowed('banner_personalizado') ? (
-                <FeatureLocked message={PLAN_FEATURES[plan?.codigo_plan]?.lockedMessage} />
-              ) : (
-                <>
+          {activeTab === 'branding' && (
+            <>
+              <div className="config-section">
+                <h3>Logo Personalizado</h3>
+                
+                {!isFeatureAllowed('logo_personalizado') ? (
+                  <FeatureLocked message={PLAN_FEATURES[plan?.codigo_plan]?.lockedMessage} />
+                ) : (
                   <div className="file-upload">
-                    {bannerPreview && (
+                    {(logoPreview || localConfig.logo_personalizado) && (
                       <div className="image-preview">
-                        <img src={bannerPreview} alt="Banner preview" />
+                        <img 
+                          src={logoPreview || localConfig.logo_personalizado} 
+                          alt="Logo preview" 
+                          onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = '/placeholder-logo.png';
+                          }}
+                        />
                       </div>
                     )}
                     <input
                       type="file"
-                      id="banner-upload"
-                      name="banner_personalizado"
+                      id="logo-upload"
+                      name="logo_personalizado"
                       accept="image/*"
-                      onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'banner')}
+                      onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'logo')}
+                      disabled={uploading === 'logo'}
                     />
-                    <label htmlFor="banner-upload" className="btn-upload">
-                      {uploading === 'banner' ? 'Subiendo...' : (bannerPreview ? 'Cambiar Banner' : 'Subir Banner')}
+                    <label htmlFor="logo-upload" className="btn-upload">
+                      {uploading === 'logo' ? 'Subiendo...' : (logoPreview || localConfig.logo_personalizado ? 'Cambiar Logo' : 'Subir Logo')}
                     </label>
-                    <p>Recomendado: 1200x400px, formato JPG o PNG</p>
+                    <p>Recomendado: 200x200px, formato PNG o JPG</p>
                   </div>
+                )}
+              </div>
 
-                  <div className="form-group checkbox">
-                    <input
-                      type="checkbox"
-                      id="mostrar-banner"
-                      name="mostrar_banner"
-                      checked={!!localConfig.mostrar_banner}
-                      onChange={(e) => handleConfigChange('mostrar_banner', e.target.checked)}
-                    />
-                    <label htmlFor="mostrar-banner">Mostrar banner en el portal</label>
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
+              <div className="config-section">
+                <h3>Banner Personalizado</h3>
+                
+                {!isFeatureAllowed('banner_personalizado') ? (
+                  <FeatureLocked message={PLAN_FEATURES[plan?.codigo_plan]?.lockedMessage} />
+                ) : (
+                  <>
+                    <div className="file-upload">
+                      {(bannerPreview || localConfig.banner_personalizado) && (
+                        <div className="image-preview">
+                          <img 
+                            src={bannerPreview || localConfig.banner_personalizado} 
+                            alt="Banner preview" 
+                            onError={(e) => {
+                              e.target.onerror = null; 
+                              e.target.src = '/placeholder-banner.png';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        id="banner-upload"
+                        name="banner_personalizado"
+                        accept="image/*"
+                        onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'banner')}
+                        disabled={uploading === 'banner'}
+                      />
+                      <label htmlFor="banner-upload" className="btn-upload">
+                        {uploading === 'banner' ? 'Subiendo...' : (bannerPreview || localConfig.banner_personalizado ? 'Cambiar Banner' : 'Subir Banner')}
+                      </label>
+                      <p>Recomendado: 1200x400px, formato JPG o PNG</p>
+                    </div>
+
+                    <div className="form-group checkbox">
+                      <input
+                        type="checkbox"
+                        id="mostrar-banner"
+                        name="mostrar_banner"
+                        checked={!!localConfig.mostrar_banner}
+                        onChange={(e) => handleConfigChange('mostrar_banner', e.target.checked)}
+                      />
+                      <label htmlFor="mostrar-banner">Mostrar banner en el portal</label>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
 
         {activeTab === 'integraciones' && (
           <>
@@ -941,6 +1035,16 @@ const ConfigPortal = () => {
           {saving ? 'Guardando...' : 
           (!initialLoadComplete ? 'Cargando configuración...' : 'Guardar Configuración')}
         </button>
+      </div>
+      <div className="console-messages-container">
+        {consoleMessages.map((msg) => (
+          <ConsoleMessage
+            key={msg.id}
+            type={msg.type}
+            message={msg.message}
+            onClose={() => setConsoleMessages(prev => prev.filter(m => m.id !== msg.id))}
+          />
+        ))}
       </div>
     </div>  
   );

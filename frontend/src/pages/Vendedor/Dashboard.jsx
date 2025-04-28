@@ -5,7 +5,7 @@ import {
   LineChart, BarChart, PieChart, 
   Line, Bar, Pie, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Cell 
+  ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis
 } from 'recharts';
 import './dashboard.css';
 
@@ -31,9 +31,9 @@ const Dashboard = () => {
         setLoading(true);
         const response = await axios.get(`${baseURL}/api/portales/${vendedorId}/dashboard`);
         setData(response.data);
-        console.log('Datos de gastos por categoría:', response.data.gastosCategoria);
       } catch (err) {
-        setError(err.message);
+        console.error('Error fetching dashboard data:', err);
+        setError(err.response?.data?.error || err.message || 'Error al cargar los datos');
       } finally {
         setLoading(false);
       }
@@ -72,6 +72,32 @@ const Dashboard = () => {
           {children}
         </div>
       </div>
+    );
+  };
+
+  const CustomizedShape = (props) => {
+    const { cx, cy, payload } = props;
+    return (
+      <g>
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={10} 
+          fill={payload.estado === 'activo' ? '#4CAF50' : '#F44336'} 
+          stroke="#fff" 
+          strokeWidth={1}
+        />
+        <text 
+          x={cx} 
+          y={cy} 
+          dy={4} 
+          textAnchor="middle" 
+          fill="#fff" 
+          fontSize={10}
+        >
+          {payload.nombre.charAt(0)}
+        </text>
+      </g>
     );
   };
 
@@ -326,6 +352,75 @@ const Dashboard = () => {
                 </ChartWithZoom>
               </div>
             </div>
+            <div className="dashboard-section">
+                <h2>Rendimiento de Portales</h2>
+                <div className="chart-container">
+                  <ChartWithZoom>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart
+                        data={data.rendimientoPortales}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="nombre" 
+                          angle={-45} 
+                          textAnchor="end"
+                          height={70}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
+                        <YAxis 
+                          yAxisId="right" 
+                          orientation="right" 
+                          stroke="#ff7300" 
+                          domain={[0, 100]}
+                          label={{ value: 'Tasa (%)', angle: -90, position: 'insideRight' }}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => {
+                            if (name === 'Tasa de conversión') return [`${value}%`, name];
+                            if (name === 'Visitas') return [value.toLocaleString(), name];
+                            return [value, name];
+                          }}
+                        />
+                        <Legend />
+                        <Bar 
+                          yAxisId="left"
+                          dataKey="visitas" 
+                          fill="#8884d8" 
+                          name="Visitas"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar 
+                          yAxisId="left"
+                          dataKey="pedidos" 
+                          fill="#82ca9d" 
+                          name="Pedidos"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Line 
+                          yAxisId="right"
+                          type="monotone" 
+                          dataKey="tasaConversion" 
+                          stroke="#ff7300" 
+                          strokeWidth={2}
+                          name="Tasa de conversión"
+                          dot={{ r: 4 }}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartWithZoom>
+                </div>
+                <div className="insights">
+                  <h3>Análisis Comparativo:</h3>
+                  <ul>
+                    <li><strong>Portales con alta tasa de conversión</strong> (línea naranja alta) son eficientes en convertir visitas a ventas</li>
+                    <li><strong>Portales con muchas visitas pero pocos pedidos</strong> (barras azules altas pero barras verdes bajas) necesitan optimización</li>
+                    <li><strong>Relación ideal</strong>: Barras azules y verdes proporcionales con línea naranja por encima del 50%</li>
+                  </ul>
+                </div>
+              </div>
           </>
         )}
 
@@ -460,6 +555,7 @@ const Dashboard = () => {
           </>
         )}
       </div>
+      
     </div>
   );
 };
