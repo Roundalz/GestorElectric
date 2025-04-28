@@ -10,4 +10,4 @@ function validateVendedorId(req, res, next) {
     next();
 }
 
-module.exports = validateVendedorId;
+export default validateVendedorId;

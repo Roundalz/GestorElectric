@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/controllers/giftCardController.js
-const giftCardService = require('../services/giftCardService');
+import giftCardService from '../services/giftCardService.js';
 
 async function crearGiftCard(req, res, next) {
     try {
@@ -46,7 +46,7 @@ async function eliminarGiftCard(req, res, next) {
     }
 }
 
-module.exports = {
+export default {
     crearGiftCard,
     listarGiftCards,
     actualizarGiftCard,

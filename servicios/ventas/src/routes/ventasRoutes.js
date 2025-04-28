@@ -1,12 +1,11 @@
 // servicios/nuevoServicio/src/routes/ventaRoutes.js
-const express = require('express');
-const router = express.Router();
-const ventaController = require('../controllers/ventaController');
-const clienteController = require('../controllers/clienteController');
-const giftCardController = require('../controllers/giftCardController');
+import express from 'express';
+import ventaController from '../controllers/ventaController.js';
+import clienteController from '../controllers/clienteController.js';
+import giftCardController from '../controllers/giftCardController.js';
+import validateVendedorId from '../middlewares/validateVendedorId.js';
 
-// Middleware validar vendedorId siempre antes
-const validateVendedorId = require('../middlewares/validateVendedorId');
+const router = express.Router();
 
 // Todas las rutas validan vendedorId
 router.use(validateVendedorId);
@@ -16,7 +15,6 @@ router.get('/ventas', ventaController.listarVentas);
 router.get('/ventas/:id', ventaController.obtenerVentaPorId);
 router.get('/ventas/export/general', ventaController.exportVentasGeneralExcel);
 router.get('/ventas/export/:id', ventaController.exportVentaDetalleExcel);
-
 
 // --- Clientes ---
 router.get('/clientes', clienteController.listarClientes);
@@ -28,4 +26,4 @@ router.get('/giftcards', giftCardController.listarGiftCards);
 router.put('/giftcards/:id', giftCardController.actualizarGiftCard);
 router.delete('/giftcards/:id', giftCardController.eliminarGiftCard);
 
-module.exports = router;
+export default router;

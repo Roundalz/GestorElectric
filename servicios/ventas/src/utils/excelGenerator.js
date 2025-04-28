@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/utils/excelGenerator.js
-const XLSX = require('xlsx');
+import XLSX from 'xlsx';
 
 function generarExcelVentas(ventas) {
     const data = ventas.map(v => ({
@@ -37,7 +37,4 @@ function generarExcelVentaDetalle(venta) {
     return buffer;
 }
 
-module.exports = {
-    generarExcelVentas,
-    generarExcelVentaDetalle,
-};
+export default{ generarExcelVentas, generarExcelVentaDetalle };    

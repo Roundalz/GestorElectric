@@ -1,6 +1,6 @@
 // servicios/nuevoServicio/src/services/giftCardService.js
-const giftCardModel = require('../models/giftCardModel');
-const logEventoModel = require('../models/logEventoModel');
+import giftCardModel from '../models/giftCardModel.js';
+import logEventoModel from '../models/logEventoModel.js';
 
 async function crearGiftCard(data, vendedorId, ipOrigen) {
     const newGiftCard = await giftCardModel.crearGiftCard({ ...data, vendedorId });
@@ -23,7 +23,7 @@ async function eliminarGiftCard(id, vendedorId, ipOrigen) {
     await logEventoModel.registrarLog(vendedorId, `Eliminó GiftCard ID ${id}`, ipOrigen);
 }
 
-module.exports = {
+export default {
     crearGiftCard,
     listarGiftCards,
     actualizarGiftCard,

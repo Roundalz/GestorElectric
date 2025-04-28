@@ -1,6 +1,6 @@
 // servicios/nuevoServicio/src/controllers/ventaController.js
-const ventaService = require('../services/ventaService');
-const excelGenerator = require('../utils/excelGenerator');
+import ventaService from '../services/ventaService.js';
+import excelGenerator from '../utils/excelGenerator.js';
 
 async function listarVentas(req, res, next) {
     try {
@@ -56,7 +56,7 @@ async function exportVentaDetalleExcel(req, res, next) {
 }
 
 
-module.exports = {
+export default {
     listarVentas,
     obtenerVentaPorId,
     exportVentasGeneralExcel,

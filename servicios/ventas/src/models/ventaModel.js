@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/models/ventaModel.js
-const db = require('../database');
+import db from '../db.js'; 
 
 async function listarVentas(vendedorId) {
   const query = `
@@ -60,7 +60,7 @@ async function obtenerVentaPorId(vendedorId, ventaId) {
   return rows[0];
 }
 
-module.exports = {
+export default {
   listarVentas,
   obtenerVentaPorId,
 };

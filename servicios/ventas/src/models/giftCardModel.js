@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/models/giftCardModel.js
-const db = require('../database');
+import db from '../db.js'; 
 
 async function crearGiftCard({ clave, fecha_expiracion, porcentaje, estado, vendedorId }) {
   const query = `
@@ -46,7 +46,7 @@ async function eliminarGiftCard(id) {
   await db.query(query, [id]);
 }
 
-module.exports = {
+export default {
   crearGiftCard,
   listarGiftCards,
   actualizarGiftCard,

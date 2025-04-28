@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/controllers/clienteController.js
-const clienteService = require('../services/clienteService');
+import clienteService from '../services/clienteService.js';
 
 async function listarClientes(req, res, next) {
     try {
@@ -22,7 +22,7 @@ async function obtenerClientePorId(req, res, next) {
     }
 }
 
-module.exports = {
+export default {
     listarClientes,
     obtenerClientePorId,
 };

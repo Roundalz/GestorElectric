@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/services/ventaService.js
-const ventaModel = require('../models/ventaModel');
+import ventaModel from '../models/ventaModel.js';
 
 async function listarVentas(vendedorId) {
     return await ventaModel.listarVentas(vendedorId);
@@ -11,7 +11,7 @@ async function obtenerVentaPorId(vendedorId, ventaId) {
 
 // Exportaciones Excel irán después (modular)
 
-module.exports = {
+export default {
     listarVentas,
     obtenerVentaPorId,
 };

@@ -1,5 +1,5 @@
 // servicios/nuevoServicio/src/models/clienteModel.js
-const db = require('../database');
+import db from '../db.js'; // Asegúrate de que la ruta sea correcta
 
 async function listarClientes(vendedorId) {
   const query = `
@@ -22,7 +22,7 @@ async function obtenerClientePorId(clienteId) {
   return rows[0];
 }
 
-module.exports = {
+export default {
   listarClientes,
   obtenerClientePorId,
 };

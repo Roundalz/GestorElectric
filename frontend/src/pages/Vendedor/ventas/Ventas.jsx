@@ -1,75 +1,87 @@
-import React, { useEffect, useState } from 'react';
+// frontend/src/pages/Vendedor/ventas/Ventas.jsx
+import React, { useState, useEffect } from 'react';
+import { useVendedor } from '@/context/VendedorContext';
 import { useNavigate } from 'react-router-dom';
-import { List, BarChart2, Users, FileSpreadsheet } from 'lucide-react';
-import styles from './Ventas.module.css';
-
-const API_BASE = 'http://localhost:5000/api/ventas';
 
 export default function Ventas() {
-  const [ventas, setVentas] = useState([]);
+  const { vendedorId } = useVendedor();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch(`${API_BASE}`)
-      .then(res => res.json())
-      .then(data => setVentas(data))
-      .catch(err => console.error('Error al obtener ventas:', err));
-  }, []);
+  const [ventas, setVentas] = useState([]);
+  const [filtro, setFiltro] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
 
-  const handleExportExcel = () => {
-    window.location.href = `${API_BASE}/export`;
+  useEffect(() => {
+    async function fetchVentas() {
+      try {
+        const res = await fetch('/api/ventas', {
+          headers: { 'X-Vendedor-Id': vendedorId }
+        });
+        const data = await res.json();
+        setVentas(data);
+      } catch (error) {
+        console.error('Error al cargar ventas:', error);
+      }
+    }
+    if (vendedorId) fetchVentas();
+  }, [vendedorId]);
+
+  const ventasFiltradas = ventas.filter(v =>
+    (v.codigo_pedido.toString().includes(filtro) || v.nombre_cliente?.toLowerCase().includes(filtro.toLowerCase())) &&
+    (filtroEstado ? v.estado_pedido === filtroEstado : true)
+  );
+
+  const handleRowClick = (id) => {
+    navigate(`/vendedor/ventas/${id}`);
   };
 
   return (
-    <div className={styles.container}>
-      <nav className={styles.navbar}>
-        <button className={`${styles.tab} ${styles.active}`}>
-          <List size={16} /> Lista de ventas
-        </button>
-        <button className={styles.tab} onClick={() => alert('Estadísticas - No implementado')}>          
-          <BarChart2 size={16} /> Estadísticas
-        </button>
-        <button className={styles.tab} onClick={() => alert('Clientes - No implementado')}>
-          <Users size={16} /> Clientes
-        </button>
-        <button className={styles.button} onClick={handleExportExcel}>
-          <FileSpreadsheet size={16} /> Exportar Excel
-        </button>
-      </nav>
+    <div className="container content">
+      <h1>Ventas</h1>
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Fecha de Venta</th>
-              <th>Cliente</th>
-              <th>Estado Venta</th>
-              <th>Monto Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ventas.length === 0 ? (
-              <tr>
-                <td colSpan="4" className={styles.empty}>
-                  No hay ventas registradas.
-                </td>
-              </tr>
-            ) : (
-              ventas.map(v => (
-                <tr
-                  key={v.codigo_pedido}
-                  className={styles.row}
-                  onClick={() => navigate(`/ventas/${v.codigo_pedido}`)}
-                >
-                  <td>{v.fecha_pedido}</td>
-                  <td>{v.nombre_cliente || 'N/A'}</td>
-                  <td>{v.estado_pedido}</td>
-                  <td>${v.total_pedido}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="flex" style={{ marginBottom: '1rem' }}>
+        <input
+          type="text"
+          placeholder="Buscar por código o cliente"
+          value={filtro}
+          onChange={e => setFiltro(e.target.value)}
+          style={{ flex: 1, padding: '0.5rem' }}
+        />
+
+        <select
+          value={filtroEstado}
+          onChange={e => setFiltroEstado(e.target.value)}
+          style={{ padding: '0.5rem' }}
+        >
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="COMPLETADO">Completado</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+      </div>
+
+      <div className="ventasTabla">
+        <div className="ventasHeader">
+          <span>Código</span>
+          <span>Cliente</span>
+          <span>Fecha</span>
+          <span>Total</span>
+          <span>Estado</span>
+        </div>
+
+        {ventasFiltradas.map(venta => (
+          <div key={venta.codigo_pedido} className="ventasRow" onClick={() => handleRowClick(venta.codigo_pedido)}>
+            <span>{venta.codigo_pedido}</span>
+            <span>{venta.nombre_cliente}</span>
+            <span>{new Date(venta.fecha_pedido).toLocaleDateString()}</span>
+            <span>${venta.total_pedido}</span>
+            <span>{venta.estado_pedido}</span>
+          </div>
+        ))}
+
+        {ventasFiltradas.length === 0 && (
+          <p style={{ marginTop: '1rem' }}>No se encontraron ventas.</p>
+        )}
       </div>
     </div>
   );
