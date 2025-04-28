@@ -123,6 +123,7 @@ export default function NavBar() {
                 <li><Link to="/vendedor/perfil" onClick={toggleMenu}>Perfil</Link></li>
                 <li><Link to="/vendedor/portal/view" onClick={toggleMenu}>Vista</Link></li>
                 <li><Link to="/vendedor/portal/config" onClick={toggleMenu}>Config</Link></li>
+                <li><Link to="/vendedor/giftcard">Gift Cards</Link></li>
                 <li><Link to="/vendedor/portal/productos" onClick={toggleMenu}>Productos</Link></li>
                 <li><Link to="/vendedor/ventas" onClick={toggleMenu}>Ventas</Link></li>
               </>

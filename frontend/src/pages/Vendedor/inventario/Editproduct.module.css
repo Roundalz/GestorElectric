@@ -1,0 +1,123 @@
+/* src/pages/Vendedor/inventario/EditProduct.module.css */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 1.5rem;
+  }
+  .back {
+    background: none;
+    border: none;
+    color: var(--clr-primary);
+    font-size: var(--fs-400);
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  .loading { text-align:center; color:var(--clr-neutral-700); }
+  
+  .section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .section h3 {
+    grid-column: 1/-1;
+    color: var(--clr-primary-dark);
+    font-size: var(--fs-500);
+  }
+  
+  .section label {
+    font-weight: 600;
+    color: var(--clr-neutral-700);
+  }
+  .section input {
+    padding: 0.5rem;
+    border: 1px solid var(--clr-neutral-200);
+    border-radius: 0.375rem;
+    font-size: var(--fs-400);
+    width: 100%;
+  }
+  
+  .charRow {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    grid-column: 1/-1;
+  }
+  .charInput {
+    flex: 1;
+  }
+  .delChar {
+    background: var(--clr-error);
+    border: none;
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+  }
+  
+  .addChar {
+    grid-column: 1/-1;
+    background: var(--clr-secondary);
+    border: none;
+    color: #fff;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .imgRow {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 0.5rem;
+    grid-column: 1/-1;
+  }
+  .imgInput {
+    padding: 0.5rem;
+    border: 1px solid var(--clr-neutral-200);
+    border-radius: 0.375rem;
+    font-size: var(--fs-300);
+  }
+  
+  .saveBtn {
+    background: var(--clr-primary);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    font-size: var(--fs-400);
+    cursor: pointer;
+    display: block;
+    margin: auto;
+  }
+  
+  .saveBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .toast {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-300);
+    z-index: 1000;
+  }
+  .success { background: var(--clr-success); color: #fff; }
+  .error { background: var(--clr-error); color: #fff; }
+  
+  @media (max-width: 600px) {
+    .charRow { flex-direction: column; }
+    .imgRow { grid-template-columns: 1fr; }
+    .section { grid-template-columns: 1fr; }
+  }
+  

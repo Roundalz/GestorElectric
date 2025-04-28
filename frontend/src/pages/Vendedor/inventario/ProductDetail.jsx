@@ -1,211 +1,190 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import Barcode from "react-barcode";
-import { QRCodeCanvas } from "qrcode.react";
-import styles from "./ProductDetail.module.css";
+// src/pages/Vendedor/inventario/ProductDetails.jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useVendedor } from '@context/VendedorContext';
+import Barcode from 'react-barcode';
+import { QRCodeCanvas } from 'qrcode.react';
+//import { motion, AnimatePresence } from 'framer-motion';
+import { Trash2, Edit2, Plus, CheckCircle } from 'lucide-react';
+import EditQuantityPopup from './EditQuantityPopup';
+import styles from './ProductDetails.module.css';
 
-function ProductDetail() {
+const API_BASE = 'http://localhost:5000/api/inventario';
+
+export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [producto, setProducto] = useState(null);
-  // Estados para el formulario de ajuste
-  const [showAdjustForm, setShowAdjustForm] = useState(false);
-  const [adjustOperation, setAdjustOperation] = useState("Agregar");
-  const [adjustValue, setAdjustValue] = useState(0);
+  const { vendedorId } = useVendedor();
+
+  const [product, setProduct] = useState(null);
+  const [mainImage, setMainImage] = useState('');
+  const [thumbnails, setThumbnails] = useState([]);
+  const [showQtyPopup, setShowQtyPopup] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    // Se asume que la API del inventario (vía orquestador) devuelve el detalle completo
-    fetch(`http://localhost:5000/api/inventario/${id}`)
-      .then((res) => res.json())
-      .then((data) => setProducto(data))
-      .catch((err) => console.error("Error al obtener el detalle:", err));
-  }, [id]);
-
-  if (!producto) {
-    return <div className={styles.loading}>Cargando detalle...</div>;
-  }
-  // Manejador del ajuste de cantidad
-  const handleAdjustQuantity = async () => {
-    const currentQty = Number(producto.cantidad_disponible_producto);
-    const value = Number(adjustValue);
-    let newQty;
-    if (adjustOperation === "Agregar") {
-      newQty = currentQty + value;
-    } else if (adjustOperation === "Restar") {
-      newQty = currentQty - value;
-      if (newQty < 0) newQty = 0;
-    }
-
-    // Crear el objeto actualizado. Se asume que debemos enviar todo el objeto o al menos el campo actualizado junto con los demás que ya tenga.
-    const updatedProduct = { ...producto, cantidad_disponible_producto: newQty };
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/inventario/${producto.codigo_producto}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedProduct)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProducto(data);
-        setShowAdjustForm(false);
-        setAdjustValue(0);
-        alert("Cantidad actualizada exitosamente");
-      } else {
-        const errorData = await response.json();
-        alert("Error al actualizar cantidad: " + errorData.error);
+    if (!vendedorId) return;
+    fetch(`${API_BASE}/productos/${id}`, {
+      headers: {
+        'X-Vendedor-Id': vendedorId, // ✅ Header correcto
       }
-    } catch (error) {
-      console.error("Error en ajuste de cantidad:", error);
-      alert("Error al actualizar cantidad");
+    })
+      .then(res => res.ok ? res.json() : Promise.reject('Error al cargar producto'))
+      .then(data => {
+        setProduct(data);
+        const angles = [];
+        data.imagenes?.forEach(img => {
+          ['primer_angulo', 'segundo_angulo', 'tercer_angulo', 'cuarto_angulo']
+            .forEach(key => img[key] && angles.push(img[key]));
+        });
+        const all = [data.imagen_referencia_producto, ...angles].filter(Boolean);
+        const unique = Array.from(new Set(all));
+        setThumbnails(unique);
+        setMainImage(data.imagen_referencia_producto || unique[0] || '');
+      })
+      .catch(console.error);
+  }, [id, vendedorId]);
+
+  const handleDelete = () => setShowConfirm(true);
+
+  const confirmDelete = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/productos/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Vendedor-Id': vendedorId // ✅ Header correcto
+        }
+      });
+      if (!res.ok) throw new Error('Error al eliminar producto');
+      setShowConfirm(false);
+      setShowToast(true);
+      setTimeout(() => navigate('/vendedor/inventario'), 1500);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
+  if (!product) return <p className={styles.loading}>Cargando producto…</p>;
+
   return (
-    <div className={styles.container}>
-      <button onClick={() => navigate(-1)} className={styles.backButton}>
-        ← Volver
-      </button>
-      <div className={styles.detailContainer}>
-        {/* Columna Izquierda (30%): Imágenes */}
-        <div className={styles.leftColumn}>
-          {producto.imagenes && producto.imagenes.length > 0 ? (
-            <div className={styles.mainImageContainer}>
-              <img
-                src={
-                  producto.imagenes[0].primer_angulo ||
-                  producto.imagen_referencia_producto
-                }
-                alt="Producto Principal"
-                className={styles.mainImage}
-              />
-            </div>
-          ) : (
-            <div className={styles.noImage}>Sin imagen</div>
-          )}
-          {producto.imagenes && producto.imagenes.length > 1 && (
-            <div className={styles.thumbnailContainer}>
-              {producto.imagenes.slice(1).map((img, index) => (
-                <img
-                  key={index}
-                  src={img.primer_angulo}
-                  alt={`Miniatura ${index + 1}`}
-                  className={styles.thumbnail}
+    <>
+      <motion.div
+        className={styles.container}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <button className={styles.backButton} onClick={() => navigate('/vendedor/inventario')}>
+          ← Volver
+        </button>
+
+        <div className={styles.main}>
+          <div className={styles.left}>
+            <motion.img
+              key={mainImage}
+              src={mainImage}
+              alt={product.nombre_producto}
+              className={styles.mainImage}
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            <div className={styles.thumbs}>
+              {thumbnails.map((src, idx) => (
+                <motion.img
+                  key={idx}
+                  src={src}
+                  alt={`Ángulo ${idx + 1}`}
+                  className={`${styles.thumb} ${src === mainImage ? styles.activeThumb : ''}`}
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => setMainImage(src)}
                 />
               ))}
             </div>
-          )}
-        </div>
 
-        {/* Columna Derecha (70%): Datos, Características, Códigos y Botones */}
-        <div className={styles.rightColumn}>
-          <h1 className={styles.productName}>{producto.nombre_producto}</h1>
-          <p>
-            <strong>Tipo:</strong> {producto.tipo_producto}
-          </p>
-          <p>
-            <strong>Precio:</strong> ${producto.precio_unidad_producto}
-          </p>
-          <p>
-            <strong>Cantidad Disponible:</strong> {producto.cantidad_disponible_producto}
-          </p>
-          <p>
-            <strong>Estado:</strong> {producto.estado_producto}
-          </p>
-          <p>
-            <strong>Calificación:</strong> {producto.calificacion_producto}
-          </p>
-          <p>
-            <strong>Costo:</strong> ${producto.costo_producto}
-          </p>
-          <p>
-            <strong>Descuento:</strong> {producto.descuento_producto}%
-          </p>
-
-          <h2>Características</h2>
-          {producto.caracteristicas && producto.caracteristicas.length > 0 ? (
-            <ul className={styles.caracteristicasList}>
-              {producto.caracteristicas.map((caract) => (
-                <li key={caract.codigo_caracteristica}>
-                  <strong>{caract.nombre_caracteristica}:</strong> {caract.descripcion_caracteristica}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No tiene características</p>
-          )}
-
-          <div className={styles.codes}>
-            <div className={styles.barcode}>
-              <Barcode
-                value={`P-${producto.codigo_producto}`}
-                format="CODE128"
-                displayValue={true}
-              />
-            </div>
-            <div className={styles.qrcode}>
-              <QRCodeCanvas
-                value={`https://miapp.com/productos/${producto.codigo_producto}`}
-                size={100}
-                level="M"
-                includeMargin
-              />
+            <div className={styles.codes}>
+              <div className={styles.barcode}>
+                <Barcode value={String(product.codigo_producto)} />
+              </div>
+              <div className={styles.qrcode}>
+                <QRCodeCanvas value={String(product.codigo_producto)} size={96} />
+              </div>
             </div>
           </div>
 
-          <div className={styles.buttonGroup}>
-            {/* Botón para mostrar formulario de ajuste de cantidad */}
-            <button
-                className={styles.adjustButton}
-                onClick={() => setShowAdjustForm(!showAdjustForm)}
-            >
-                Ajustar Cantidad
-            </button>
-             {/* Formulario de Ajuste de Cantidad */}
-            {showAdjustForm && (
-                <div className={styles.adjustForm}>
-                <label>Ajustar:</label>
-                <select
-                    value={adjustOperation}
-                    onChange={(e) => setAdjustOperation(e.target.value)}
-                >
-                    <option value="Agregar">Agregar</option>
-                    <option value="Restar">Restar</option>
-                </select>
-                <input
-                    type="number"
-                    min="1"
-                    value={adjustValue}
-                    onChange={(e) => setAdjustValue(e.target.value)}
-                    placeholder="Cantidad"
-                />
-                <div className={styles.adjustFormButtons}>
-                    <button onClick={handleAdjustQuantity} className={styles.applyButton}>
-                    Aplicar
-                    </button>
-                    <button onClick={() => setShowAdjustForm(false)} className={styles.cancelButton}>
-                    Cancelar
-                    </button>
-                </div>
-                </div>
-            )}
-            <button
-              className={styles.editButton}
-              onClick={() => alert("Editar Producto - (No implementado)")}
-            >
-              Editar Producto
-            </button>
-            <button
-              className={styles.deleteButton}
-              onClick={() => alert("Eliminar Producto - (No implementado)")}
-            >
-              Eliminar Producto
-            </button>
+          <div className={styles.right}>
+            <h2 className={styles.title}>{product.nombre_producto}</h2>
+            {[
+              'tipo_producto', 'precio_unidad_producto', 'cantidad_disponible_producto',
+              'estado_producto', 'costo_producto', 'descuento_producto', 'calificacion_producto'
+            ].map((field, i) => (
+              <p key={i}>
+                <strong>{field.replace(/_/g, ' ')}:</strong> {product[field]}
+                {(field.includes('precio') || field === 'costo_producto') ? ' $' : ''}
+              </p>
+            ))}
+
+            <div className={styles.characteristics}>
+              <h3>Características</h3>
+              <ul>
+                {product.caracteristicas.map(c => (
+                  <li key={c.codigo_caracteristica}>
+                    <strong>{c.nombre_caracteristica}:</strong> {c.descripcion_caracteristica}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.actions}>
+              <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => setShowQtyPopup(true)}>
+                <Plus size={16} /> Ajustar Cantidad
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => navigate(`/inventario/editar/${id}`)}>
+                <Edit2 size={16} /> Editar
+              </button>
+              <button className={`${styles.btn} ${styles.btnDanger}`} onClick={handleDelete}>
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+
+        {showQtyPopup && (
+          <EditQuantityPopup
+            productId={id}
+            currentQuantity={product.cantidad_disponible_producto}
+            onUpdate={qty => setProduct(prev => ({ ...prev, cantidad_disponible_producto: qty }))}
+            onClose={() => setShowQtyPopup(false)}
+          />
+        )}
+      </motion.div>
+
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div className={styles.confirmOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className={styles.confirmModal} initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}>
+              <p>¿Eliminar este producto?</p>
+              <div className={styles.confirmButtons}>
+                <button className={styles.btn} onClick={() => setShowConfirm(false)}>Cancelar</button>
+                <button className={`${styles.btn} ${styles.btnDanger}`} onClick={confirmDelete}>
+                  Sí, eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showToast && (
+          <motion.div className={styles.toast} initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }}>
+            <CheckCircle size={20} /> Producto eliminado
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
-
-export default ProductDetail;

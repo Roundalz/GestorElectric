@@ -1,125 +1,132 @@
-import React, { useEffect, useState } from "react";
-import styles from "./Inventario.module.css";
-import { useNavigate } from "react-router-dom";
+// src/pages/Vendedor/inventario/Inventario.jsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useVendedor } from '@context/VendedorContext';
+import AddProduct from './AddProduct';
+import BarcodePrint from './BarcodePrint';
+import ListAll from './ListAll';
+import styles from './Inventario.module.css';
 
-function Inventario() {
-  const [productos, setProductos] = useState([]);
-  const [grouped, setGrouped] = useState({});
-  const [expandedGroups, setExpandedGroups] = useState({});
+const DEFAULT_IMAGE = 'https://img3.wallspic.com/crops/5/8/0/1/5/151085/151085-marco_de_plastico_verde_y_negro-3840x2160.jpg';
+
+export default function Inventario() {
+  const [activeTab, setActiveTab] = useState('list');
+  const [products, setProducts] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [selectedType, setSelectedType] = useState(null);
   const navigate = useNavigate();
+  
+  const { vendedorId } = useVendedor();
 
   useEffect(() => {
-    // Se asume que la API devuelve los productos filtrados por vendedor (vendedor 1)
-    fetch("http://localhost:5000/api/inventario")
-      .then((response) => response.json())
-      .then((data) => {
-        setProductos(data);
-        // Agrupar productos por tipo_producto:
-        const groups = data.reduce((acc, producto) => {
-          const tipo = producto.tipo_producto;
-          if (!acc[tipo]) acc[tipo] = [];
-          acc[tipo].push(producto);
-          return acc;
-        }, {});
-        setGrouped(groups);
+    if (activeTab === 'list' && vendedorId) {
+      fetch(`http://localhost:5000/api/inventario/productos`, {
+        headers: {
+          'X-Vendedor-Id': vendedorId, // ✅ HEADER correcto
+        },
       })
-      .catch((error) => console.error("Error al obtener productos:", error));
-  }, []);
+        .then(res => res.json())
+        .then(data => {
+          setProducts(data);
+          const uniqueTypes = Array.from(new Set(data.map(p => p.tipo_producto)));
+          setTypes(uniqueTypes);
+        })
+        .catch(console.error);
+    }
+  }, [activeTab, vendedorId]);// también depende de vendedorId
 
-  // Función para expandir/contraer cada grupo
-  const toggleGroup = (tipo) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [tipo]: !prev[tipo]
-    }));
-  };
-
-  // Handlers para los botones
-  const handleAddProduct = () => {
-    navigate("/agregar-producto");
-  };
-
-  const handleExportExcel = () => {
-    // Se supone que el backend exporta a Excel desde este endpoint
-    window.location.href = "http://localhost:5000/api/inventario/export";
-  };
-
-  const handlePrintBarCodes = () => {
-    alert("Imprimir Códigos de Barra - (No implementado)");
-  };
-
-  const handleListAll = () => {
-    alert("Listar Todos - (No implementado)");
-  };
+  const filteredProducts = selectedType
+    ? products.filter(p => p.tipo_producto === selectedType)
+    : [];
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.header}>Inventario</h1>
-
-      <div className={styles.buttonContainer}>
-        <button className={styles.button} onClick={handleAddProduct}>
+      <nav className={styles.navbar}>
+        <button
+          className={`${styles.navItem} ${activeTab === 'list' ? styles.active : ''}`}
+          onClick={() => { setActiveTab('list'); setSelectedType(null); }}
+        >
+          Listar Inventario
+        </button>
+        <button
+          className={`${styles.navItem} ${activeTab === 'add' ? styles.active : ''}`}
+          onClick={() => setActiveTab('add')}
+        >
           Agregar Producto
         </button>
-        <button className={styles.button} onClick={handleExportExcel}>
-          Exportar a Excel
+        <button
+          className={`${styles.navItem} ${activeTab === 'print' ? styles.active : ''}`}
+          onClick={() => setActiveTab('print')}
+        >
+          Imprimir Códigos
         </button>
-        <button className={styles.button} onClick={handlePrintBarCodes}>
-          Imprimir Códigos de Barra
+        <button
+          className={`${styles.navItem} ${activeTab === 'products' ? styles.active : ''}`}
+          onClick={() => setActiveTab('products')}
+        >
+          Listar Productos
         </button>
-        <button className={styles.button} onClick={handleListAll}>
-          Listar Todos
-        </button>
-      </div>
+      </nav>
 
-      <div className={styles.groupContainer}>
-        {Object.keys(grouped).length === 0 ? (
-          <p>No hay productos registrados.</p>
-        ) : (
-          Object.keys(grouped).map((tipo) => (
-            <div key={tipo} className={styles.groupCard}>
-              <div
-                className={styles.groupHeader}
-                onClick={() => toggleGroup(tipo)}
-              >
-                <h2 className={styles.groupTitle}>{tipo}</h2>
-                <span className={styles.toggleIcon}>
-                  {expandedGroups[tipo] ? "−" : "+"}
-                </span>
+      <div className={styles.content}>
+        {activeTab === 'list' && (
+          !selectedType
+            ? (
+              <div className={styles.grid}>
+                {types.map(type => (
+                  <div
+                    key={type}
+                    className={styles.typeCard}
+                    onClick={() => setSelectedType(type)}
+                  >
+                    <img
+                      src={DEFAULT_IMAGE}
+                      alt={type}
+                      className={styles.typeImage}
+                    />
+                    <h3 className={styles.typeName}>{type}</h3>
+                  </div>
+                ))}
               </div>
-              {expandedGroups[tipo] && (
-                <div className={styles.groupProducts}>
-                  {grouped[tipo].map((producto) => (
+            )
+            : (
+              <>
+                <button
+                  className={styles.backButton}
+                  onClick={() => setSelectedType(null)}
+                >
+                  ← Volver a tipos
+                </button>
+                <div className={styles.grid}>
+                  {filteredProducts.map(prod => (
                     <div
-                      key={producto.codigo_producto}
+                      key={prod.codigo_producto}
                       className={styles.productCard}
-                      onClick={() =>
-                        navigate(`/inventario/${producto.codigo_producto}`)
-                      }
+                      onClick={() => navigate(`/inventario/${prod.codigo_producto}`)}
                     >
-                      <h3>{producto.nombre_producto}</h3>
-                      <p>
-                        <strong>Código:</strong> {producto.codigo_producto}
-                      </p>
-                      <p>
-                        <strong>Precio:</strong> ${producto.precio_unidad_producto}
-                      </p>
-                      <p>
-                        <strong>Cant.:</strong>{" "}
-                        {producto.cantidad_disponible_producto}
-                      </p>
-                      <p>
-                        <strong>Estado:</strong> {producto.estado_producto}
-                      </p>
+                      <img
+                        src={prod.imagen_referencia_producto || DEFAULT_IMAGE}
+                        alt={prod.nombre_producto}
+                        className={styles.productImage}
+                      />
+                      <div className={styles.productInfo}>
+                        <h4 className={styles.productName}>{prod.nombre_producto}</h4>
+                        <p className={styles.price}>${prod.precio_unidad_producto}</p>
+                        <p className={styles.quantity}>
+                          Disponibles: {prod.cantidad_disponible_producto}
+                        </p>
+                        <p className={styles.status}>{prod.estado_producto}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          ))
+              </>
+            )
         )}
+        {activeTab === 'add' && <AddProduct />}
+        {activeTab === 'print' && <BarcodePrint />}
+        {activeTab === 'products' && <ListAll />}
       </div>
     </div>
   );
 }
-
-export default Inventario;

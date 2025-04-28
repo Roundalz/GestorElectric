@@ -81,3 +81,22 @@ export const crearPedido = async (req, res) => {
     client.release();
   }
 };
+
+// Detalle pedido
+
+export const getDetallePedido = async (req, res) => {
+  const { codigo_pedido } = req.params;
+  try {
+    const [rows] = await pool.query(
+      `SELECT dp.codigo_detalle, p.nombre_producto, dp.cantidad, dp.precio_unitario
+       FROM detalle_pedido dp
+       INNER JOIN productos p ON dp.codigo_producto = p.codigo_producto
+       WHERE dp.codigo_pedido = ?`,
+      [codigo_pedido]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al obtener detalles del pedido');
+  }
+};

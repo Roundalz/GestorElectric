@@ -3,7 +3,7 @@ import pool   from '../database.js';
 import crypto from 'crypto';
 /* ─────────── BLOQUEO POR INTENTOS FALLIDOS (solo BD) ──────────── */
 const MAX_FALLOS   = 3;          // 3 intentos
-const BLOQUEO_MIN  = 30;         // 30 min
+const BLOQUEO_MIN  = 15;         // 30 min
 
 // ① inserta (o actualiza) la tabla LOGIN_ATTEMPT
 const insertLoginAttempt = (email, role, ok, ip) =>

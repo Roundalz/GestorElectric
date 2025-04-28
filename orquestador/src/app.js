@@ -8,6 +8,7 @@ import clientes from "./routes/clientesRoutes.js";
 import inventarioRouter from './routes/inventario.js';
 import logsRoutes from "./routes/LogsRoutes.js"; // <-- Asegúrate de importar las rutas de logs
 import servicioRoutes from './routes/servicioRoutes.js'; // Importa las rutas de servicios
+import giftCardRoutes from './routes/giftCardRoutes.js';
 import pagoRoutes from "./routes/pagoRoutes.js";
 import planPagosRoutes from "./routes/planPagosRoutes.js";
 import planesRoutes   from './routes/planesRoutes.js';
@@ -126,6 +127,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/pagos", pagoRoutes);
+app.use("/api/gift-cards", giftCardRoutes);
 
 // Puerto del servidor
 const PORT = process.env.PORT || 5000;

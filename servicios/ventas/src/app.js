@@ -1,28 +1,21 @@
-// app.js en la carpeta ventas/
-import express from "express";
-import dotenv from "dotenv";
-import ventaRoutes from "./routes/ventaRoutes.js";
-import clienteRoutes from "./routes/clienteRoutes.js";
-import cors from "cors";
-
-
-
-dotenv.config();
-
+// servicios/ventas/src/app.js
+import express from 'express';
+import ventaRoutes from './routes/ventaRoutes.js';
+import errorHandler from './middlewares/errorHandler.js'; // Opcional si quieres capturar errores globales
 
 const app = express();
-app.use(cors());
+
+// Middleware para parsear JSON
 app.use(express.json());
 
-// Monta las rutas
-app.use("/ventas", ventaRoutes);
-app.use("/clientes", clienteRoutes);
+// Rutas principales
+app.use('/api/ventas', ventaRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Servidor de Ventas funcionando 🚀");
-});
+// Manejo de errores (opcional)
+app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Servidor de Ventas corriendo en http://localhost:${PORT}`);
+// Levantar servidor directamente
+const port = process.env.PORT || 4000;
+app.listen(port, () => {
+    console.log(`Microservicio ventas corriendo en puerto ${port}`);
 });

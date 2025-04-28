@@ -16,6 +16,7 @@ import Inicio from "./pages/Cliente/Inicio";
 import PerfilCliente from "./pages/Cliente/Perfil";
 import TiendaDetallePage from './pages/Cliente/TiendaDetallePage';
 
+import GiftCards from "./pages/Vendedor/GiftCards"
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/inventario/Inventario";
 import ProductDetail from "./pages/Vendedor/inventario/ProductDetail"; 
@@ -69,6 +70,7 @@ function App() {
           <Route path="/vendedor/portal/config" element={<ConfigPortal />} />
           <Route path="/vendedor/portal/view" element={<PortalView />} />
           <Route path="/vendedor/portal/historico" element={<HistoricoConfiguracion />} />
+          <Route path= "/vendedor/giftcard" element={<GiftCards/>}/>
           <Route path="/vendedor/ventas" element={<Ventas />} />
           <Route path="/inventario/:id" element={<ProductDetail />} />
           <Route path="/ventas/:id" element={<SalesDetail />} />

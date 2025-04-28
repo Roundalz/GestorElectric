@@ -34,9 +34,17 @@ const Historial = () => {
 
   
   // Abrir el modal y asignar el pedido seleccionado
-  const openModal = (pedido) => {
+  const openModal = async (pedido) => {
     setSelectedPedido(pedido); // Guardar el pedido seleccionado
-    setModalVisible(true); // Hacer visible el modal
+    setModalVisible(true);     // Abrir el modal
+  
+    try {
+      const response = await fetch(`http://localhost:5000/api/pedido/detalle_pedido/${pedido.codigo_pedido}`);
+      const data = await response.json();
+      setDetalleProductos(data); // Guardar los productos en el estado
+    } catch (error) {
+      console.error('Error al obtener detalles del pedido:', error);
+    }
   };
 
   // Cerrar el modal
@@ -68,11 +76,23 @@ const Historial = () => {
             <h2>Detalles del Pedido</h2>
             {selectedPedido && (
               <div>
-                <p><strong>Código del pedido:</strong> {selectedPedido.codigo_pedido}</p>
-                <p><strong>Fecha:</strong> {formatDate(selectedPedido.fecha_pedido)}</p>
-                <p><strong>Total:</strong> ${selectedPedido.total_pedido}</p>
-                <p><strong>Cliente:</strong> {selectedPedido.nombre_cliente}</p>
-                {/* Agrega más campos según sea necesario */}
+                <p><strong>Fecha de compra:</strong> {formatDate(selectedPedido.fecha_pedido)}</p>
+
+                <div style={{ marginTop: '1rem' }}>
+                  <h3>Productos:</h3>
+                  <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                    {detalleProductos.map((producto) => (
+                      <li key={producto.codigo_detalle} style={{ marginBottom: '0.5rem' }}>
+                        <div><strong>Producto:</strong> {producto.nombre_producto}</div>
+                        <div><strong>Cantidad:</strong> {producto.cantidad}</div>
+                        <div><strong>Precio unitario:</strong> ${producto.precio_unitario}</div>
+                        <hr style={{ margin: '0.5rem 0' }} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <p style={{ marginTop: '1rem' }}><strong>Total del pedido:</strong> ${selectedPedido.total_pedido}</p>
               </div>
             )}
             <button className="close-button" onClick={closeModal}>Cerrar</button>
