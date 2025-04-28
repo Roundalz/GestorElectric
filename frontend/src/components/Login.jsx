@@ -152,6 +152,8 @@ const handleLogin = async (e) => {
   /* --------------------------- UI --------------------------------------- */
   return (
     <div className="auth-container">
+      <div className="auth-body">
+
       <div className="auth-left">
         <div className="company-logo">
           <img src={logo} alt="Company Logo" />
@@ -159,9 +161,9 @@ const handleLogin = async (e) => {
       </div>
 
       <div className="auth-right">
-        <h2 className="auth-title">INICIO DE SESIÓN</h2>
+      <h2 className="auth-title fade-up">INICIO DE SESIÓN</h2>
+        <form onSubmit={handleLogin} className="auth-form fade-up delay-1">
 
-        <form onSubmit={handleLogin} className="auth-form">
           {/* Selector de rol */}
           <div className="role-options">
             {["cliente", "vendedor", "admin"].map((r) => (
@@ -230,6 +232,8 @@ const handleLogin = async (e) => {
           </p>
         </div>
       </div>
+    </div>
+
     </div>
   );
 }

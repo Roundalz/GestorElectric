@@ -181,13 +181,14 @@ export const registerVendedor = async (req, res) => {
       return res.status(400).json({ error: 'El correo ya está registrado como vendedor' });
     }
 
+    // Insertar VENDEDOR
     const { rows } = await pool.query(
       `INSERT INTO VENDEDOR
        (nombre_vendedor, correo_vendedor, telefono_vendedor, clave_vendedor, estado_vendedor,
         nombre_empresa, tipo_empresa, logo_empresa, correo_empresa, telefono_empresa,
         pais_empresa, ciudad_empresa, direccion_empresa, banner_empresa, PLANES_PAGO_codigo_plan)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING codigo_vendedore, clave_vendedor`,
+       RETURNING codigo_vendedore, nombre_empresa`,
       [
         nombre_vendedor, email, telefono_vendedor, claveFinal, estado_vendedor,
         nombre_empresa, tipo_empresa, logo_empresa, correo_empresa, telefono_empresa,
@@ -196,8 +197,42 @@ export const registerVendedor = async (req, res) => {
       ]
     );
 
+    const nuevoVendedorId = rows[0].codigo_vendedore;
+    const codigoPortal = nombre_empresa.toLowerCase().replace(/\s+/g, '-'); // nombre_empresa → formato código_portal
+
+    // Insertar PORTAL
+    await pool.query(
+      `INSERT INTO PORTAL (codigo_portal, publicidad_portal, VENDEDOR_codigo_vendedore, estado_portal)
+       VALUES ($1, false, $2, 'Activo')`,
+      [codigoPortal, nuevoVendedorId]
+    );
+
+    // Insertar PORTAL_CONFIGURACION
+    await pool.query(
+      `INSERT INTO PORTAL_CONFIGURACION (
+        PORTAL_codigo_portal, estilo_titulo, color_principal, color_secundario,
+        color_fondo, fuente_principal, disposicion_productos, productos_por_fila,
+        mostrar_precios, mostrar_valoraciones, estilo_header, mostrar_busqueda,
+        mostrar_categorias, estilos_productos, mostrar_banner, logo_personalizado,
+        banner_personalizado, fecha_actualizacion, opciones_avanzadas, scripts_personalizados,
+        estilos_botones, efecto_hover_productos, opciones_filtrados, mostrar_ofertas,
+        mostrar_boton_whatsapp, whatsapp_numero, mostrar_instragram_feed, instagram_link
+      )
+      VALUES (
+        $1, 'bold 24px Arial', '#e74c3c', '#f39c12',
+        '#ffffff', 'Arial', 'grid', 4,
+        true, true, 'fixed', true,
+        true, 'card', true, 'logos/default_logo.jpg',
+        'banners/default_banner.jpg', (NOW() AT TIME ZONE 'America/La_Paz'),
+        '{"seo": {"meta_title": "Portal Nuevo", "meta_description": "Tienda online personalizada"}}', '',
+        'redondeado', 'sombra', '{"precio": true, "categorias": true}', 
+        false, false, 0, false, ''
+      )`,
+      [codigoPortal]
+    );
+
     /* LOG_EVENTO → registro_vendedor */
-    await addLogEvento(rows[0].codigo_vendedore, 'registro_vendedor', remoteIp(req));
+    await addLogEvento(nuevoVendedorId, 'registro_vendedor', remoteIp(req));
 
     res.status(201).json(rows[0]);   // { codigo_vendedore, clave_vendedor }
   } catch (e) {
@@ -205,6 +240,7 @@ export const registerVendedor = async (req, res) => {
     res.status(500).json({ error: 'Error en registro de vendedor' });
   }
 };
+
 
 /* ───────────────────────────  LOGIN CLIENTE  ─────────────────────── */
 export const loginCliente = async (req, res) => {
