@@ -412,9 +412,17 @@ const PortalView = () => {
               </div>
               
               <div className="product-actions">
-                <button className={`btn-add-to-cart ${config.estilos_botones}`} onClick={() => addToCart(selectedProduct)}>
-                  Añadir al carrito
-                </button>
+              <button 
+                className={`btn-add-to-cart ${config.estilos_botones}`} 
+                onClick={() => {
+                  addToCart({
+                    ...selectedProduct,
+                    vendedor_codigo_vendedore: vendedor.codigo_vendedore, // <- añadimos el código del vendedor
+                  });
+                }}
+              >
+                Añadir al carrito
+              </button>
                 <button className={`btn-favorite ${config.estilos_botones}`}>
                   ❤️ Favorito
                 </button>

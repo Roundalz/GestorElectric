@@ -129,32 +129,34 @@ const handleLogout = async () => {
                 <>
                   <li><Link to="/">Home</Link></li>
                   <li><Link to="/about">About</Link></li>
-                  <div
-                    className="carrito-container"
+                  <div className="carrito-container"
                     onMouseEnter={() => document.querySelector('.carrito-menu').style.display = 'block'}
                     onMouseLeave={() => document.querySelector('.carrito-menu').style.display = 'none'}
                   >
                     <button className="carrito-btn" onClick={irAlCarrito}>
-                      Carrito ({cart.length})
+                      Carrito ({cart.reduce((acc, item) => acc + item.cantidad, 0)})
                     </button>
                       <div className="carrito-menu">
                         {cart.length === 0 ? (
-                          <p>El carrito está vacío</p>
-                        ) : (
-                          cart.map((item, index) => (
-                            <div key={index} className="item-carrito">
-                              <div className="texto-item">
-                                <p>{item.nombre_producto}</p>
-                                <p>${item.precio_unidad_producto}</p>
-                              </div>
-                              <button className="eliminar-btn" onClick={() => removeFromCart(item.id)}>
-                                ❌
-                              </button>
+                        <p>El carrito está vacío</p>
+                      ) : (
+                        cart.map((item) => (
+                          <div key={item.codigo_producto} className="item-carrito">
+                            <div className="texto-item">
+                              <p>{item.nombre_producto} (x{item.cantidad})</p>
+                              <p>${item.precio_unidad_producto * item.cantidad}</p>
                             </div>
-                          ))
-                        )}
-                      </div>
+                            <button
+                              className="eliminar-btn"
+                              onClick={() => removeFromCart(item.codigo_producto)}
+                            >
+                              ❌
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
+                  </div>
                   <li><Link to="/cliente/historial">Historial</Link></li>
                   <li><Link to="/cliente/inicio">Inicio</Link></li>
                   <li><Link to="/cliente/perfil">Perfil</Link></li>

@@ -11,20 +11,7 @@ export const getPedido = async (req, res) => {
   }
 };
 
-// Obtener pedido por ID (codigo_pedido)
-/*export const getPedidoById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('SELECT * FROM PEDIDO WHERE codigo_pedido = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error al obtener pedido:", err);
-    res.status(500).json({ error: 'Error al obtener pedido' });
-  }
-};*/
+
 
 // Obtener pedidos por ID de cliente (CLIENTE_codigo_cliente)
 export const getPedidoByClienteId = async (req, res) => {
@@ -41,52 +28,56 @@ export const getPedidoByClienteId = async (req, res) => {
     }
   };
 
-// Crear un nuevo servicio
-/*export const createServicio = async (req, res) => {
-  // Ahora se espera que codigo_servicio se envíe en el cuerpo de la solicitud
-  const { codigo_servicio, nombre_servicio, costo_servicio, descripcion_servicio } = req.body;
+export const crearPedido = async (req, res) => {
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
-      'INSERT INTO SERVICIO (codigo_servicio, nombre_servicio, costo_servicio, descripcion_servicio) VALUES ($1, $2, $3, $4) RETURNING *',
-      [codigo_servicio, nombre_servicio, costo_servicio, descripcion_servicio]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("Error al crear servicio:", err);
-    res.status(500).json({ error: 'Error al crear servicio' });
+    const { clienteId, productos } = req.body;
+
+    if (!clienteId || productos.length === 0) {
+      return res.status(400).json({ error: 'Faltan datos para crear el pedido' });
+    }
+
+    // Calculamos el total
+    const totalPedido = productos.reduce((acc, prod) => acc + prod.precio_unitario, 0);
+
+    // Asumimos el primer vendedor
+    const vendedorId = productos[0].vendedor_codigo_vendedore;
+
+    await client.query('BEGIN');
+
+    // Insertamos en PEDIDO
+    const insertPedidoQuery = `
+      INSERT INTO pedido (fecha_pedido, estado_pedido, total_pedido, cliente_codigo_cliente, vendedore_codigo_vendedore)
+      VALUES (NOW(), 'Pendiente', $1, $2, $3)
+      RETURNING codigo_pedido
+    `;
+    const pedidoResult = await client.query(insertPedidoQuery, [totalPedido, clienteId, vendedorId]);
+    const codigoPedido = pedidoResult.rows[0].codigo_pedido;
+
+    // Insertamos cada DETALLE_PEDIDO
+    const insertDetalleQuery = `
+      INSERT INTO detalle_pedido (cantidad_detalle_pedido, precio_unitario_, subtotal_detalle_pedido, pedido_codigo_pedido, productos_codigo_producto, calificacion_pedido)
+      VALUES ($1, $2, $3, $4, $5, 5)
+    `;
+
+    for (const producto of productos) {
+      await client.query(insertDetalleQuery, [
+        1, // cantidad siempre 1
+        producto.precio_unitario,
+        producto.precio_unitario, // subtotal = precio * 1
+        codigoPedido,
+        producto.codigo_producto
+      ]);
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, mensaje: 'Pedido creado exitosamente' });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error(error);
+    res.status(500).json({ error: 'Error al crear el pedido' });
+  } finally {
+    client.release();
   }
 };
-
-// Actualizar un servicio existente
-export const updateServicio = async (req, res) => {
-  const { id } = req.params;
-  const { nombre_servicio, costo_servicio, descripcion_servicio } = req.body;
-  try {
-    const result = await pool.query(
-      'UPDATE SERVICIO SET nombre_servicio = $1, costo_servicio = $2, descripcion_servicio = $3 WHERE codigo_servicio = $4 RETURNING *',
-      [nombre_servicio, costo_servicio, descripcion_servicio, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Servicio no encontrado' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error al actualizar servicio:", err);
-    res.status(500).json({ error: 'Error al actualizar servicio' });
-  }
-};
-
-// Eliminar un servicio
-export const deleteServicio = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('DELETE FROM SERVICIO WHERE codigo_servicio = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Servicio no encontrado' });
-    }
-    res.json({ message: 'Servicio eliminado' });
-  } catch (err) {
-    console.error("Error al eliminar servicio:", err);
-    res.status(500).json({ error: 'Error al eliminar servicio' });
-  }
-};*/

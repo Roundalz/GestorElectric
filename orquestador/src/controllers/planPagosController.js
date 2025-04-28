@@ -19,13 +19,12 @@ export const crearPlan = async (req, res) => {
     precio_m_s_a,
     comision_venta,
     max_productos,
-    fecha_expiracion_plan,
   } = req.body;
   try {
     const result = await pool.query(
       `INSERT INTO planes_pago 
-        (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos, fecha_expiracion_plan)
-       VALUES ($1, $2, $3, $4, $5, $6) 
+        (nombre_plan, descripcion, precio_m_s_a, comision_venta, max_productos)
+       VALUES ($1, $2, $3, $4, $5) 
        RETURNING *`,
       [
         nombre_plan,
@@ -33,7 +32,6 @@ export const crearPlan = async (req, res) => {
         precio_m_s_a,
         comision_venta,
         max_productos,
-        fecha_expiracion_plan,
       ]
     );
 
@@ -53,14 +51,13 @@ export const actualizarPlan = async (req, res) => {
     precio_m_s_a,
     comision_venta,
     max_productos,
-    fecha_expiracion_plan,
   } = req.body;
   try {
     const result = await pool.query(
       `UPDATE planes_pago 
        SET nombre_plan = $1, descripcion = $2, precio_m_s_a = $3, comision_venta = $4, 
-           max_productos = $5, fecha_expiracion_plan = $6
-       WHERE codigo_plan = $7
+           max_productos = $5,
+       WHERE codigo_plan = $6
        RETURNING *`,
       [
         nombre_plan,
@@ -68,7 +65,6 @@ export const actualizarPlan = async (req, res) => {
         precio_m_s_a,
         comision_venta,
         max_productos,
-        fecha_expiracion_plan,
         id,
       ]
     );
