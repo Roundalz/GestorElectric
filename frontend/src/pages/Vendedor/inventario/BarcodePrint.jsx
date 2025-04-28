@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Barcode from 'react-barcode';
 import { QRCodeCanvas } from 'qrcode.react';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import styles from './BarcodePrint.module.css';
 
 const API_BASE = 'http://localhost:5000/api/inventario';

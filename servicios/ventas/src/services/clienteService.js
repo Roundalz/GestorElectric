@@ -1,16 +1,15 @@
-// services/clienteService.js
-import clienteModel from "../models/clienteModel.js";
-import logEventoModel from "../models/logEventoModel.js";
+// servicios/nuevoServicio/src/services/clienteService.js
+const clienteModel = require('../models/clienteModel');
 
-export const getClientes = async (vendedorId = 1, logData = {}) => {
-  // Registrar acción de listar clientes
-  await logEventoModel.createLogEvento({
-    usuario_id: vendedorId,
-    accion: "Listar clientes (compradores)",
-    ip_origen: logData.ip || "0.0.0.0"
-  });
-  const clientes = await clienteModel.getClientesByVendedor(vendedorId);
-  return clientes;
+async function listarClientes(vendedorId) {
+    return await clienteModel.listarClientes(vendedorId);
+}
+
+async function obtenerClientePorId(clienteId) {
+    return await clienteModel.obtenerClientePorId(clienteId);
+}
+
+module.exports = {
+    listarClientes,
+    obtenerClientePorId,
 };
-
-export default { getClientes };

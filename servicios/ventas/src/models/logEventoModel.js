@@ -1,15 +1,14 @@
-// models/logEventoModel.js
-import pool from "../database.js";
+// servicios/nuevoServicio/src/models/logEventoModel.js
+const db = require('../database');
 
-export const createLogEvento = async ({ usuario_id, accion, ip_origen }) => {
+async function registrarLog(usuarioId, accion, ipOrigen = null) {
   const query = `
     INSERT INTO LOG_EVENTO (usuario_id, fecha_hora, accion, ip_origen)
     VALUES ($1, NOW(), $2, $3)
-    RETURNING *
   `;
-  const values = [usuario_id, accion, ip_origen || null];
-  const result = await pool.query(query, values);
-  return result.rows[0];
-};
+  await db.query(query, [usuarioId, accion, ipOrigen]);
+}
 
-export default { createLogEvento };
+module.exports = {
+  registrarLog,
+};

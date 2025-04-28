@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePortalConfig } from '../Portal/usePortalConfig.jsx';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import axios from 'axios';
 import './styles.css';
 

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, Plus } from 'lucide-react';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import styles from './AddProduct.module.css';
 
 const API_BASE = 'http://localhost:5000/api/inventario';

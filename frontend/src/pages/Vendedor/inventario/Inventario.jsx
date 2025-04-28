@@ -1,7 +1,7 @@
 // src/pages/Vendedor/inventario/Inventario.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import AddProduct from './AddProduct';
 import BarcodePrint from './BarcodePrint';
 import ListAll from './ListAll';

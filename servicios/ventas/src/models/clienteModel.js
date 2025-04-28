@@ -1,20 +1,28 @@
-// models/clienteModel.js
-import pool from "../database.js";
+// servicios/nuevoServicio/src/models/clienteModel.js
+const db = require('../database');
 
-export const getClientesByVendedor = async (vendedorId = 1) => {
+async function listarClientes(vendedorId) {
   const query = `
-    SELECT c.*, 
-           COUNT(DISTINCT p.codigo_pedido) AS total_pedidos,
-           COALESCE(SUM(dp.cantidad_detalle_pedido), 0) AS total_productos
+    SELECT DISTINCT c.codigo_cliente, c.nombre_cliente, c.correo_cliente
     FROM CLIENTE c
-    JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
-    LEFT JOIN DETALLE_PEDIDO dp ON p.codigo_pedido = dp.PEDIDO_codigo_pedido
+    INNER JOIN PEDIDO p ON c.codigo_cliente = p.CLIENTE_codigo_cliente
     WHERE p.VENDEDORE_codigo_vendedore = $1
-    GROUP BY c.codigo_cliente
-    ORDER BY c.codigo_cliente
   `;
-  const result = await pool.query(query, [vendedorId]);
-  return result.rows;
-};
+  const { rows } = await db.query(query, [vendedorId]);
+  return rows;
+}
 
-export default { getClientesByVendedor };
+async function obtenerClientePorId(clienteId) {
+  const query = `
+    SELECT *
+    FROM CLIENTE
+    WHERE codigo_cliente = $1
+  `;
+  const { rows } = await db.query(query, [clienteId]);
+  return rows[0];
+}
+
+module.exports = {
+  listarClientes,
+  obtenerClientePorId,
+};

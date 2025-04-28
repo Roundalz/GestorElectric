@@ -1,59 +1,188 @@
-import axios from "axios";
+// orquestador/src/controllers/ventasController.js
+import fetch from 'node-fetch';
+import { getVendedorId } from '../utils/getVendedorId.js';
 
+const baseUrl = process.env.NUEVO_SERVICIO_URL || 'http://localhost:4000/api/ventas';
 
-const VENTAS_SERVICE_URL = process.env.VENTAS_SERVICE_URL || "http://ventas:4000";
-
-// Listar todas las ventas
-export const getVentas = async (req, res) => {
+export async function proxyVentas(req, res) {
   try {
-    const response = await axios.get(`${VENTAS_SERVICE_URL}/ventas`);
-    res.json(response.data);
+    const vendedorId = getVendedorId(req);
+    const response = await fetch(`${baseUrl}/ventas`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
   } catch (error) {
-    console.error("Error al obtener ventas:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error al obtener ventas", details: error.message });
+    console.error('Error en proxyVentas:', error);
+    res.status(500).json({ error: 'Error proxyVentas' });
   }
-};
+}
 
-// Detalle de una venta
-export const getVentaDetail = async (req, res) => {
+export async function proxyVentaDetalle(req, res) {
   try {
+    const vendedorId = getVendedorId(req);
     const { id } = req.params;
-    const response = await axios.get(`${VENTAS_SERVICE_URL}/ventas/${id}`);
-    res.json(response.data);
+    const response = await fetch(`${baseUrl}/ventas/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
   } catch (error) {
-    console.error("Error al obtener el detalle de la venta:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error al obtener el detalle de la venta", details: error.message });
+    console.error('Error en proxyVentaDetalle:', error);
+    res.status(500).json({ error: 'Error proxyVentaDetalle' });
   }
-};
+}
 
-// Endpoint para exportar ventas a Excel
-export const exportVentas = async (req, res) => {
-    try {
-      // Obtenemos las ventas (se supone que ya están filtradas por vendedor 1)
-      const response = await axios.get(`${VENTAS_SERVICE_URL}/ventas`);
-      const ventasData = response.data;
-  
-      const workbook = await exportVentasExcel(ventasData);
-  
-      // Configuramos los headers para la descarga del archivo Excel
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=ventas.xlsx"
-      );
-  
-      // Escribir el workbook al stream de respuesta y finalizar
-      await workbook.xlsx.write(res);
-      res.end();
-    } catch (error) {
-      console.error("Error al exportar ventas:", error.response?.data || error.message);
-      res.status(500).json({ error: "Error al exportar ventas", details: error.message });
-    }
-  };
-  
-  
+export async function proxyClientes(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const response = await fetch(`${baseUrl}/clientes`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Error en proxyClientes:', error);
+    res.status(500).json({ error: 'Error proxyClientes' });
+  }
+}
 
-export default { getVentas, getVentaDetail, exportVentas };
+export async function proxyClienteDetalle(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const { id } = req.params;
+    const response = await fetch(`${baseUrl}/clientes/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Error en proxyClienteDetalle:', error);
+    res.status(500).json({ error: 'Error proxyClienteDetalle' });
+  }
+}
+export async function crearGiftCard(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const response = await fetch(`${baseUrl}/giftcards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+      body: JSON.stringify(req.body),
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Error en crearGiftCard:', error);
+    res.status(500).json({ error: 'Error al crear GiftCard' });
+  }
+}
+
+export async function listarGiftCards(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const response = await fetch(`${baseUrl}/giftcards`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Error en listarGiftCards:', error);
+    res.status(500).json({ error: 'Error al listar GiftCards' });
+  }
+}
+
+export async function actualizarGiftCard(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const { id } = req.params;
+    const response = await fetch(`${baseUrl}/giftcards/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+      body: JSON.stringify(req.body),
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Error en actualizarGiftCard:', error);
+    res.status(500).json({ error: 'Error al actualizar GiftCard' });
+  }
+}
+
+export async function eliminarGiftCard(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const { id } = req.params;
+    const response = await fetch(`${baseUrl}/giftcards/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+    res.status(response.status).send();
+  } catch (error) {
+    console.error('Error en eliminarGiftCard:', error);
+    res.status(500).json({ error: 'Error al eliminar GiftCard' });
+  }
+}
+
+// --- Exportaciones Excel ---
+export async function exportVentasGeneral(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const response = await fetch(`${baseUrl}/ventas/export/general`, {
+      headers: {
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+
+    const buffer = await response.buffer();
+    res.setHeader('Content-Disposition', 'attachment; filename=ventas_general.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.status(response.status).send(buffer);
+  } catch (error) {
+    console.error('Error en exportVentasGeneral:', error);
+    res.status(500).json({ error: 'Error exportando ventas general' });
+  }
+}
+
+export async function exportVentaDetalle(req, res) {
+  try {
+    const vendedorId = getVendedorId(req);
+    const { id } = req.params;
+    const response = await fetch(`${baseUrl}/ventas/export/${id}`, {
+      headers: {
+        'X-Vendedor-Id': vendedorId,
+      },
+    });
+
+    const buffer = await response.buffer();
+    res.setHeader('Content-Disposition', `attachment; filename=venta_detalle_${id}.xlsx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.status(response.status).send(buffer);
+  } catch (error) {
+    console.error('Error en exportVentaDetalle:', error);
+    res.status(500).json({ error: 'Error exportando venta detalle' });
+  }
+}

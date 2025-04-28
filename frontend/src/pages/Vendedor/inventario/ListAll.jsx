@@ -1,7 +1,7 @@
 // src/pages/Vendedor/inventario/ListAll.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import styles from './ListAll.module.css';
 
 const API_BASE = 'http://localhost:5000/api/inventario';

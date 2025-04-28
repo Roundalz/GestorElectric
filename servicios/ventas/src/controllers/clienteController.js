@@ -1,16 +1,28 @@
-// controllers/clienteController.js
-import clienteService from "../services/clienteService.js";
+// servicios/nuevoServicio/src/controllers/clienteController.js
+const clienteService = require('../services/clienteService');
 
-const VENDEDOR_ID = 1;
+async function listarClientes(req, res, next) {
+    try {
+        const { vendedorId } = req;
+        const clientes = await clienteService.listarClientes(vendedorId);
+        res.json(clientes);
+    } catch (err) {
+        next(err);
+    }
+}
 
-export const listClientes = async (req, res) => {
-  try {
-    const clientes = await clienteService.getClientes(VENDEDOR_ID, { ip: req.ip });
-    res.json(clientes);
-  } catch (error) {
-    console.error("Error listando clientes:", error.message);
-    res.status(500).json({ error: "Error al listar clientes", details: error.message });
-  }
+async function obtenerClientePorId(req, res, next) {
+    try {
+        const { id } = req.params;
+        const cliente = await clienteService.obtenerClientePorId(id);
+        if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+        res.json(cliente);
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = {
+    listarClientes,
+    obtenerClientePorId,
 };
-
-export default { listClientes };

@@ -21,11 +21,11 @@ import Inventario from "./pages/Vendedor/inventario/Inventario";
 import ProductDetails from "./pages/Vendedor/inventario/ProductDetails";
 import EditProduct from "./pages/Vendedor/inventario/EditProduct";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
-import Ventas from "./pages/Vendedor/Ventas";
+import Ventas from "./pages/Vendedor/ventas/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
 import PortalView from './pages/Vendedor/Portal/PortalView';
 import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
-import { VendedorProvider } from '@context/vendedorContext';
+import { VendedorProvider } from '@context/VendedorContext';
 
 import SalesDetail from "./pages/Vendedor/SalesDetail";
 import AddProduct from "./pages/Vendedor/inventario/AddProduct"; // Nueva página para agregar productos
