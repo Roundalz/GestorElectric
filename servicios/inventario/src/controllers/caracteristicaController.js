@@ -1,18 +1,17 @@
+// servicios/inventario/src/controllers/caracteristicaController.js
 import characteristicService from "../services/caracteristicaService.js";
 
 /**
  * Controlador para rutas relacionadas con CARACTERISTICAS de un PRODUCTO.
  */
 
-/**
- * POST /productos/:productId/caracteristicas
- * Reemplaza todas las características de un producto.
- */
+// POST /productos/:productId/caracteristicas
 export async function setCharacteristics(req, res) {
   try {
     const productId = Number(req.params.productId);
+    const { vendedorId } = req; // (1) Usar vendedorId
     const chars = req.body;
-    const result = await characteristicService.setCharacteristics(productId, chars);
+    const result = await characteristicService.setCharacteristics(productId, chars, vendedorId);
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error en setCharacteristics:", error);
@@ -20,14 +19,12 @@ export async function setCharacteristics(req, res) {
   }
 }
 
-/**
- * GET /productos/:productId/caracteristicas
- * Obtiene todas las características asociadas a un producto.
- */
+// GET /productos/:productId/caracteristicas
 export async function getCharacteristicsByProduct(req, res) {
   try {
     const productId = Number(req.params.productId);
-    const characteristics = await characteristicService.getCharacteristicsByProduct(productId);
+    const { vendedorId } = req; // (2) Usar vendedorId
+    const characteristics = await characteristicService.getCharacteristicsByProduct(productId, vendedorId);
     return res.status(200).json(characteristics);
   } catch (error) {
     console.error("Error en getCharacteristicsByProduct:", error);
@@ -35,15 +32,13 @@ export async function getCharacteristicsByProduct(req, res) {
   }
 }
 
-/**
- * PUT /caracteristicas/:charId
- * Actualiza datos de una característica específica.
- */
+// PUT /caracteristicas/:charId
 export async function updateCharacteristic(req, res) {
   try {
     const charId = Number(req.params.charId);
+    const { vendedorId } = req; // (3) Usar vendedorId
     const data = req.body;
-    const updated = await characteristicService.updateCharacteristic(charId, data);
+    const updated = await characteristicService.updateCharacteristic(charId, data, vendedorId);
     return res.status(200).json(updated);
   } catch (error) {
     console.error("Error en updateCharacteristic:", error);
@@ -51,14 +46,12 @@ export async function updateCharacteristic(req, res) {
   }
 }
 
-/**
- * DELETE /productos/:productId/caracteristicas
- * Elimina todas las características de un producto.
- */
+// DELETE /productos/:productId/caracteristicas
 export async function deleteCharacteristicsByProduct(req, res) {
   try {
     const productId = Number(req.params.productId);
-    const deleted = await characteristicService.deleteCharacteristicsByProduct(productId);
+    const { vendedorId } = req; // (4) Usar vendedorId
+    const deleted = await characteristicService.deleteCharacteristicsByProduct(productId, vendedorId);
     return res.status(200).json(deleted);
   } catch (error) {
     console.error("Error en deleteCharacteristicsByProduct:", error);

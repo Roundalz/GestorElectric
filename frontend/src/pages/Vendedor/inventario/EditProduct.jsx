@@ -1,7 +1,7 @@
 // src/pages/Vendedor/inventario/EditProduct.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-//import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useVendedor } from '@context/VendedorContext';
 import styles from './EditProduct.module.css';

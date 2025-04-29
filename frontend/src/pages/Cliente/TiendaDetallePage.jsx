@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import axios from 'axios';
 import './styles.css';
 import { useCart } from "../../context/CartContext";

@@ -19,13 +19,15 @@ import TiendaDetallePage from './pages/Cliente/TiendaDetallePage';
 import GiftCards from "./pages/Vendedor/GiftCards"
 import Dashboard from "./pages/Vendedor/Dashboard";
 import Inventario from "./pages/Vendedor/inventario/Inventario";
-import ProductDetail from "./pages/Vendedor/inventario/ProductDetail"; 
+import ProductDetails from "./pages/Vendedor/inventario/ProductDetails";
+import EditProduct from "./pages/Vendedor/inventario/EditProduct";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
-import Ventas from "./pages/Vendedor/Ventas";
+import Ventas from "./pages/Vendedor/ventas/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
 import PortalView from './pages/Vendedor/portal/PortalView';
 import HistoricoConfiguracion from "./pages/Vendedor/portal/HistoricoConfiguracion";
-import { VendedorProvider } from '@context/vendedorContext';
+import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
+import { VendedorProvider } from '@context/VendedorContext';
 
 import SalesDetail from "./pages/Vendedor/SalesDetail";
 import AddProduct from "./pages/Vendedor/inventario/AddProduct"; // Nueva página para agregar productos
@@ -74,7 +76,9 @@ function App() {
           <Route path="/vendedor/portal/historico" element={<HistoricoConfiguracion />} />
           <Route path= "/vendedor/giftcard" element={<GiftCards/>}/>
           <Route path="/vendedor/ventas" element={<Ventas />} />
-          <Route path="/inventario/:id" element={<ProductDetail />} />
+          <Route path="/inventario/:id" element={<ProductDetails />} />
+          <Route path="/inventario/editar/:id" element={<EditProduct />} />
+          {/* Ruta para ver detalles de ventas */}
           <Route path="/ventas/:id" element={<SalesDetail />} />
           <Route path="/agregar-producto" element={<AddProduct />} />
 

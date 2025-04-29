@@ -1,204 +1,60 @@
+// orquestador/src/controllers/inventarioController.js
 import axios from 'axios';
+import { getVendedorId } from '../utils/getVendedorId.js';
 
-// URL base del microservicio de Inventario
 const INVENTARIO_BASE_URL = process.env.INVENTARIO_SERVICE_URL || 'http://localhost:3001/inventario';
 
-console.log('⏩ Orquestador está proxy a:', INVENTARIO_BASE_URL);
-/**
- * Controlador que delega llamadas al microservicio de inventario
- */
+console.log('⏩ Proxy Orquestador hacia Inventario en:', INVENTARIO_BASE_URL);
 
-// CRUD Productos
-export async function createProduct(req, res) {
+async function handleRequest(req, res, method, endpoint, data = {}, params = {}) {
+  const vendedorId = getVendedorId(req);
+  if (!vendedorId || !Number.isInteger(vendedorId)) {
+    return res.status(400).json({ error: 'Vendedor ID inválido u obligatorio' });
+  }
+
+  const config = {
+    method,
+    url: `${INVENTARIO_BASE_URL}${endpoint}`,
+    params,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Vendedor-Id': vendedorId.toString(),
+    },
+  };
+
+  if (['post', 'put', 'patch'].includes(method.toLowerCase())) {
+    config.data = data;
+  }
+
   try {
-    const response = await axios.post(`${INVENTARIO_BASE_URL}/productos`, req.body);
+    const response = await axios(config);
     res.status(response.status).json(response.data);
   } catch (error) {
     const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
+    const message = error.response?.data?.error || error.message || 'Error desconocido';
     res.status(status).json({ error: message });
   }
 }
 
-export async function getProducts(req, res) {
-  try {
-    const response = await axios.get(`${INVENTARIO_BASE_URL}/productos`, { params: req.query });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function getProductById(req, res) {
-  try {
-    const { id } = req.params;
-    const response = await axios.get(`${INVENTARIO_BASE_URL}/productos/${id}`);
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function updateProduct(req, res) {
-  try {
-    const { id } = req.params;
-    const response = await axios.put(`${INVENTARIO_BASE_URL}/productos/${id}`, req.body);
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function updateQuantity(req, res) {
-  try {
-    const { id } = req.params;
-    const response = await axios.patch(
-      `${INVENTARIO_BASE_URL}/productos/${id}/cantidad`,
-      { cantidad: req.body.cantidad }
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function deleteProduct(req, res) {
-  try {
-    const { id } = req.params;
-    const response = await axios.delete(`${INVENTARIO_BASE_URL}/productos/${id}`);
-    res.sendStatus(response.status);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
+// Productos
+export const createProduct = (req, res) => handleRequest(req, res, 'post', '/productos', req.body);
+export const getProducts = (req, res) => handleRequest(req, res, 'get', '/productos', {}, req.query);
+export const getProductById = (req, res) => handleRequest(req, res, 'get', `/productos/${req.params.id}`);
+export const updateProduct = (req, res) => handleRequest(req, res, 'put', `/productos/${req.params.id}`, req.body);
+export const updateQuantity = (req, res) => handleRequest(req, res, 'patch', `/productos/${req.params.id}/cantidad`, { cantidad: req.body.cantidad });
+export const deleteProduct = (req, res) => handleRequest(req, res, 'delete', `/productos/${req.params.id}`);
 
 // Características
-export async function setCharacteristics(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.post(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/caracteristicas`,
-      req.body
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function getCharacteristics(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.get(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/caracteristicas`
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function updateCharacteristic(req, res) {
-  try {
-    const { charId } = req.params;
-    const response = await axios.put(
-      `${INVENTARIO_BASE_URL}/caracteristicas/${charId}`,
-      req.body
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function deleteCharacteristics(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.delete(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/caracteristicas`
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
+export const setCharacteristics = (req, res) => handleRequest(req, res, 'post', `/productos/${req.params.productId}/caracteristicas`, req.body);
+export const getCharacteristics = (req, res) => handleRequest(req, res, 'get', `/productos/${req.params.productId}/caracteristicas`);
+export const updateCharacteristic = (req, res) => handleRequest(req, res, 'put', `/caracteristicas/${req.params.charId}`, req.body);
+export const deleteCharacteristics = (req, res) => handleRequest(req, res, 'delete', `/productos/${req.params.productId}/caracteristicas`);
 
 // Imágenes
-export async function setImages(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.post(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/imagenes`,
-      req.body
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function getImages(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.get(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/imagenes`
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function updateImage(req, res) {
-  try {
-    const { imgId } = req.params;
-    const response = await axios.put(
-      `${INVENTARIO_BASE_URL}/imagenes/${imgId}`,
-      req.body
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
-
-export async function deleteImages(req, res) {
-  try {
-    const { productId } = req.params;
-    const response = await axios.delete(
-      `${INVENTARIO_BASE_URL}/productos/${productId}/imagenes`
-    );
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.error || error.message;
-    res.status(status).json({ error: message });
-  }
-}
+export const setImages = (req, res) => handleRequest(req, res, 'post', `/productos/${req.params.productId}/imagenes`, req.body);
+export const getImages = (req, res) => handleRequest(req, res, 'get', `/productos/${req.params.productId}/imagenes`);
+export const updateImage = (req, res) => handleRequest(req, res, 'put', `/imagenes/${req.params.imgId}`, req.body);
+export const deleteImages = (req, res) => handleRequest(req, res, 'delete', `/productos/${req.params.productId}/imagenes`);
 
 export default {
   createProduct,
@@ -214,5 +70,5 @@ export default {
   setImages,
   getImages,
   updateImage,
-  deleteImages
+  deleteImages,
 };

@@ -1,36 +1,36 @@
+// servicios/inventario/src/controllers/productoController.js
 import productService from "../services/productoService.js";
 
 /**
  * Controlador para rutas relacionadas con PRODUCTOS.
  */
 
-/**
- * POST /productos
- * Crea un nuevo producto con sus características e imágenes.
- */
+// POST /productos → Crear producto
 export async function createProduct(req, res) {
   try {
-    const data = req.body;
-    const newProduct = await productService.createProduct(data);
-    return res.status(201).json(newProduct);
+    const vendedorId = parseInt(req.headers['x-vendedor-id'], 10);
+    if (!vendedorId || isNaN(vendedorId)) {
+      return res.status(400).json({ error: 'VendedorId inválido' });
+    }
+    const newProduct = await productService.createProduct(req.body, vendedorId);
+    res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error en createProduct:", error);
-    return res.status(400).json({ error: error.message });
+    console.error('Error en createProduct:', error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-/**
- * GET /productos
- * Obtiene todos los productos o filtra por nombre si se pasa query ?name=
- */
+// GET /productos → Obtener productos del vendedor
 export async function getProducts(req, res) {
   try {
     const { name } = req.query;
+    const { vendedorId } = req;
+
     let products;
     if (name) {
-      products = await productService.getProductsByName(name);
+      products = await productService.getProductsByName(name, vendedorId);
     } else {
-      products = await productService.getAllProducts();
+      products = await productService.getAllProducts(vendedorId);
     }
     return res.status(200).json(products);
   } catch (error) {
@@ -39,14 +39,13 @@ export async function getProducts(req, res) {
   }
 }
 
-/**
- * GET /productos/:id
- * Obtiene un producto por su ID.
- */
+// GET /productos/:id → Obtener producto específico
 export async function getProductById(req, res) {
   try {
     const { id } = req.params;
-    const product = await productService.getProductById(Number(id));
+    const { vendedorId } = req;
+
+    const product = await productService.getProductById(Number(id), vendedorId);
     if (!product) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
@@ -57,15 +56,14 @@ export async function getProductById(req, res) {
   }
 }
 
-/**
- * PUT /productos/:id
- * Actualiza un producto y sus relaciones (características, imágenes).
- */
+// PUT /productos/:id → Actualizar producto
 export async function updateProduct(req, res) {
   try {
     const { id } = req.params;
-    const data = req.body;
-    const updated = await productService.updateProduct(Number(id), data);
+    const { vendedorId, portalCode } = req;
+    const data = { ...req.body, portalCode };
+
+    const updated = await productService.updateProduct(Number(id), data, vendedorId);
     return res.status(200).json(updated);
   } catch (error) {
     console.error("Error en updateProduct:", error);
@@ -73,15 +71,14 @@ export async function updateProduct(req, res) {
   }
 }
 
-/**
- * PATCH /productos/:id/cantidad
- * Actualiza sólo la cantidad disponible de un producto.
- */
+// PATCH /productos/:id/cantidad → Actualizar cantidad
 export async function updateQuantity(req, res) {
   try {
     const { id } = req.params;
     const { cantidad } = req.body;
-    const newQty = await productService.updateQuantity(Number(id), Number(cantidad));
+    const { vendedorId } = req;
+
+    const newQty = await productService.updateQuantity(Number(id), Number(cantidad), vendedorId);
     return res.status(200).json({ cantidad_disponible_producto: newQty });
   } catch (error) {
     console.error("Error en updateQuantity:", error);
@@ -89,14 +86,13 @@ export async function updateQuantity(req, res) {
   }
 }
 
-/**
- * DELETE /productos/:id
- * Elimina un producto y sus datos relacionados.
- */
+// DELETE /productos/:id → Eliminar producto
 export async function deleteProduct(req, res) {
   try {
     const { id } = req.params;
-    await productService.deleteProduct(Number(id));
+    const { vendedorId } = req;
+
+    await productService.deleteProduct(Number(id), vendedorId);
     return res.status(204).send();
   } catch (error) {
     console.error("Error en deleteProduct:", error);

@@ -1,6 +1,6 @@
 // src/pages/Vendedor/inventario/EditQuantityPopup.jsx
 import React, { useState } from 'react';
-//import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import { useVendedor } from '@context/VendedorContext';
 import styles from './EditQuantityPopup.module.css';

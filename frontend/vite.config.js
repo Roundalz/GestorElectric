@@ -10,5 +10,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@context': path.resolve(__dirname, './src/context')
     }
-  }
+  },
+  server: {
+    proxy: {
+      '/api/inventario': {
+        target: 'http://localhost:5000',   // o el host real de tu servicio inventario
+        changeOrigin: true,
+        secure: false,
+        // opcionalmente reescribe la ruta (aquí no cambia nada)
+        rewrite: path => path.replace(/^\/api\/inventario/, '/api/inventario')
+      }
+    }
+  },
 })

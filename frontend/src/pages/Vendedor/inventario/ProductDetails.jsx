@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useVendedor } from '@context/VendedorContext';
 import Barcode from 'react-barcode';
 import { QRCodeCanvas } from 'qrcode.react';
-//import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Edit2, Plus, CheckCircle } from 'lucide-react';
 import EditQuantityPopup from './EditQuantityPopup';
 import styles from './ProductDetails.module.css';

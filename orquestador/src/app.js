@@ -17,6 +17,8 @@ import perfilRoutes from './routes/perfilRoutes.js'; // Importamos las rutas del
 import portalRoutes from './routes/portalRoutes.js';
 import portalRouter from './routes/portal.js';
 import productoRoutes from './routes/productoRoutes.js';
+import validarVendedorId from './middlewares/validarVendedorId.js';
+import clientesRoutes from './routes/clientesRoutes.js';
 import vendedorRoutes from "./routes/vendedorRoutes.js";
 import ventasRoutes from "./routes/ventas.js"; 
 import accountLockRoutes from './routes/accountLockRoutes.js'
@@ -89,12 +91,16 @@ app.use("/api/producto", productoRoutes);
 app.use("/api/perfil", perfilRoutes); // Aquí se añaden las rutas para actualizar perfil
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://frontend'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: ['http://localhost:3000','http://localhost', 'http://frontend'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization','X-Vendedor-Id'],
   exposedHeaders: ['Content-Disposition']
 }));
-app.use(express.json());
+
+app.use(validarVendedorId);
+// ↑ Aquí subimos el tamaño máximo del body
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 

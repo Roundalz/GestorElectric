@@ -1,54 +1,64 @@
-// controllers/ventaController.js
-import ventaService from "../services/ventaService.js";
+// servicios/nuevoServicio/src/controllers/ventaController.js
+import ventaService from '../services/ventaService.js';
+import excelGenerator from '../utils/excelGenerator.js';
 
-// Usamos un dato estático para el vendedor (1) por ahora
-const VENDEDOR_ID = 1;
+async function listarVentas(req, res, next) {
+    try {
+        const { vendedorId } = req;
+        const ventas = await ventaService.listarVentas(vendedorId);
+        res.json(ventas);
+    } catch (err) {
+        next(err);
+    }
+}
 
-export const listVentas = async (req, res) => {
+async function obtenerVentaPorId(req, res, next) {
+    try {
+        const { vendedorId } = req;
+        const { id } = req.params;
+        const venta = await ventaService.obtenerVentaPorId(vendedorId, id);
+        if (!venta) return res.status(404).json({ error: 'Venta no encontrada' });
+        res.json(venta);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function exportVentasGeneralExcel(req, res, next) {
   try {
-    // Puedes obtener la IP del request si es necesario (req.ip)
-    const ventas = await ventaService.getVentas(VENDEDOR_ID, { ip: req.ip });
-    res.json(ventas);
-  } catch (error) {
-    console.error("Error listando ventas:", error.message);
-    res.status(500).json({ error: "Error al listar ventas", details: error.message });
-  }
-};
+      const { vendedorId } = req;
+      const ventas = await ventaService.listarVentas(vendedorId);
+      const fileBuffer = excelGenerator.generarExcelVentas(ventas);
 
-export const ventaDetail = async (req, res) => {
+      res.setHeader('Content-Disposition', 'attachment; filename=ventas_general.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(fileBuffer);
+  } catch (err) {
+      next(err);
+  }
+}
+
+async function exportVentaDetalleExcel(req, res, next) {
   try {
-    const { id } = req.params;
-    const venta = await ventaService.getVentaDetail(id, VENDEDOR_ID, { ip: req.ip });
-    if (!venta) return res.status(404).json({ message: "Venta no encontrada" });
-    res.json(venta);
-  } catch (error) {
-    console.error("Error obteniendo detalle de venta:", error.message);
-    res.status(500).json({ error: "Error al obtener detalle de venta", details: error.message });
+      const { vendedorId } = req;
+      const { id } = req.params;
+      const venta = await ventaService.obtenerVentaPorId(vendedorId, id);
+      if (!venta) return res.status(404).json({ error: 'Venta no encontrada' });
+
+      const fileBuffer = excelGenerator.generarExcelVentaDetalle(venta);
+
+      res.setHeader('Content-Disposition', `attachment; filename=venta_detalle_${id}.xlsx`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(fileBuffer);
+  } catch (err) {
+      next(err);
   }
+}
+
+
+export default {
+    listarVentas,
+    obtenerVentaPorId,
+    exportVentasGeneralExcel,
+    exportVentaDetalleExcel,
 };
-export const exportVentas = async (req, res) => {
-  try {
-    // Obtenemos las ventas (filtradas por vendedor 1, por ejemplo)
-    const response = await axios.get(`${VENTAS_SERVICE_URL}/ventas`);
-    const ventasData = response.data;
-
-    const workbook = await exportVentasExcel(ventasData);
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=ventas.xlsx"
-    );
-
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (error) {
-    console.error("Error al exportar ventas:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error al exportar ventas", details: error.message });
-  }
-};
-
-export default { listVentas, ventaDetail, exportVentas };

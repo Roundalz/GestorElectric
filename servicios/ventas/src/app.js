@@ -1,6 +1,6 @@
 // servicios/ventas/src/app.js
 import express from 'express';
-import ventaRoutes from './routes/ventaRoutes.js';
+import ventaRoutes from './routes/ventasRoutes.js';
 import errorHandler from './middlewares/errorHandler.js'; // Opcional si quieres capturar errores globales
 
 const app = express();

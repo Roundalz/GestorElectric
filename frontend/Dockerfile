@@ -9,6 +9,7 @@ RUN npm install axios react-router-dom jsbarcode
 RUN npm install framer-motion lucide-react
 RUN npm install lucide-react
 RUN npm install exceljs
+RUN npm install react-chartjs-2 chart.js
 COPY . .
 RUN npm run build
 

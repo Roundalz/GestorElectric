@@ -2,16 +2,17 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      args:
+        VITE_API_BASE_URL: http://orquestador:5000/api
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_BASE_URL=http://orquestador:5000/api
+    ports:
+      - "80:80"
+    depends_on:
+      - orquestador
     networks:
       - app_network
+
 
   orquestador:
     build: ./orquestador
@@ -26,7 +27,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: 'admin'        # Cambiado a 'admin'
       DB_NAME: 'gestor_nuevo'         # Cambiado a gestor_nuevo
-      INVENTARIO_SERVICE_URL: http://inventario:3001
+      INVENTARIO_SERVICE_URL: http://inventario:3001/inventario
       VENTAS_SERVICE_URL: http://ventas:4000
     networks:
       - app_network
