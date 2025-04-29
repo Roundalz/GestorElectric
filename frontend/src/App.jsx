@@ -3,7 +3,7 @@ import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import PlanesPago from './components/planesPago';
+import PlanesPago from './components/PlanesPago';
 
 import CrudClientes from "./pages/Admin/CrudClientes";
 import CrudPlanPagos from "./pages/Admin/CrudPlanPagos";
@@ -24,9 +24,8 @@ import EditProduct from "./pages/Vendedor/inventario/EditProduct";
 import PerfilVendedor from "./pages/Vendedor/Perfil";
 import Ventas from "./pages/Vendedor/ventas/Ventas";
 import ConfigPortal from './pages/Vendedor/Portal/ConfigPortal';
-import PortalView from './pages/Vendedor/portal/PortalView';
-import HistoricoConfiguracion from "./pages/Vendedor/portal/HistoricoConfiguracion";
-import ProductEditor from './pages/Vendedor/Portal/ProductEdit';
+import PortalView from './pages/Vendedor/Portal/PortalView';
+import HistoricoConfiguracion from "./pages/Vendedor/Portal/HistoricoConfiguracion";
 import { VendedorProvider } from '@context/VendedorContext';
 
 import SalesDetail from "./pages/Vendedor/SalesDetail";

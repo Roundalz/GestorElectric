@@ -18,7 +18,6 @@ import portalRoutes from './routes/portalRoutes.js';
 import portalRouter from './routes/portal.js';
 import productoRoutes from './routes/productoRoutes.js';
 import validarVendedorId from './middlewares/validarVendedorId.js';
-import clientesRoutes from './routes/clientesRoutes.js';
 import vendedorRoutes from "./routes/vendedorRoutes.js";
 import ventasRoutes from "./routes/ventas.js"; 
 import accountLockRoutes from './routes/accountLockRoutes.js'

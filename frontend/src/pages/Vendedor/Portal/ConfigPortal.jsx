@@ -3,7 +3,7 @@ import { usePortalConfig } from '../Portal/usePortalConfig.jsx';
 import { useVendedor } from '@context/VendedorContext';
 import axios from 'axios';
 import './styles.css';
-import HistoricoConfiguracion from '../portal/HistoricoConfiguracion.jsx'
+import HistoricoConfiguracion from '../Portal/HistoricoConfiguracion.jsx'
 // Primero definimos las características base para cada plan
 const plan1Features = [
   'color_principal', 'color_secundario', 'color_fondo', 

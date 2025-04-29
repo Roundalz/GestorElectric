@@ -1,7 +1,7 @@
 // src/pages/cliente/TiendasPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useVendedor } from '@context/vendedorContext';
+import { useVendedor } from '@context/VendedorContext';
 import axios from 'axios';
 import './styles/InicioStyles.css';
 
