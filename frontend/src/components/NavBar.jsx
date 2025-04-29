@@ -79,6 +79,7 @@ export default function NavBar() {
                 <li><Link to="/admin/plan-pagos" onClick={toggleMenu}>Planes</Link></li>
                 <li><Link to="/admin/vendedores" onClick={toggleMenu}>Vendedores</Link></li>
                 <li><Link to="/admin/logs" onClick={toggleMenu}>Logs</Link></li>
+                <li><Link to="/admin/accountlock" onClick={toggleMenu}>Cuentas Bloqueadas</Link></li>
               </>
             )}
             {user?.role === "cliente" && (

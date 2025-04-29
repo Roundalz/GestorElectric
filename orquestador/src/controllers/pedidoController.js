@@ -82,21 +82,48 @@ export const crearPedido = async (req, res) => {
   }
 };
 
-// Detalle pedido
-
-export const getDetallePedido = async (req, res) => {
-  const { codigo_pedido } = req.params;
+// Obtener los pedidos de un cliente
+export const getPedidosByCliente = async (req, res) => {
+  const { codigoCliente } = req.params;
   try {
-    const [rows] = await pool.query(
-      `SELECT dp.codigo_detalle, p.nombre_producto, dp.cantidad, dp.precio_unitario
-       FROM detalle_pedido dp
-       INNER JOIN productos p ON dp.codigo_producto = p.codigo_producto
-       WHERE dp.codigo_pedido = ?`,
-      [codigo_pedido]
+    const [pedidos] = await pool.query(
+      `SELECT 
+        p.codigo_pedido, 
+        p.fecha_pedido, 
+        p.precio_total AS total_pedido,
+        c.nombre_cliente
+      FROM pedido p
+      INNER JOIN cliente c ON p.cliente_codigo_cliente = c.codigo_cliente
+      WHERE p.cliente_codigo_cliente = ?
+      ORDER BY p.fecha_pedido DESC`,
+      [codigoCliente]
     );
-    res.json(rows);
+
+    res.json(pedidos);
   } catch (error) {
     console.error(error);
+    res.status(500).send('Error al obtener pedidos');
+  }
+};
+
+// Obtener los detalles de un pedido específico
+export const getDetallePedido = async (req, res) => {
+  const { codigoPedido } = req.params;
+
+  try {
+    const [detalles] = await pool.query(`
+      SELECT
+        p.nombre_producto,
+        dp.cantidad_producto,
+        dp.precio_producto
+      FROM detalle_pedido dp
+      INNER JOIN productos p ON dp.productos_codigo_producto = p.codigo_producto
+      WHERE dp.pedido_codigo_pedido = ?
+    `, [codigoPedido]);
+
+    res.json(detalles);
+  } catch (error) {
+    console.error('Error al obtener detalles del pedido:', error);
     res.status(500).send('Error al obtener detalles del pedido');
   }
 };

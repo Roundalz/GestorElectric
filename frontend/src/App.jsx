@@ -34,6 +34,7 @@ import Login from "./components/Login";
 import "./App.css"; // Importamos los estilos globales
 import Register from "./components/Register";
 
+import AdminAccountLocks from "./pages/Admin/AccountLocks";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path="/admin/plan-pagos" element={<CrudPlanPagos />} />
           <Route path="/admin/vendedores" element={<CrudVendedores />} />
           <Route path="/admin/logs" element={<Logs />} />
+          <Route path="/admin/accountlock" element={<AdminAccountLocks />} />
 
           {/* Rutas de Cliente */}
           <Route path="/cliente/carrito" element={<Carrito />} />

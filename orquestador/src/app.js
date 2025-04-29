@@ -19,6 +19,7 @@ import portalRouter from './routes/portal.js';
 import productoRoutes from './routes/productoRoutes.js';
 import vendedorRoutes from "./routes/vendedorRoutes.js";
 import ventasRoutes from "./routes/ventas.js"; 
+import accountLockRoutes from './routes/accountLockRoutes.js'
 
 import dotenv from 'dotenv';
 import pool from './database.js';
@@ -49,6 +50,7 @@ app.use(express.json()); // Habilitar JSON en requests
 
 // Rutas de prueba (o cualquier endpoint de prueba)
 app.use("/api", testController);
+app.use('/api', accountLockRoutes);
 
 // Rutas de CRUD para LOGS
 app.use("/api/logs", logsRoutes); // <-- Monta tus rutas de logs aquí

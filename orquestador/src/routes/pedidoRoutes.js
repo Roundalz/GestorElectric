@@ -3,6 +3,7 @@ import {
   getPedido,
   getPedidoByClienteId,
   crearPedido,
+  getPedidosByCliente,
   getDetallePedido
 } from '../controllers/pedidoController.js';
 
@@ -17,8 +18,11 @@ router.get('/:clienteid', getPedidoByClienteId);
 
 router.post('/crear-pedido', crearPedido);
 
-// Ruta nueva en tu servidor (por ejemplo en pedidoRoutes.js)
-router.get('/detalle_pedido/:codigo_pedido', getDetallePedido);
+// Obtener todos los pedidos de un cliente
+router.get('/codigo/:codigoCliente', getPedidosByCliente);
+
+// Obtener detalles de un pedido específico
+router.get('/detalle/:codigoPedido', getDetallePedido);
 
 
 export default router;

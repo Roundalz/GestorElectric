@@ -1,0 +1,53 @@
+.admin-locks-container {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .admin-locks-container h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: var(--clr-primary-dark);
+  }
+  
+  .admin-locks-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .admin-locks-table th, .admin-locks-table td {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+  
+  .admin-locks-btn {
+    background: var(--clr-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .admin-locks-btn:hover {
+    background: var(--clr-primary-dark);
+  }
+  
+  .admin-locks-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .admin-locks-message {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: var(--clr-success);
+  }
+  

@@ -1,3 +1,4 @@
+// src/pages/cliente/Historial.jsx
 import React, { useEffect, useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import './styles/HistorialStyles.css';
@@ -6,19 +7,18 @@ const Historial = () => {
   const { user } = useContext(AuthContext);
   const [pedidos, setPedidos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState(null); // Guardar el pedido seleccionado
+  const [detallePedido, setDetallePedido] = useState([]);
+  const [selectedPedido, setSelectedPedido] = useState(null);
 
- 
   const formatDate = (date) => {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0'); // Asegura que el día tenga dos dígitos
-    const month = String(d.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript empiezan desde 0
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
-
     return `${day}-${month}-${year}`;
   };
 
-  const fetchPedido = async () => {
+  const fetchPedidos = async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/pedido/${user.codigo_cliente}`);
       const data = await response.json();
@@ -27,32 +27,35 @@ const Historial = () => {
       console.error("Error al obtener pedidos:", error);
     }
   };
-  
-  useEffect(() => {
-    fetchPedido();
-  }, []);
 
-  
-  // Abrir el modal y asignar el pedido seleccionado
-  const openModal = async (pedido) => {
-    setSelectedPedido(pedido); // Guardar el pedido seleccionado
-    setModalVisible(true);     // Abrir el modal
-  
+  const fetchDetallePedido = async (codigoPedido) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/pedido/detalle_pedido/${pedido.codigo_pedido}`);
+      const response = await fetch(`http://localhost:5000/api/pedido/detalle/${codigoPedido}`);
       const data = await response.json();
-      setDetalleProductos(data); // Guardar los productos en el estado
+      setDetallePedido(data);
     } catch (error) {
-      console.error('Error al obtener detalles del pedido:', error);
+      console.error("Error al obtener detalle del pedido:", error);
     }
   };
 
-  // Cerrar el modal
-  const closeModal = () => {
-    setModalVisible(false); // Ocultar el modal
-    setSelectedPedido(null); // Limpiar el pedido seleccionado
+  useEffect(() => {
+    if (user?.codigo_cliente) {
+      fetchPedidos();
+    }
+  }, [user]);
+
+  const openModal = async (pedido) => {
+    setSelectedPedido(pedido);
+    await fetchDetallePedido(pedido.codigo_pedido);
+    setModalVisible(true);
   };
-  
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedPedido(null);
+    setDetallePedido([]);
+  };
+
   return (
     <div className="purchase-history-container">
       <h1 className="text-2xl font-semibold mb-8">Historial de Compras</h1>
@@ -74,34 +77,32 @@ const Historial = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>Detalles del Pedido</h2>
+
             {selectedPedido && (
-              <div>
-                <p><strong>Fecha de compra:</strong> {formatDate(selectedPedido.fecha_pedido)}</p>
+              <>
+                <p><strong>Fecha del pedido:</strong> {formatDate(selectedPedido.fecha_pedido)}</p>
 
                 <div style={{ marginTop: '1rem' }}>
-                  <h3>Productos:</h3>
-                  <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-                    {detalleProductos.map((producto) => (
-                      <li key={producto.codigo_detalle} style={{ marginBottom: '0.5rem' }}>
-                        <div><strong>Producto:</strong> {producto.nombre_producto}</div>
-                        <div><strong>Cantidad:</strong> {producto.cantidad}</div>
-                        <div><strong>Precio unitario:</strong> ${producto.precio_unitario}</div>
-                        <hr style={{ margin: '0.5rem 0' }} />
-                      </li>
-                    ))}
-                  </ul>
+                  <h3 style={{ marginBottom: '0.5rem' }}>Productos:</h3>
+                  {detallePedido.map((producto, index) => (
+                    <div key={index} style={{ marginBottom: '0.5rem', backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '6px' }}>
+                      <p><strong>Producto:</strong> {producto.nombre_producto}</p>
+                      <p><strong>Cantidad:</strong> {producto.cantidad}</p>
+                      <p><strong>Precio unitario:</strong> ${producto.precio_unitario}</p>
+                    </div>
+                  ))}
                 </div>
 
-                <p style={{ marginTop: '1rem' }}><strong>Total del pedido:</strong> ${selectedPedido.total_pedido}</p>
-              </div>
+                <p style={{ marginTop: '1rem', fontWeight: 'bold' }}>Total del pedido: ${selectedPedido.total_pedido}</p>
+
+                <button className="close-button" onClick={closeModal}>Cerrar</button>
+              </>
             )}
-            <button className="close-button" onClick={closeModal}>Cerrar</button>
           </div>
         </div>
       )}
-
     </div>
   );
 };
-  export default Historial;
-  
+
+export default Historial;
