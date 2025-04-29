@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "axios": "^1.8.4"
+    "axios": "^1.8.4",
+    "morgan": "^1.10.0",
+    "qrcode.react": "^4.2.0",
+    "react-barcode": "^1.6.1"
   }
 }

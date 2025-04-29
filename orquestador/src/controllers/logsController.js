@@ -1,41 +1,25 @@
-import db from "../db.js";
+import pool from "../database.js";
 
-// GET
+// Función para registrar logs
+export const registrarLog = async ({ usuario_id, accion, ip_origen }) => {
+  try {
+    await pool.query(
+      `INSERT INTO LOG_EVENTO (usuario_id, fecha_hora, accion, ip_origen) 
+       VALUES ($1, CURRENT_TIMESTAMP, $2, $3)`,
+      [usuario_id, accion, ip_origen]
+    );
+  } catch (error) {
+    console.error("Error al registrar log:", error.message);
+  }
+};
+
+// Función para obtener logs
 export const obtenerLogs = async (req, res) => {
   try {
-    // Obtener logs de LOG_EVENTO
-    const [eventos] = await db.query(`
-      SELECT 
-        id_logEvento AS id,
-        accion,
-        usuario_id AS usuario,
-        fecha_hora AS fecha,
-        ip_origen AS detalles,
-        'evento' AS tipo_log
-      FROM LOG_EVENTO
-    `);
-
-    // Obtener logs de LOG_USUARIO
-    const [usuarios] = await db.query(`
-      SELECT 
-        col_logUsuario AS id,
-        'Login/Logout' AS accion,
-        usuario_id AS usuario,
-        fecha_hora AS fecha,
-        ip_origen AS detalles,
-        'usuario' AS tipo_log
-      FROM LOG_USUARIO
-    `);
-
-    // Unir ambos arrays de logs
-    const todosLosLogs = [...eventos, ...usuarios];
-
-    // Ordenarlos por fecha descendente
-    todosLosLogs.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-    res.json(todosLosLogs);
+    const logs = await pool.query("SELECT * FROM LOG_EVENTO");
+    res.json(logs.rows);
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener logs:", error.message);
     res.status(500).json({ error: "Error al obtener logs" });
   }
 };

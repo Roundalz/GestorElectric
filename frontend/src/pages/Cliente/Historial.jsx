@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useContext, useState } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import './styles/HistorialStyles.css';
 
 const Historial = () => {
+  const { user } = useContext(AuthContext);
   const [pedidos, setPedidos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null); // Guardar el pedido seleccionado
@@ -18,7 +20,7 @@ const Historial = () => {
 
   const fetchPedido = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/pedido/1');
+      const response = await fetch(`http://localhost:5000/api/pedido/${user.codigo_cliente}`);
       const data = await response.json();
       setPedidos(data);
     } catch (error) {

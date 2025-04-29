@@ -1,15 +1,25 @@
+import axios from "axios";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import '../../styles/CrudPlanPagos.css';
 
 function CrudPlanPagos() {
   const [planes, setPlanes] = useState([]);
-  const [form, setForm] = useState({ nombre: "", descripcion: "", monto: "" });
+  const [form, setForm] = useState({
+    nombre_plan: "",
+    descripcion: "",
+    tipo_pago_plan: "",
+    duracion_dias: "",
+    precio_m_s_a: "",
+    comision_venta: "",
+    max_productos: "",
+  });
   const [modoEditar, setModoEditar] = useState(false);
   const [planActual, setPlanActual] = useState(null);
 
-  // GET: Obtener planes de pago
   const obtenerPlanes = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/planes");
+      const res = await axios.get("http://localhost:5000/api/planes_pago");
       setPlanes(res.data);
     } catch (error) {
       console.error("Error al obtener planes:", error);
@@ -20,37 +30,46 @@ function CrudPlanPagos() {
     obtenerPlanes();
   }, []);
 
-  // POST: Crear nuevo plan
   const crearPlan = async () => {
     try {
-      await axios.post("http://localhost:5000/api/planes", form);
+      await axios.post("http://localhost:5000/api/planes_pago", form);
       obtenerPlanes();
-      setForm({ nombre: "", descripcion: "", monto: "" });
+      resetForm();
     } catch (error) {
       console.error("Error al crear plan:", error);
     }
   };
 
-  // PUT: Editar plan
   const actualizarPlan = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/planes/${planActual}`, form);
+      await axios.put(`http://localhost:5000/api/planes_pago/${planActual}`, form);
       obtenerPlanes();
       setModoEditar(false);
-      setForm({ nombre: "", descripcion: "", monto: "" });
+      resetForm();
     } catch (error) {
       console.error("Error al actualizar plan:", error);
     }
   };
 
-  // DELETE: Eliminar plan
   const eliminarPlan = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/planes/${id}`);
+      await axios.delete(`http://localhost:5000/api/planes_pago/${id}`);
       obtenerPlanes();
     } catch (error) {
       console.error("Error al eliminar plan:", error);
     }
+  };
+
+  const resetForm = () => {
+    setForm({
+      nombre_plan: "",
+      descripcion: "",
+      tipo_pago_plan: "",
+      duracion_dias: "",
+      precio_m_s_a: "",
+      comision_venta: "",
+      max_productos: "",
+    });
   };
 
   const handleChange = (e) => {
@@ -63,15 +82,18 @@ function CrudPlanPagos() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{modoEditar ? "Editar Plan de Pago" : "Nuevo Plan de Pago"}</h1>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
+    <div className="crud-container">
+      <h1 className="crud-title">
+        {modoEditar ? "Editar Plan de Pago" : "Nuevo Plan de Pago"}
+      </h1>
+
+      <form onSubmit={handleSubmit} className="crud-form">
         <input
-          name="nombre"
-          value={form.nombre}
+          name="nombre_plan"
+          value={form.nombre_plan}
           onChange={handleChange}
           placeholder="Nombre del plan"
-          className="border p-2 w-full"
+          className="crud-input"
           required
         />
         <input
@@ -79,66 +101,118 @@ function CrudPlanPagos() {
           value={form.descripcion}
           onChange={handleChange}
           placeholder="Descripción"
-          className="border p-2 w-full"
+          className="crud-input"
           required
         />
         <input
-          name="monto"
-          value={form.monto}
+          name="tipo_pago_plan"
+          value={form.tipo_pago_plan}
           onChange={handleChange}
-          placeholder="Monto"
-          type="number"
-          className="border p-2 w-full"
+          placeholder="Tipo de pago (mensual, anual, etc.)"
+          className="crud-input"
           required
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+        <input
+          name="duracion_dias"
+          value={form.duracion_dias}
+          onChange={handleChange}
+          placeholder="Duración en días"
+          type="number"
+          className="crud-input"
+          required
+        />
+        <input
+          name="precio_m_s_a"
+          value={form.precio_m_s_a}
+          onChange={handleChange}
+          placeholder="Precio (Bs)"
+          type="number"
+          step="0.01"
+          className="crud-input"
+          required
+        />
+        <input
+          name="comision_venta"
+          value={form.comision_venta}
+          onChange={handleChange}
+          placeholder="Comisión (%)"
+          type="number"
+          step="0.01"
+          className="crud-input"
+          required
+        />
+        <input
+          name="max_productos"
+          value={form.max_productos}
+          onChange={handleChange}
+          placeholder="Máx. productos"
+          type="number"
+          className="crud-input"
+          required
+        />
+
+        <button type="submit" className="crud-button">
           {modoEditar ? "Actualizar" : "Crear"}
         </button>
       </form>
 
-      <h2 className="text-xl font-semibold mb-2">Lista de Planes de Pago</h2>
-      <table className="w-full table-auto border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Nombre</th>
-            <th className="p-2 border">Descripción</th>
-            <th className="p-2 border">Monto</th>
-            <th className="p-2 border">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {planes.map((plan) => (
-            <tr key={plan.id}>
-              <td className="p-2 border">{plan.nombre}</td>
-              <td className="p-2 border">{plan.descripcion}</td>
-              <td className="p-2 border">{plan.monto}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  onClick={() => {
-                    setModoEditar(true);
-                    setForm({
-                      nombre: plan.nombre,
-                      descripcion: plan.descripcion,
-                      monto: plan.monto,
-                    });
-                    setPlanActual(plan.id);
-                  }}
-                  className="bg-yellow-500 text-white px-2 py-1 rounded"
-                >
-                  Editar
-                </button>
+      <h2 className="crud-subtitle">Planes de Pago Registrados</h2>
 
-                <button
-                  onClick={() => eliminarPlan(plan.id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded"
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="crud-table-container">
+        <table className="crud-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Tipo</th>
+              <th>Duración (días)</th>
+              <th>Precio</th>
+              <th>Comisión</th>
+              <th>Máx. Productos</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {planes.map((plan) => (
+              <tr key={plan.codigo_plan}>
+                <td>{plan.nombre_plan}</td>
+                <td>{plan.descripcion}</td>
+                <td>{plan.tipo_pago_plan}</td>
+                <td>{plan.duracion_dias}</td>
+                <td>{plan.precio_m_s_a} Bs</td>
+                <td>{plan.comision_venta}%</td>
+                <td>{plan.max_productos}</td>
+                <td className="crud-actions">
+                  <button
+                    onClick={() => {
+                      setModoEditar(true);
+                      setForm({
+                        nombre_plan: plan.nombre_plan,
+                        descripcion: plan.descripcion,
+                        tipo_pago_plan: plan.tipo_pago_plan,
+                        duracion_dias: plan.duracion_dias,
+                        precio_m_s_a: plan.precio_m_s_a,
+                        comision_venta: plan.comision_venta,
+                        max_productos: plan.max_productos,
+                      });
+                      setPlanActual(plan.codigo_plan);
+                    }}
+                    className="edit-button"
+                  >
+                    <Pencil />
+                  </button>
+                  <button
+                    onClick={() => eliminarPlan(plan.codigo_plan)}
+                    className="delete-button"
+                  >
+                    <Trash2 />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

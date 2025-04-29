@@ -19,13 +19,15 @@ services:
       - "5000:5000"
     depends_on:
       postgres:
-        condition: service_healthy   # Espera a que PostgreSQL pase el healthcheck
+        condition: service_healthy
     environment:
-      DB_HOST: postgres              # Usa el nombre del servicio como host
+      DB_HOST: postgres              # Mismo nombre de servicio
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: 'admin'
-      DB_NAME: 'gestor_nuevo'
+      DB_PASSWORD: 'admin'        # Cambiado a 'admin'
+      DB_NAME: 'gestor_nuevo'         # Cambiado a gestor_nuevo
+      INVENTARIO_SERVICE_URL: http://inventario:3001
+      VENTAS_SERVICE_URL: http://ventas:4000
     networks:
       - app_network
 
@@ -38,6 +40,35 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://postgres:admin@postgres:5432/gestor_nuevo
+    networks:
+      - app_network
+  inventario:
+    build: ./servicios/inventario
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'gestor_nuevo'
+    networks:
+      - app_network
+
+  ventas:
+    build: ./servicios/ventas
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 'admin'
+      DB_NAME: 'gestor_nuevo'
     networks:
       - app_network
 
@@ -53,6 +84,8 @@ services:
       POSTGRES_DB: 'gestor_nuevo'
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Opcional: si la base de datos ya está inicializada, no es necesario montar ./initdb
+      # - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - app_network
     healthcheck:
@@ -67,7 +100,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
       PGADMIN_DEFAULT_PASSWORD: "admin"
     ports:
-      - "8080:80"         # Ahora pgAdmin se expone en el puerto 8080 en el host
+      - "8080:80"   # pgAdmin se expone en el puerto 8080 en el host
     depends_on:
       - postgres
     networks:

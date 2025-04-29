@@ -1,47 +1,60 @@
-import React, { useEffect, useState } from "react";
-import Card from './card/InicioCard';
+// src/pages/cliente/TiendasPage.jsx
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useVendedor } from '@context/vendedorContext';
+import axios from 'axios';
 import './styles/InicioStyles.css';
-import { useCart } from "../../context/CartContext";
 
 const Inicio = () => {
-  const [items, setItems] = useState([]);
-  const { addToCart } = useCart(); // Extraemos la función para agregar productos al carrito
+  const { vendedorId, setVendedorId } = useVendedor();
+  const navigate = useNavigate();
+  const [portales, setPortales] = useState([]);
 
-  // Obtener servicios
-  const fetchProductos = async () => {
+  useEffect(() => {
+    const fetchPortales = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/portales/activos'); // Ajusta la URL si es necesario
+        setPortales(response.data.rows);
+      } catch (error) {
+        console.error('Error al obtener los portales:', error);
+      }
+    };
+
+    fetchPortales();
+  }, []);
+
+  const handleEntrar = async (codigoPortal, vendedorCodigo) => {
     try {
-      const response = await fetch('http://localhost:5000/api/producto');
-      const data = await response.json();
-      setItems(data);
+      await axios.put(`http://localhost:5000/api/portales/${codigoPortal}/visita`);
+      setVendedorId(vendedorCodigo);
+      navigate(`/cliente/portal/${codigoPortal}`);
     } catch (error) {
-      console.error("Error al obtener productos:", error);
+      console.error('Error al registrar la visita:', error);
     }
   };
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
-
   return (
-    <div className="cards-container">
-      <div className="cards-grid">
-        {items.map((item) => (
-          <div>
-          <Card
-            key={item.codigo_producto}
-            image="https://a.rgbimg.com/users/o/or/organza3/300/mtgVC1W.jpg"
-            title={`${item.nombre_producto}`}
-            line1={`${item.tipo_producto}`}
-            line2={`${item.precio_unidad_producto} Bs.`}
-          />
-          <br/>
-          <button class='details-button' onClick={() => addToCart(item)}>Agregar al carrito</button>
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <h2>Tiendas Disponibles</h2>
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        {portales.map((portal) => (
+          <div
+            key={portal.codigo_portal}
+            style={{
+              width: '300px',
+              border: '1px solid #ccc',
+              borderRadius: '10px',
+              padding: '1rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <p>{portal.codigo_portal}</p>
+            <button onClick={() => handleEntrar(portal.codigo_portal, portal.vendedor_codigo_vendedore)}>Entrar</button>
           </div>
         ))}
       </div>
-      <br></br>
     </div>
   );
 };
-  
-  export default Inicio;
+
+export default Inicio;

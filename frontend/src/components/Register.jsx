@@ -1,51 +1,94 @@
 // frontend/src/pages/Cliente/Register.jsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 import "./Auth.css";
-import logo from "../assets/logo.png"; // Importa el logo desde assets
+import logo from "../assets/logo.png";
 
+/*  ▸  PON TU API‑KEY  de imgbb  EN .env  (REACT_APP_IMGBB_KEY) */
+const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY || "YOUR_IMGBB_API_KEY";
+
+/* ─────────────────────────────────────────────────────────── */
+const uploadToImgbb = async (file) => {
+  const form = new FormData();
+  form.append("image", file);
+  const res = await fetch(
+    `https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,
+    { method: "POST", body: form }
+  );
+  const data = await res.json();
+  if (!data.success) throw new Error("Error subiendo imagen");
+  return data.data.url;                    // 🔗 URL final
+};
+/* ─────────────────────────────────────────────────────────── */
 
 function Register() {
-  const [role, setRole] = useState('cliente');
+  const [role, setRole] = useState("cliente");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
+  const [uploading, setUploading] = useState(false);            // estado loader
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    // Campos para cliente:
-    nombre_cliente: '',
-    telefono_cliente: '',
-    cumpleanos_cliente: '',
-    foto_perfil_cliente: '',
-    // Campos para vendedor:
-    nombre_vendedor: '',
-    telefono_vendedor: '',
-    nombre_empresa: '',
-    tipo_empresa: '',
-    logo_empresa: '',
-    correo_empresa: '',
-    telefono_empresa: '',
-    pais_empresa: '',
-    ciudad_empresa: '',
-    direccion_empresa: '',
-    banner_empresa: ''
+    email: "",
+    password: "",
+    /* cliente */
+    nombre_cliente: "",
+    telefono_cliente: "",
+    cumpleanos_cliente: "",
+    foto_perfil_cliente: "",
+    /* vendedor */
+    nombre_vendedor: "",
+    telefono_vendedor: "",
+    nombre_empresa: "",
+    tipo_empresa: "",
+    logo_empresa: "",
+    correo_empresa: "",
+    telefono_empresa: "",
+    pais_empresa: "",
+    ciudad_empresa: "",
+    direccion_empresa: "",
+    banner_empresa: ""
   });
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  /* ---- genérico para campos de texto ---- */
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  /* ---- subida de archivos (cliente o vendedor) ---- */
+  const handleFileSelect = async (e, campo) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const url = await uploadToImgbb(file);
+      setFormData((prev) => ({ ...prev, [campo]: url }));
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo subir la imagen.");
+    } finally {
+      setUploading(false);
+    }
   };
 
+  /* -------------------------------------------------- */
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      console.log("Usuario creado en Firebase:", userCredential.user);
+      /* 1. Firebase auth */
+      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
-      let endpoint = '/api/auth/register/cliente';
-      let bodyData = {
+      /* 2. Si es vendedor → ir a Planes Pago (guardamos form) */
+      if (role === "vendedor") {
+        sessionStorage.setItem("vendedorRegistro", JSON.stringify({ formData }));
+        navigate("/planes-pago");
+        return;
+      }
+
+      /* 3. Cliente: enviamos al backend */
+      const endpoint = "/api/auth/register/cliente";
+      const bodyData = {
         email: formData.email,
         nombre_cliente: formData.nombre_cliente,
         telefono_cliente: formData.telefono_cliente,
@@ -53,50 +96,27 @@ function Register() {
         foto_perfil_cliente: formData.foto_perfil_cliente
       };
 
-      if (role === 'vendedor') {
-        endpoint = '/api/auth/register/vendedor';
-        bodyData = {
-          email: formData.email,
-          nombre_vendedor: formData.nombre_vendedor,
-          telefono_vendedor: formData.telefono_vendedor,
-          nombre_empresa: formData.nombre_empresa,
-          tipo_empresa: formData.tipo_empresa,
-          logo_empresa: formData.logo_empresa,
-          correo_empresa: formData.correo_empresa,
-          telefono_empresa: formData.telefono_empresa,
-          pais_empresa: formData.pais_empresa,
-          ciudad_empresa: formData.ciudad_empresa,
-          direccion_empresa: formData.direccion_empresa,
-          banner_empresa: formData.banner_empresa
-        };
-      }
-
       const response = await fetch(`http://localhost:5000${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData)
       });
 
       if (!response.ok) {
         const errData = await response.json();
-        setError(errData.error || 'Error en el registro');
+        setError(errData.error || "Error en el registro");
         return;
       }
 
-      if (role === 'vendedor') {
-        const data = await response.json();
-        setMessage(`Registro exitoso. Tu clave de vendedor es: ${data.clave_vendedor}`);
-      } else {
-        setMessage("Registro exitoso. Por favor, inicia sesión.");
-      }
-
-      // Si quieres redirigir tras la confirmación:
-      // navigate('/login');
+      setMessage("Registro exitoso. ¡Inicia sesión!");
+      // navigate("/login");  ← si lo deseas
     } catch (err) {
       console.error("Error en el registro:", err);
       setError(err.message);
     }
   };
+
+  /*  ███████████████████████████████████████████████████████ */
 
   return (
     <div className="auth-container">
@@ -108,6 +128,7 @@ function Register() {
 
       <div className="auth-right">
         <h2 className="auth-title">REGISTRARME COMO</h2>
+
         <form onSubmit={handleRegister} className="auth-form">
           <div className="role-options">
             <label>
@@ -115,8 +136,8 @@ function Register() {
                 type="radio"
                 name="role"
                 value="cliente"
-                checked={role === 'cliente'}
-                onChange={() => setRole('cliente')}
+                checked={role === "cliente"}
+                onChange={() => setRole("cliente")}
               />
               Cliente
             </label>
@@ -125,13 +146,14 @@ function Register() {
                 type="radio"
                 name="role"
                 value="vendedor"
-                checked={role === 'vendedor'}
-                onChange={() => setRole('vendedor')}
+                checked={role === "vendedor"}
+                onChange={() => setRole("vendedor")}
               />
               Vendedor
             </label>
           </div>
 
+          {/* campos comunes */}
           <input
             className="auth-input"
             type="email"
@@ -149,7 +171,8 @@ function Register() {
             required
           />
 
-          {role === 'cliente' ? (
+          {/* ───────── CLIENTE ───────── */}
+          {role === "cliente" && (
             <>
               <input
                 className="auth-input"
@@ -174,16 +197,31 @@ function Register() {
                 onChange={handleChange}
                 required
               />
-              <input
-                className="auth-input"
-                type="text"
-                name="foto_perfil_cliente"
-                placeholder="URL de foto de perfil"
-                onChange={handleChange}
-                required
-              />
+
+              {/* Foto de perfil (carga archivo) */}
+              <label className="file-label">
+                Foto de perfil
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="file-input"
+                  onChange={(e) => handleFileSelect(e, "foto_perfil_cliente")}
+                />
+              </label>
+
+              {/* preview */}
+              {formData.foto_perfil_cliente && (
+                <img
+                  src={formData.foto_perfil_cliente}
+                  alt="preview"
+                  className="img-preview"
+                />
+              )}
             </>
-          ) : (
+          )}
+
+          {/* ───────── VENDEDOR ───────── */}
+          {role === "vendedor" && (
             <>
               <input
                 className="auth-input"
@@ -217,14 +255,22 @@ function Register() {
                 onChange={handleChange}
                 required
               />
-              <input
-                className="auth-input"
-                type="text"
-                name="logo_empresa"
-                placeholder="URL del logo"
-                onChange={handleChange}
-                required
-              />
+
+              {/* Logo */}
+              <label className="file-label">
+                Logo de la empresa
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="file-input"
+                  onChange={(e) => handleFileSelect(e, "logo_empresa")}
+                />
+              </label>
+              {formData.logo_empresa && (
+                <img src={formData.logo_empresa} alt="logo" className="img-preview" />
+              )}
+
+              {/* resto de campos */}
               <input
                 className="auth-input"
                 type="email"
@@ -265,18 +311,30 @@ function Register() {
                 onChange={handleChange}
                 required
               />
-              <input
-                className="auth-input"
-                type="text"
-                name="banner_empresa"
-                placeholder="URL del banner"
-                onChange={handleChange}
-                required
-              />
+
+              {/* Banner */}
+              <label className="file-label">
+                Banner de la empresa
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="file-input"
+                  onChange={(e) => handleFileSelect(e, "banner_empresa")}
+                />
+              </label>
+              {formData.banner_empresa && (
+                <img
+                  src={formData.banner_empresa}
+                  alt="banner"
+                  className="img-preview"
+                />
+              )}
             </>
           )}
 
-          <button type="submit" className="auth-button">REGISTRAR</button>
+          <button type="submit" className="auth-button" disabled={uploading}>
+            {uploading ? "Subiendo imagen..." : "REGISTRAR"}
+          </button>
         </form>
 
         {error && <p className="auth-error">{error}</p>}

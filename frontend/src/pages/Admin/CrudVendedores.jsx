@@ -1,18 +1,41 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
+import "../../styles/crudVendedores.css"; // Solo lo importamos, no como módulo
 
 function CrudVendedores() {
   const [vendedores, setVendedores] = useState([]);
-  const [form, setForm] = useState({ nombre: "", correo: "", telefono: "" });
+  const [form, setForm] = useState({
+    nombre_vendedor: "",
+    correo_vendedor: "",
+    telefono_vendedor: "",
+    clave_vendedor: "",
+    estado_vendedor: "activo",
+    nombre_empresa: "",
+    tipo_empresa: "",
+    logo_empresa: "default_logo.png",
+    correo_empresa: "",
+    telefono_empresa: "",
+    pais_empresa: "Colombia",
+    ciudad_empresa: "",
+    direccion_empresa: "",
+    banner_empresa: "default_banner.png",
+    PLANES_PAGO_codigo_plan: 1,
+  });
+
   const [modoEditar, setModoEditar] = useState(false);
   const [vendedorActual, setVendedorActual] = useState(null);
+  const [error, setError] = useState(null);
 
-  // GET: Obtener vendedores
+  const API_URL = "http://localhost:5000/api/vendedores";
+
   const obtenerVendedores = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/vendedores");
+      const res = await axios.get(API_URL);
       setVendedores(res.data);
+      setError(null);
     } catch (error) {
       console.error("Error al obtener vendedores:", error);
+      setError("Error al cargar los vendedores");
     }
   };
 
@@ -20,41 +43,72 @@ function CrudVendedores() {
     obtenerVendedores();
   }, []);
 
-  // POST: Crear nuevo vendedor
+  const validarFormulario = () => {
+    if (!form.nombre_vendedor || !form.correo_vendedor || !form.telefono_vendedor || 
+        !form.clave_vendedor || !form.nombre_empresa || !form.tipo_empresa || 
+        !form.correo_empresa || !form.telefono_empresa || !form.ciudad_empresa || 
+        !form.direccion_empresa) {
+      setError("Por favor complete todos los campos requeridos");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
   const crearVendedor = async () => {
+    if (!validarFormulario()) return;
+    
     try {
-      await axios.post("http://localhost:5000/api/vendedores", form);
+      await axios.post(API_URL, form);
+      alert("Vendedor creado exitosamente");
       obtenerVendedores();
-      setForm({ nombre: "", correo: "", telefono: "" });
+      resetForm();
     } catch (error) {
-      console.error("Error al crear vendedor:", error);
+      console.error("Error completo:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      setError(error.response?.data?.detalle || error.response?.data?.error || error.message);
     }
   };
 
-  // PUT: Editar vendedor
   const actualizarVendedor = async () => {
+    if (!validarFormulario() || !vendedorActual) {
+      setError("No se ha seleccionado un vendedor para editar");
+      return;
+    }
+    
     try {
-      await axios.put(`http://localhost:5000/api/vendedores/${vendedorActual}`, form);
+      await axios.put(`${API_URL}/${vendedorActual}`, form);
+      alert("Vendedor actualizado exitosamente");
       obtenerVendedores();
       setModoEditar(false);
-      setForm({ nombre: "", correo: "", telefono: "" });
+      resetForm();
     } catch (error) {
       console.error("Error al actualizar vendedor:", error);
+      setError(error.response?.data?.detalle || error.response?.data?.error || error.message);
     }
   };
 
-  // DELETE: Eliminar vendedor
   const eliminarVendedor = async (id) => {
+    if (!window.confirm("¿Está seguro de eliminar este vendedor?")) return;
+    
     try {
-      await axios.delete(`http://localhost:5000/api/vendedores/${id}`);
+      await axios.delete(`${API_URL}/${id}`);
+      alert("Vendedor eliminado exitosamente");
       obtenerVendedores();
     } catch (error) {
       console.error("Error al eliminar vendedor:", error);
+      setError(error.response?.data?.detalle || error.response?.data?.error || error.message);
     }
   };
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = (e) => {
@@ -62,84 +116,150 @@ function CrudVendedores() {
     modoEditar ? actualizarVendedor() : crearVendedor();
   };
 
+  const resetForm = () => {
+    setForm({
+      nombre_vendedor: "",
+      correo_vendedor: "",
+      telefono_vendedor: "",
+      clave_vendedor: "",
+      estado_vendedor: "activo",
+      nombre_empresa: "",
+      tipo_empresa: "",
+      logo_empresa: "default_logo.png",
+      correo_empresa: "",
+      telefono_empresa: "",
+      pais_empresa: "Colombia",
+      ciudad_empresa: "",
+      direccion_empresa: "",
+      banner_empresa: "default_banner.png",
+      PLANES_PAGO_codigo_plan: 1,
+    });
+    setModoEditar(false);
+    setVendedorActual(null);
+    setError(null);
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}</h1>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
-        <input
-          name="nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          placeholder="Nombre del vendedor"
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          name="correo"
-          value={form.correo}
-          onChange={handleChange}
-          placeholder="Correo electrónico"
-          type="email"
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          name="telefono"
-          value={form.telefono}
-          onChange={handleChange}
-          placeholder="Teléfono"
-          type="tel"
-          className="border p-2 w-full"
-          required
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          {modoEditar ? "Actualizar" : "Crear"}
-        </button>
+    <div className="container">
+      <h1 className="title">
+        {modoEditar ? "Editar Vendedor" : "Nuevo Vendedor"}
+      </h1>
+
+      {error && (
+        <div className="errorBox">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="form">
+        <div className="grid">
+          {/* Inputs */}
+          {[
+            { label: "Nombre del vendedor*", name: "nombre_vendedor", type: "text" },
+            { label: "Correo electrónico*", name: "correo_vendedor", type: "email" },
+            { label: "Teléfono*", name: "telefono_vendedor", type: "tel" },
+            { label: "Clave*", name: "clave_vendedor", type: "password" },
+            { label: "Nombre de la empresa*", name: "nombre_empresa", type: "text" },
+            { label: "Tipo de empresa*", name: "tipo_empresa", type: "text" },
+            { label: "Logo de la empresa", name: "logo_empresa", type: "text" },
+            { label: "Correo de la empresa*", name: "correo_empresa", type: "email" },
+            { label: "Teléfono de la empresa*", name: "telefono_empresa", type: "text" },
+            { label: "País", name: "pais_empresa", type: "text" },
+            { label: "Ciudad", name: "ciudad_empresa", type: "text" },
+            { label: "Dirección", name: "direccion_empresa", type: "text" },
+            { label: "Banner", name: "banner_empresa", type: "text" },
+            { label: "Código del plan", name: "PLANES_PAGO_codigo_plan", type: "number" },
+          ].map(({ label, name, type }) => (
+            <div key={name}>
+              <label className="label">{label}</label>
+              <input
+                name={name}
+                type={type}
+                value={form[name]}
+                onChange={handleChange}
+                className="input"
+                required={label.includes('*')}
+              />
+            </div>
+          ))}
+          {/* Estado */}
+          <div>
+            <label className="label">Estado</label>
+            <select
+              name="estado_vendedor"
+              value={form.estado_vendedor}
+              onChange={handleChange}
+              className="input"
+            >
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="buttonGroup">
+          <button type="button" onClick={resetForm} className="cancelButton">
+            Cancelar
+          </button>
+          <button type="submit" className="submitButton">
+            {modoEditar ? "Actualizar" : "Crear"}
+          </button>
+        </div>
       </form>
 
-      <h2 className="text-xl font-semibold mb-2">Lista de Vendedores</h2>
-      <table className="w-full table-auto border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Nombre</th>
-            <th className="p-2 border">Correo</th>
-            <th className="p-2 border">Teléfono</th>
-            <th className="p-2 border">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vendedores.map((vendedor) => (
-            <tr key={vendedor.id}>
-              <td className="p-2 border">{vendedor.nombre}</td>
-              <td className="p-2 border">{vendedor.correo}</td>
-              <td className="p-2 border">{vendedor.telefono}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  onClick={() => {
-                    setModoEditar(true);
-                    setForm({
-                      nombre: vendedor.nombre,
-                      correo: vendedor.correo,
-                      telefono: vendedor.telefono,
-                    });
-                    setVendedorActual(vendedor.id);
-                  }}
-                  className="bg-yellow-500 text-white px-2 py-1 rounded"
-                >
-                  Editar
-                </button>
+      <h2 className="subTitle">Lista de Vendedores</h2>
 
-                <button
-                  onClick={() => eliminarVendedor(vendedor.id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded"
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead className="tableHead">
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Empresa</th>
+              <th>Logo</th>
+              <th>Banner</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {vendedores.map((vendedor) => (
+              <tr key={vendedor.codigo_vendedore} className="tableRow">
+                <td>{vendedor.nombre_vendedor}</td>
+                <td>{vendedor.correo_vendedor}</td>
+                <td>{vendedor.telefono_vendedor}</td>
+                <td>{vendedor.nombre_empresa}</td>
+                <td>
+                  <img src={vendedor.logo_empresa} alt="Logo" className="logoImg" />
+                </td>
+                <td>
+                  <img src={vendedor.banner_empresa} alt="Banner" className="bannerImg" />
+                </td>
+                <td>
+                  <div className="actions">
+                    <button
+                      onClick={() => {
+                        setModoEditar(true);
+                        setForm({ ...vendedor });
+                        setVendedorActual(vendedor.codigo_vendedore);
+                      }}
+                      className="editButton"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => eliminarVendedor(vendedor.codigo_vendedore)}
+                      className="deleteButton"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -9,27 +9,58 @@ export const CartProvider = ({ children }) => {
 
   // Función para agregar productos al carrito
   const addToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product]);
+    setCart((prevCart) => {
+      const existingProduct = prevCart.find(item => item.codigo_producto === product.codigo_producto);
+      if (existingProduct) {
+        return prevCart.map(item =>
+          item.codigo_producto === product.codigo_producto
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { ...product, cantidad: 1 }];
+      }
+    });
   };
 
-  // Función para eliminar productos del carrito
-  const removeFromCart = (productId) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  // Función para eliminar uno en uno
+  const removeFromCart = (codigoProducto) => {
+    setCart((prevCart) => {
+      const existingProduct = prevCart.find(item => item.codigo_producto === codigoProducto);
+      if (existingProduct) {
+        if (existingProduct.cantidad > 1) {
+          // Reducimos cantidad
+          return prevCart.map(item =>
+            item.codigo_producto === codigoProducto
+              ? { ...item, cantidad: item.cantidad - 1 }
+              : item
+          );
+        } else {
+          // Eliminamos si la cantidad es 1
+          return prevCart.filter(item => item.codigo_producto !== codigoProducto);
+        }
+      }
+      return prevCart;
+    });
   };
 
-  // Función para obtener el total del carrito
+  // Función para obtener el total
   const getTotal = () => {
-    return cart.reduce((total, product) => total + product.precio_unidad_producto, 0);
+    return cart.reduce((total, product) => total + (product.precio_unidad_producto * product.cantidad), 0);
+  };
+  
+  const clearCart = () => {
+    setCart([]); // ← Esto vacía el carrito
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, getTotal }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, getTotal, clearCart }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-// Hook para usar el carrito en otros componentes
+// Hook para usar el carrito
 export const useCart = () => {
   return useContext(CartContext);
 };

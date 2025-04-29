@@ -1,16 +1,37 @@
-// frontend/src/pages/Cliente/ClientePerfil.jsx
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { updatePassword } from "firebase/auth";
 import { auth } from "../../firebase";
 import "./ClientePerfil.css";
 
+/* ───────────────────────────────────────────────────────────── */
+const uploadImgToImgbb = async (file) => {
+  const key = import.meta.env.VITE_IMGBB_KEY;
+  if (!key) throw new Error("Falta VITE_IMGBB_KEY en .env");
+
+  const form = new FormData();
+  form.append("image", file);
+  form.append("name", file.name.split(".")[0]);
+
+  const res = await fetch(
+    `https://api.imgbb.com/1/upload?key=${key}`,
+    { method: "POST", body: form }
+  );
+  const data = await res.json();
+  if (!data.success) throw new Error("Upload failed");
+
+  return data.data.url;
+};
+/* ───────────────────────────────────────────────────────────── */
+
 const Perfil = () => {
   const { user, setUser } = useContext(AuthContext);
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState(null);
+
   const [formData, setFormData] = useState({
     nombre_cliente: "",
     telefono_cliente: "",
@@ -19,7 +40,7 @@ const Perfil = () => {
   });
 
   useEffect(() => {
-    if (user && user.role === "cliente") {
+    if (user?.role === "cliente") {
       setFormData({
         nombre_cliente: user.nombre_cliente || "",
         telefono_cliente: user.telefono_cliente || "",
@@ -35,23 +56,37 @@ const Perfil = () => {
     return <p>No estás autenticado como cliente.</p>;
   }
 
-  const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
-  };
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
     setMessage(null);
   };
 
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const url = await uploadImgToImgbb(file);
+      setFormData((f) => ({ ...f, foto_perfil_cliente: url }));
+    } catch (err) {
+      console.error(err);
+      setMessage("No se pudo subir la imagen.");
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5000/api/perfil/cliente/${user.codigo_cliente}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/perfil/cliente/${user.codigo_cliente}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        }
+      );
       if (!response.ok) {
         const errData = await response.json();
         setMessage(`Error: ${errData.error || "No se pudo actualizar el perfil"}`);
@@ -67,11 +102,9 @@ const Perfil = () => {
     }
   };
 
-  // Función para actualizar la contraseña
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     try {
-      // updatePassword se aplica al usuario de Firebase
       await updatePassword(auth.currentUser, newPassword);
       setMessage("Contraseña actualizada con éxito");
       setNewPassword("");
@@ -83,63 +116,72 @@ const Perfil = () => {
   };
 
   return (
-    <div className="perfil-container">
-      <h1>Perfil del Cliente</h1>
-      {message && <p className="perfil-message">{message}</p>}
-      
+    <div className="clientePerfil-container">
+      <h1 className="clientePerfil-title">Perfil del Cliente</h1>
+      {message && <p className="clientePerfil-message">{message}</p>}
+
       {isEditing ? (
-        <form onSubmit={handleSave} className="perfil-form">
-          <label>
-            Nombre:
+        <form onSubmit={handleSave} className="clientePerfil-form">
+          <label>Nombre:</label>
+          <input
+            type="text"
+            name="nombre_cliente"
+            value={formData.nombre_cliente}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Teléfono:</label>
+          <input
+            type="text"
+            name="telefono_cliente"
+            value={formData.telefono_cliente}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Cumpleaños:</label>
+          <input
+            type="date"
+            name="cumpleanos_cliente"
+            value={formData.cumpleanos_cliente}
+            onChange={handleChange}
+            required
+          />
+
+          <label className="clientePerfil-file-label">
+            Foto de perfil:
             <input
-              type="text"
-              name="nombre_cliente"
-              value={formData.nombre_cliente}
-              onChange={handleChange}
-              required
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="clientePerfil-file-input"
             />
           </label>
-          <label>
-            Teléfono:
-            <input
-              type="text"
-              name="telefono_cliente"
-              value={formData.telefono_cliente}
-              onChange={handleChange}
-              required
+
+          {formData.foto_perfil_cliente && (
+            <img
+              src={formData.foto_perfil_cliente}
+              alt="Preview"
+              className="clientePerfil-img"
             />
-          </label>
-          <label>
-            Cumpleaños:
-            <input
-              type="date"
-              name="cumpleanos_cliente"
-              value={formData.cumpleanos_cliente}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <label>
-            Foto de perfil (URL):
-            <input
-              type="text"
-              name="foto_perfil_cliente"
-              value={formData.foto_perfil_cliente}
-              onChange={handleChange}
-              required
-            />
-          </label>
-          <div className="perfil-form-buttons">
-            <button type="submit">Guardar</button>
-            <button type="button" onClick={handleEditToggle}>Cancelar</button>
+          )}
+
+          <div className="clientePerfil-form-buttons">
+            <button type="submit" className="clientePerfil-save-btn">
+              Guardar
+            </button>
+            <button type="button" onClick={handleEditToggle} className="clientePerfil-cancel-btn">
+              Cancelar
+            </button>
           </div>
         </form>
       ) : (
-        <div className="perfil-details">
+        <div className="clientePerfil-details">
           <img
             src={user.foto_perfil_cliente}
             alt="Foto de Perfil"
-            className="perfil-img"
+            className="clientePerfil-img"
           />
           <p><strong>ID:</strong> {user.codigo_cliente}</p>
           <p><strong>Nombre:</strong> {user.nombre_cliente}</p>
@@ -149,26 +191,33 @@ const Perfil = () => {
             <strong>Cumpleaños:</strong>{" "}
             {new Date(user.cumpleanos_cliente).toLocaleDateString()}
           </p>
-          <button onClick={handleEditToggle}>Editar Perfil</button>
+          <button onClick={handleEditToggle} className="clientePerfil-edit-btn">
+            Editar Perfil
+          </button>
         </div>
       )}
 
-      {/* Botón para cambiar contraseña */}
-      <div className="password-section">
-        <button onClick={() => setShowPasswordForm(!showPasswordForm)} className="change-password-btn">
+      <div className="clientePerfil-password-section">
+        <button
+          onClick={() => setShowPasswordForm(!showPasswordForm)}
+          className="clientePerfil-password-toggle"
+        >
           Cambiar de Contraseña
         </button>
+
         {showPasswordForm && (
-          <form onSubmit={handlePasswordUpdate} className="password-form">
+          <form onSubmit={handlePasswordUpdate} className="clientePerfil-password-form">
             <input
               type="password"
               placeholder="Nueva Contraseña"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              className="password-input"
+              className="clientePerfil-password-input"
             />
-            <button type="submit" className="update-password-btn">Actualizar</button>
+            <button type="submit" className="clientePerfil-password-btn">
+              Actualizar
+            </button>
           </form>
         )}
       </div>

@@ -55,4 +55,20 @@
     font-size: 1.1rem;
     color: #111827;
   }
+  .create-order-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
   
+  .create-order-btn:hover {
+    background-color: #45a049;
+  }

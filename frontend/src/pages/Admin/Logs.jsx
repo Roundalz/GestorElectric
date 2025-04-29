@@ -1,4 +1,6 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
+import "../../styles/Logs.css"; // <-- importamos tu CSS personalizado
 
 function Logs() {
   const [logs, setLogs] = useState([]);
@@ -9,7 +11,6 @@ function Logs() {
     tipo: "",
   });
 
-  // GET: Obtener todos los logs
   const obtenerLogs = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/logs");
@@ -28,25 +29,25 @@ function Logs() {
   };
 
   const logsFiltrados = logs.filter((log) =>
-    log.usuario.toString().toLowerCase().includes(filtros.usuario) &&
-    log.accion.toLowerCase().includes(filtros.accion) &&
-    new Date(log.fecha).toLocaleString().toLowerCase().includes(filtros.fecha) &&
-    log.tipo_log.toLowerCase().includes(filtros.tipo)
+    (log.usuario_id?.toString().toLowerCase() || "").includes(filtros.usuario) &&
+    (log.accion?.toLowerCase() || "").includes(filtros.accion) &&
+    (new Date(log.fecha_hora).toLocaleString().toLowerCase() || "").includes(filtros.fecha) &&
+    (log.tipo_log?.toLowerCase() || "").includes(filtros.tipo)
   );
 
   return (
-    <div className="p-4 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Historial de Logs</h1>
+    <div className="logsContainer">
+      <h1 className="logsTitle">Historial de Logs</h1>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="logsFilters">
         <input
           type="text"
           name="usuario"
           value={filtros.usuario}
           onChange={handleFiltroChange}
           placeholder="Filtrar por usuario ID"
-          className="border p-2 w-full"
+          className="inputFiltro"
         />
         <input
           type="text"
@@ -54,7 +55,7 @@ function Logs() {
           value={filtros.accion}
           onChange={handleFiltroChange}
           placeholder="Filtrar por acción"
-          className="border p-2 w-full"
+          className="inputFiltro"
         />
         <input
           type="text"
@@ -62,7 +63,7 @@ function Logs() {
           value={filtros.fecha}
           onChange={handleFiltroChange}
           placeholder="Filtrar por fecha (ej: 2025-04)"
-          className="border p-2 w-full"
+          className="inputFiltro"
         />
         <input
           type="text"
@@ -70,45 +71,45 @@ function Logs() {
           value={filtros.tipo}
           onChange={handleFiltroChange}
           placeholder="Filtrar por tipo (evento/usuario)"
-          className="border p-2 w-full"
+          className="inputFiltro"
         />
       </div>
 
-      {/* Tabla de logs */}
-      <table className="w-full table-auto border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">ID</th>
-            <th className="p-2 border">Tipo</th>
-            <th className="p-2 border">Acción</th>
-            <th className="p-2 border">Usuario ID</th>
-            <th className="p-2 border">Fecha</th>
-            <th className="p-2 border">Detalles</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logsFiltrados.length > 0 ? (
-            logsFiltrados.map((log) => (
-              <tr key={`${log.tipo_log}-${log.id}`}>
-                <td className="p-2 border">{log.id}</td>
-                <td className="p-2 border capitalize">{log.tipo_log}</td>
-                <td className="p-2 border">{log.accion}</td>
-                <td className="p-2 border">{log.usuario}</td>
-                <td className="p-2 border">
-                  {new Date(log.fecha).toLocaleString()}
-                </td>
-                <td className="p-2 border">{log.detalles}</td>
-              </tr>
-            ))
-          ) : (
+      {/* Tabla */}
+      <div className="tablaLogsContainer">
+        <table className="tablaLogs">
+          <thead>
             <tr>
-              <td colSpan="6" className="text-center py-4">
-                No se encontraron logs con los filtros aplicados.
-              </td>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Acción</th>
+              <th>Usuario ID</th>
+              <th>Fecha</th>
+              <th>Detalles</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {logsFiltrados.length > 0 ? (
+              logsFiltrados.map((log, index) => (
+                <tr key={log.id ?? `log-${index}`}>
+                  <td>{log.id}</td>
+                  <td className="capitalize">{log.tipo_log}</td>
+                  <td>{log.accion}</td>
+                  <td>{log.usuario_id}</td>
+                  <td>{new Date(log.fecha_hora).toLocaleString()}</td>
+                  <td>{log.detalles || "N/A"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="noLogs">
+                  No se encontraron logs con los filtros aplicados.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
