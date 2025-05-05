@@ -14,10 +14,12 @@ export default function Ventas() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [tabActivo, setTabActivo] = useState('ventas');
 
+  const API_URL = 'http://localhost:5000';
+
   useEffect(() => {
     async function fetchVentas() {
       try {
-        const res = await fetch('/api/ventas', {
+        const res = await fetch(`${API_URL}/api/ventas`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
